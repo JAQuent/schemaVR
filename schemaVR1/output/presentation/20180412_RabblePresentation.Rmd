@@ -1,0 +1,345 @@
+---
+title: "Interim results of schemaVR1"
+author: "Jörn Alexander Quent"
+date: "12 April 2018"
+output:
+  slidy_presentation: default
+  beamer_presentation: default
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, 
+                      warning = FALSE, 
+                      message = FALSE,
+                      fig.width = 10, 
+                      fig.height= 7, 
+                      dpi=300, 
+                      out.width="1000px", 
+                      out.height="700px")
+
+# Libraries
+library(plyr)
+library(ggplot2)
+library(gridExtra)
+library(lmerTest)
+library(grid)
+library(knitr)
+
+# Functions
+pValue <-function(x, sign = '='){
+  if (inherits(x, "lm")){
+    s <- summary.lm(x)
+    x <- pf(s$fstatistic[1L], s$fstatistic[2L], s$fstatistic[3L], lower.tail = FALSE)
+    if(x > 1){
+      stop("There is no p-value greater than 1")
+    } else if(x < 0.001){
+      x.converted <- '< .001'
+    } else{
+      x.converted <- paste(sign,substr(as.character(round(x, 3)), 2,5))
+    } 
+  } else {
+    if(x > 1){
+      stop("There is no p-value greater than 1")
+    } else if(x < 0.001){
+      x.converted <- '< .001'
+    } else{
+      x.converted <- paste(sign,substr(as.character(round(x, 3)), 2,5))
+    } 
+  }
+  return(x.converted)
+}
+
+rValue <-function(x){
+  if (inherits(x, "lm")){
+    r.squared <- summary(x)$r.squared
+    x.converted <- paste('=',substr(as.character(round(r.squared, 3)), 2,5)) 
+  } else {
+    if (x < 0){
+      x.converted <- paste('= -',substr(as.character(abs(round(x, 3))), 2,5), sep = '') 
+    } else {
+      x.converted <- paste('=',substr(as.character(abs(round(x, 3))), 2,5)) 
+    }
+  }
+  return(x.converted) 
+}
+
+# Loading data
+load("data/mergedData/exp1Data.RData")
+
+# Adding the normative object/location rating for each target and foil 1 & 2
+combData$objLocTargetNorm <- 99
+combData$objLocFoil1Norm  <- 99
+combData$objLocFoil2Norm  <- 99
+for(i in 1:dim(combData)[1]){
+  combData$objLocTargetNorm[i] <- combData[i, paste("loc", combData$targetLocation[i], sep = "")]
+  combData$objLocFoil1Norm[i]  <- combData[i, paste("loc", combData$foil1Location[i], sep = "")]
+  combData$objLocFoil2Norm[i]  <- combData[i, paste("loc", combData$foil2Location[i], sep = "")]
+}
+
+# Scaling variables for analysis
+combDataScaled                    <- combData
+combDataScaled$objLocTargetRating <- scale(combData$objLocTargetRating)
+combDataScaled$targetRankPre      <- scale(combData$targetRankPre)
+combDataScaled$generalRatingNorm  <- scale(combData$generalRatingNorm)
+combDataScaled$generalRatingPost  <- scale(combData$generalRatingPost)
+combDataScaled$objLocTargetNorm   <- scale(combDataScaled$objLocTargetNorm)
+
+# Aggregating across all objects
+objectAgg <- ddply(combData, c('objNum', 'objName'), summarise, 
+                   generalRatingNorm = mean(generalRatingNorm),
+                   generalRatingPost = mean(generalRatingPost),
+                   afc = mean(accAFC),
+                   preRank = mean(targetRankPre),
+                   postRating = mean(objLocTargetRating),
+                   recall = mean(accRecall, na.rm = TRUE),
+                   euclideanDist = mean(euclideanDist))
+```
+
+## Desgin
+
+1. Familiarisation in VR 
+2. Encoding phase in VR (45 sec) 
+3. Practice to pick up objects in VR 
+4. Location recall task in VR
+5. 3AFC choosing the correct location out of 3
+6. Object/location expectancy ratings (3 per times object)
+7. General expectancy ratings
+
+## Overall memory performance
+```{r}
+# Plot: Recall performance
+combDataSub1 <- subset(combData, combData$recallNoMemory == 0 | is.na(combData$recallNoMemory))
+agg1         <- ddply(combDataSub1, c('subNum'), summarise, accRecall = mean(accRecall, na.rm = TRUE))
+p1 <- ggplot(agg1, aes(x = "accRecall" , y = accRecall)) + 
+  geom_boxplot(alpha = 0.5, width = 0.5) +
+  geom_dotplot(binaxis='y', stackdir='center') +
+  labs(y = 'Recall rate', x = ' ', title = 'Recall performance') + 
+  coord_cartesian(ylim = c(0, 1), xlim = c(0.9, 1.1)) + 
+  theme(plot.margin = margin(10, 10, 10, 10), 
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+
+# Plot: 3AFC performance
+afcCombDataSub <- subset(combData, combData$resCon != 1)
+agg2           <- ddply(afcCombDataSub, c('subNum'), summarise, accAFC = mean(accAFC))
+p2 <- ggplot(agg2, aes(x = "accAFC" , y = accAFC)) + 
+  geom_boxplot(alpha = 0.5, width = 0.5) +
+  geom_dotplot(binaxis='y', stackdir='center') + 
+  geom_hline(yintercept = 1/3) + 
+  annotate('text', x = 0.95, y = (1/3) - 0.03, label = 'Chance (1/3)') + 
+  labs(y = 'Accuracy (3AFC)', x = ' ', title = '3AFC performance') + 
+  coord_cartesian(ylim = c(0, 1), xlim = c(0.9, 1.1)) + 
+  theme(plot.margin = margin(10, 10, 10, 10), 
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+grid.arrange(p1, p2, ncol = 2)
+```
+
+## Correlation between memory measures
+```{r, echo=FALSE}
+agg3 <- subset(agg2, subNum < 100)
+ggplot(data.frame(accRecall = agg1$accRecall, accAFC = agg3$accAFC), aes(x  = accRecall, y = accAFC)) +
+  geom_smooth(method = 'lm') + 
+  geom_point() + 
+  labs(y = '3AFC accuracy', x = 'Recall rate')
+```
+
+## Relationship between expectancy and recall
+```{r}
+plot1 <- ggplot(objectAgg, aes(x = postRating, y = recall)) + 
+  geom_point() +
+  geom_text(aes(label = objNum),hjust = 0, vjust = 0) + 
+  geom_smooth() +  
+  labs(y = 'Mean accuracy (Recall)', x = "Post-ratings expectancy", title = 'Object/location expectancy vs. recall')  + 
+  coord_cartesian(ylim = c(0, 1), xlim = c(-100, 100), expand = FALSE)
+
+
+plot2 <- ggplot(objectAgg, aes(x = preRank, y = recall)) + 
+  geom_point() +
+  geom_text(aes(label = objNum),hjust = 0, vjust = 0) + 
+  geom_smooth() +  
+  labs(y = 'Mean accuracy (Recall)', x = "Normative expectancy (ranked)", title = 'Object/location expectancy vs. recall') + 
+  coord_cartesian(ylim = c(0, 1), xlim = c(0, 400), expand = FALSE)
+
+plot3 <- ggplot(objectAgg, aes(x = postRating, y = recall)) + 
+  geom_point() +
+  geom_text(aes(label = objNum),hjust = 0, vjust = 0) + 
+  geom_smooth() +  
+  labs(y = 'Mean accuracy (Recall)', x = "Post-ratings expectancy", title = 'Object/location expectancy vs. recall') + 
+  coord_cartesian(ylim = c(0, 1), xlim = c(-100, 100), expand = FALSE)
+
+plot4 <- ggplot(objectAgg, aes(x = generalRatingNorm, y = recall)) + 
+  geom_point() +
+  geom_text(aes(label = objNum),hjust = 0, vjust = 0) + 
+  geom_smooth() +  
+  labs(y = 'Mean accuracy (Recall)', x = "Normative expectancy", title = 'General expectancy vs. recall') + 
+  coord_cartesian(ylim = c(0, 1), xlim = c(-100, 100), expand = FALSE)
+
+grid.arrange(plot1, plot2, plot3, plot4, ncol = 2)
+```
+
+## Relationship between expectancy and recall
+```{r}
+plot5 <- ggplot(objectAgg, aes(x = generalRatingPost, y = recall)) + 
+  geom_point() +
+  geom_text(aes(label = objNum),hjust = 0, vjust = 0) + 
+  geom_smooth() +  
+  labs(y = 'Mean accuracy (Recall)', x = "Post-ratings expectancy", title = 'General expectancy vs. recall') + 
+  coord_cartesian(ylim = c(0, 1), xlim = c(-100, 100), expand = FALSE)
+for (i in 1:dim(objectAgg)[1])  {
+  height <- seq(0, 1, length = dim(objectAgg)[1])
+plot5 <- plot5 + annotation_custom(
+      grob = textGrob(label = paste(as.character(objectAgg$objNum[i]), "=", objectAgg$objName[i]), hjust = 0),
+      ymin = height[i],      # Vertical position of the textGrob
+      ymax = height[i],
+      xmin = 104,         # Note: The grobs are positioned outside the plot area
+      xmax = 104)
+ }   
+plot5 <- ggplot_gtable(ggplot_build(plot5))
+plot5$layout$clip[plot5$layout$name == "panel"] <- "off"
+grid.arrange(plot5, ncol = 2, nrow = 2)
+```
+
+## Recall models
+```{r}
+subRecall <- subset(combDataScaled, combDataScaled$recallNoMemory == 0)
+
+# Model 1
+logiModel <- glmer(accRecall ~  objLocTargetRating + I(objLocTargetRating*objLocTargetRating) + (1 | subNum), data = subRecall, family = binomial, control = glmerControl(optimizer = "bobyqa"),
+                   nAGQ = 1)
+
+kable(summary(logiModel)$coefficients)
+# Model 2
+logiModel <- glmer(accRecall ~  targetRankPre + I(targetRankPre*targetRankPre) + (1 | subNum), data = subRecall, family = binomial, control = glmerControl(optimizer = "bobyqa"),
+                   nAGQ = 1)
+
+kable(summary(logiModel)$coefficients)
+# Model 3
+logiModel <- glmer(accRecall ~  objLocTargetNorm + I(objLocTargetNorm*objLocTargetNorm) + (1 | subNum), data = subRecall, family = binomial, control = glmerControl(optimizer = "bobyqa"),
+                   nAGQ = 1)
+
+kable(summary(logiModel)$coefficients)
+```
+
+## Recall models
+```{r}
+# Model 4
+logiModel <- glmer(accRecall ~  generalRatingNorm + I(generalRatingNorm*generalRatingNorm)  + (1 | subNum), data = subRecall, family = binomial, control = glmerControl(optimizer = "bobyqa"),
+                   nAGQ = 1)
+
+kable(summary(logiModel)$coefficients)
+# Model 5
+logiModel <- glmer(accRecall ~  generalRatingPost + I(generalRatingPost*generalRatingPost)  + (1 | subNum), data = subRecall, family = binomial, control = glmerControl(optimizer = "bobyqa"),
+                   nAGQ = 1)
+
+kable(summary(logiModel)$coefficients)
+```
+
+## Full recall model
+```{r}
+logiModel <- glmer(accRecall ~  objLocTargetNorm + 
+                     I(objLocTargetNorm*objLocTargetNorm) + 
+                     objLocTargetRating +
+                     I(objLocTargetRating*objLocTargetRating) +
+                     generalRatingNorm +
+                     I(generalRatingNorm*generalRatingNorm) +
+                     targetRankPre +
+                     I(targetRankPre*targetRankPre) +
+                     generalRatingPost +
+                     I(generalRatingPost*generalRatingPost) +
+                     answerTime +
+                     (1 | subNum), data = subRecall, family = binomial, control = glmerControl(optimizer = "bobyqa"),
+                   nAGQ = 1)
+
+kable(summary(logiModel)$coefficients)
+```
+
+## Relationship between expectancy and 3AFC
+```{r}
+plot1 <- ggplot(objectAgg, aes(x = postRating, y = afc)) + 
+  geom_point() +
+  geom_text(aes(label = objNum),hjust = 0, vjust = 0) + 
+  geom_smooth() +  
+  labs(y = 'Mean accuracy (3AFC)', x = "Post-ratings expectancy", title = 'Object/location expectancy vs. 3AFC') + 
+  coord_cartesian(ylim = c(0, 1.5), xlim = c(-100, 100), expand = FALSE) #+ 
+  #theme(plot.margin = unit(c(1,7,1,1), "lines"))
+
+plot2 <- ggplot(objectAgg, aes(x = preRank, y = afc)) + 
+  geom_point() +
+  geom_text(aes(label = objNum),hjust = 0, vjust = 0) + 
+  geom_smooth() +  
+  labs(y = 'Mean accuracy (3AFC)', x = "Normative expectancy (ranked)", title = 'Object/location expectancy vs. 3AFC') + 
+  coord_cartesian(ylim = c(0, 1.5), xlim = c(0, 400), expand = FALSE) #+ 
+  #theme(plot.margin = unit(c(1,7,1,1), "lines"))
+
+plot3 <- ggplot(objectAgg, aes(x = generalRatingNorm, y = afc)) + 
+  geom_point() +
+  geom_text(aes(label = objNum),hjust = 0, vjust = 0) + 
+  geom_smooth() +  
+  labs(y = 'Mean accuracy (3AFC)', x = "Normative expectancy", title = 'General expectancy vs. 3AFC') + 
+  coord_cartesian(ylim = c(0, 1.5), xlim = c(-100, 100), expand = FALSE) #+ 
+  #theme(plot.margin = unit(c(1,7,1,1), "lines"))
+for (i in 1:dim(objectAgg)[1])  {
+  height <- seq(0, 1.5, length = dim(objectAgg)[1])
+plot3 <- plot3 + annotation_custom(
+      grob = textGrob(label = paste(as.character(objectAgg$objNum[i]), "=", objectAgg$objName[i]), hjust = 0),
+      ymin = height[i],      # Vertical position of the textGrob
+      ymax = height[i],
+      xmin = 104,         # Note: The grobs are positioned outside the plot area
+      xmax = 104)
+ }   
+
+plot3 <- ggplot_gtable(ggplot_build(plot3))
+plot3$layout$clip[plot3$layout$name == "panel"] <- "off"
+
+grid.arrange(plot1, plot2, plot3, ncol = 2)
+```
+
+## 3AFC models
+```{r}
+# Model 1
+subAFC    <- subset(combDataScaled, combDataScaled$resCon != 1)
+logiModel <- glmer(accAFC ~  objLocTargetRating + I(objLocTargetRating*objLocTargetRating) + (1 | subNum), data = subAFC, family = binomial, control = glmerControl(optimizer = "bobyqa"),
+                   nAGQ = 1)
+
+kable(summary(logiModel)$coefficients)
+
+# Model 2
+logiModel <- glmer(accAFC ~  targetRankPre + I(targetRankPre*targetRankPre) + (1 | subNum), data = subAFC, family = binomial, control = glmerControl(optimizer = "bobyqa"),
+                   nAGQ = 1)
+
+kable(summary(logiModel)$coefficients)
+
+# Model 3
+logiModel <- glmer(accAFC ~  generalRatingNorm + I(generalRatingNorm*generalRatingNorm)  + (1 | subNum), data = subAFC, family = binomial, control = glmerControl(optimizer = "bobyqa"),
+                   nAGQ = 1)
+
+kable(summary(logiModel)$coefficients)
+```
+
+## Full 3AFC model
+```{r}
+logiModel <- glmer(accAFC ~  objLocTargetNorm + 
+                     I(objLocTargetNorm*objLocTargetNorm) + 
+                     objLocTargetRating +
+                     I(objLocTargetRating*objLocTargetRating) +
+                     generalRatingNorm +
+                     I(generalRatingNorm*generalRatingNorm) +
+                     targetRankPre +
+                     I(targetRankPre*targetRankPre) +
+                     generalRatingPost +
+                     I(generalRatingPost*generalRatingPost) +
+                     answerTime +
+                     (1 | subNum), data = subAFC, family = binomial, control = glmerControl(optimizer = "bobyqa"),
+                   nAGQ = 1)
+
+kable(summary(logiModel)$coefficients)
+```
+
+
+
