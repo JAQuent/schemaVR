@@ -1,0 +1,213 @@
+---
+title: "Two lines results"
+author: "Jörn Alexander Quent"
+date: "22 October 2019"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+library(brms)
+library(ggplot2)
+library(MRColour)
+library(knitr)
+library(polspline)
+
+load("U:/Projects/schemaVR/schemaVR_paper/scriptsOutput/twoLineTests_20191022_122817.RData")
+```
+
+# Recall accuracy
+```{r}
+# Number of runs
+nSim_recall <- length(br_recall)
+
+# Extracting CIS
+for(i in 1:nSim_recall){
+  if(i == 1){
+    temp_fixef <- fixef(results_recall[[i]])
+    recall_CI <- data.frame(br = c(br_recall[i], br_recall[i], br_recall[i], br_recall[i]),
+                            Line = c('low', 'low', 'high', 'high'),
+                            Bound = c('Q2.5', 'Q97.5', 'Q2.5', 'Q97.5'),
+                            Beta = c(temp_fixef[2,3], temp_fixef[2,4], temp_fixef[3,3], temp_fixef[3,4]))
+  } else {
+    temp_fixef <- fixef(results_recall[[i]])
+    recall_CI <- rbind(recall_CI, data.frame(br = c(br_recall[i], br_recall[i], br_recall[i], br_recall[i]),
+                                             Line = c('low', 'low', 'high', 'high'),
+                                             Bound = c('Q2.5', 'Q97.5', 'Q2.5', 'Q97.5'),
+                                             Beta = c(temp_fixef[2,3], temp_fixef[2,4], temp_fixef[3,3], temp_fixef[3,4])))
+  }
+}
+
+recall_CI$lineId <- rep(1:(nSim_recall*2), each = 2)
+```
+
+
+```{r}
+ggplot(recall_CI, aes(x = Beta, y = br, group = lineId, colour = Line)) + 
+  geom_point() + 
+  geom_line(aes(group = lineId)) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(title = '95% CI for two slopes (Recall accuracy)', y = 'Breaking point') +
+  scale_color_mrc() +  
+  geom_segment(aes(x = -3.7, y = -0.2, xend = -2.7, yend = -0.2),
+                  arrow = arrow(length = unit(0.5, "cm")), colour = 'red')
+```
+
+For breaking point at -0.2:
+```{r}
+# Extract right model 
+recall_twolines          <- results_recall[[7]]
+postDist_recall_twolines <- posterior_samples(recall_twolines)
+
+# For low values
+xlow          <- postDist_recall_twolines$b_xlow
+fit.posterior <- logspline(xlow)
+areaPosterior <- sum(xlow < 0)/length(xlow)
+posterior     <- dlogspline(0, fit.posterior) 
+posterior.OR  <- posterior/areaPosterior    
+areaPrior     <- integrate(dstudent_t, 
+                           mu = 0,
+                           df = 3, 
+                           sigma = 2.5, 
+                           lower = -Inf, 
+                           upper = 0, 
+                           abs.tol = 0)$value 
+prior.OR      <- dstudent_t(0, 3, 0, 2.5)/areaPrior
+bf_recall_twolines_low  <- round(prior.OR/posterior.OR, 2)
+
+# For high values
+xhigh          <- postDist_recall_twolines$b_xhigh
+fit.posterior <- logspline(xhigh)
+areaPosterior <- sum(xhigh > 0)/length(xhigh)
+posterior     <- dlogspline(0, fit.posterior) 
+posterior.OR  <- posterior/areaPosterior    
+areaPrior     <- integrate(dstudent_t, 
+                           mu = 0,
+                           df = 3, 
+                           sigma = 2.5, 
+                           lower = 0, 
+                           upper = Inf, 
+                           abs.tol = 0)$value 
+prior.OR      <- dstudent_t(0, 3, 0, 2.5)/areaPrior
+bf_recall_twolines_high  <- round(prior.OR/posterior.OR, 2)
+
+kable(data.frame(Line = c('Low', 'High'),
+                 BF10   = round(c(bf_recall_twolines_low, bf_recall_twolines_high), 2)))
+```
+
+# Euclidean distance
+```{r}
+# Number of runs
+nSim_euclid <- length(br_euclid)
+
+# Extracting CIS
+for(i in 1:nSim_euclid){
+  if(i == 1){
+    temp_fixef <- fixef(results_euclid[[i]])
+    euclid_CI <- data.frame(br = c(br_euclid[i], br_euclid[i], br_euclid[i], br_euclid[i]),
+                            Line = c('low', 'low', 'high', 'high'),
+                            Bound = c('Q2.5', 'Q97.5', 'Q2.5', 'Q97.5'),
+                            Beta = c(temp_fixef[2,3], temp_fixef[2,4], temp_fixef[3,3], temp_fixef[3,4]))
+  } else {
+    temp_fixef <- fixef(results_euclid[[i]])
+    euclid_CI <- rbind(euclid_CI, data.frame(br = c(br_euclid[i], br_euclid[i], br_euclid[i], br_euclid[i]),
+                                             Line = c('low', 'low', 'high', 'high'),
+                                             Bound = c('Q2.5', 'Q97.5', 'Q2.5', 'Q97.5'),
+                                             Beta = c(temp_fixef[2,3], temp_fixef[2,4], temp_fixef[3,3], temp_fixef[3,4])))
+  }
+}
+
+euclid_CI$lineId <- rep(1:(nSim_euclid*2), each = 2)
+```
+
+
+```{r}
+ggplot(euclid_CI, aes(x = Beta, y = br, group = lineId, colour = Line)) + 
+  geom_point() + 
+  geom_line(aes(group = lineId)) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(title = '95% CI for two slopes (Euclidean distance)', y = 'Breaking point') +
+  scale_color_mrc()
+```
+
+There is no breaking point where both CI are not overlapping with zero. 
+
+# AFC
+```{r}
+# Number of runs
+nSim_AFC <- length(br_AFC)
+
+# Extracting CIS
+for(i in 1:nSim_AFC){
+  if(i == 1){
+    temp_fixef <- fixef(results_AFC[[i]])
+    AFC_CI <- data.frame(br = c(br_AFC[i], br_AFC[i], br_AFC[i], br_AFC[i]),
+                            Line = c('low', 'low', 'high', 'high'),
+                            Bound = c('Q2.5', 'Q97.5', 'Q2.5', 'Q97.5'),
+                            Beta = c(temp_fixef[2,3], temp_fixef[2,4], temp_fixef[3,3], temp_fixef[3,4]))
+  } else {
+    temp_fixef <- fixef(results_AFC[[i]])
+    AFC_CI <- rbind(AFC_CI, data.frame(br = c(br_AFC[i], br_AFC[i], br_AFC[i], br_AFC[i]),
+                                             Line = c('low', 'low', 'high', 'high'),
+                                             Bound = c('Q2.5', 'Q97.5', 'Q2.5', 'Q97.5'),
+                                             Beta = c(temp_fixef[2,3], temp_fixef[2,4], temp_fixef[3,3], temp_fixef[3,4])))
+  }
+}
+
+AFC_CI$lineId <- rep(1:(nSim_AFC*2), each = 2)
+```
+
+
+```{r}
+ggplot(AFC_CI, aes(x = Beta, y = br, group = lineId, colour = Line)) + 
+  geom_point() + 
+  geom_line(aes(group = lineId)) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(title = '95% CI for two slopes (3AFC)', y = 'Breaking point') +
+  scale_color_mrc() +  
+  geom_segment(aes(x = -5, y = -0.35, xend = -4, yend = -0.35),
+                  arrow = arrow(length = unit(0.5, "cm")), colour = 'red')
+```
+
+For breaking point at -0.35:
+```{r}
+# Extract right model 
+AFC_twolines          <- results_AFC[[which(br_AFC == -0.35)]]
+postDist_AFC_twolines <- posterior_samples(AFC_twolines)
+
+# For low values
+xlow          <- postDist_AFC_twolines$b_xlow
+fit.posterior <- logspline(xlow)
+areaPosterior <- sum(xlow < 0)/length(xlow)
+posterior     <- dlogspline(0, fit.posterior) 
+posterior.OR  <- posterior/areaPosterior    
+areaPrior     <- integrate(dstudent_t, 
+                           mu = 0,
+                           df = 3, 
+                           sigma = 2.5, 
+                           lower = -Inf, 
+                           upper = 0, 
+                           abs.tol = 0)$value 
+prior.OR      <- dstudent_t(0, 3, 0, 2.5)/areaPrior
+bf_AFC_twolines_low  <- round(prior.OR/posterior.OR, 2)
+
+# For high values
+xhigh          <- postDist_AFC_twolines$b_xhigh
+fit.posterior <- logspline(xhigh)
+areaPosterior <- sum(xhigh > 0)/length(xhigh)
+posterior     <- dlogspline(0, fit.posterior) 
+posterior.OR  <- posterior/areaPosterior    
+areaPrior     <- integrate(dstudent_t, 
+                           mu = 0,
+                           df = 3, 
+                           sigma = 2.5, 
+                           lower = 0, 
+                           upper = Inf, 
+                           abs.tol = 0)$value 
+prior.OR      <- dstudent_t(0, 3, 0, 2.5)/areaPrior
+bf_AFC_twolines_high  <- round(prior.OR/posterior.OR, 2)
+
+kable(data.frame(Line = c('Low', 'High'),
+                 BF10   = round(c(bf_AFC_twolines_low, bf_AFC_twolines_high), 2)))
+```

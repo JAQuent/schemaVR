@@ -1,0 +1,276 @@
+---
+title: "Explaining remember results"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+library(rslurm)
+library(brms)
+library(ggplot2)
+library(plyr)
+```
+
+# Normative data (model 1)
+```{r}
+model1 <- readRDS('U:/Projects/schemaVR/schemaVR_paper/scripts/rememberAnalysis/_rslurm_model1/results_0.RDS', refhook = NULL)
+model1 <- combine_models(model1[[1]]$model,
+                         model1[[2]]$model,
+                         model1[[3]]$model,
+                         model1[[4]]$model,
+                         model1[[5]]$model,
+                         model1[[6]]$model,
+                         model1[[7]]$model,
+                         model1[[8]]$model)
+
+marginal_effects(model1)
+fixef(model1)
+```
+
+# All trials (model 2)
+```{r}
+model2 <- readRDS('U:/Projects/schemaVR/schemaVR_paper/scripts/rememberAnalysis/_rslurm_model2/results_0.RDS', refhook = NULL)
+model2 <- combine_models(model2[[1]]$model,
+                         model2[[2]]$model,
+                         model2[[3]]$model,
+                         model2[[4]]$model,
+                         model2[[5]]$model,
+                         model2[[6]]$model,
+                         model2[[7]]$model,
+                         model2[[8]]$model)
+
+marginal_effects(model2)
+fixef(model2)
+```
+
+# Correct only (model 3)
+```{r}
+model3 <- readRDS('U:/Projects/schemaVR/schemaVR_paper/scripts/rememberAnalysis/_rslurm_model3/results_0.RDS', refhook = NULL)
+model3 <- combine_models(model3[[1]]$model,
+                         model3[[2]]$model,
+                         model3[[3]]$model,
+                         model3[[4]]$model,
+                         model3[[5]]$model,
+                         model3[[6]]$model,
+                         model3[[7]]$model,
+                         model3[[8]]$model)
+
+marginal_effects(model3)
+fixef(model3)
+```
+
+# R + all others only correct (model 4)
+```{r}
+model4 <- readRDS('U:/Projects/schemaVR/schemaVR_paper/scripts/rememberAnalysis/_rslurm_model4/results_0.RDS', refhook = NULL)
+model4 <- combine_models(model4[[1]]$model,
+                         model4[[2]]$model,
+                         model4[[3]]$model,
+                         model4[[4]]$model,
+                         model4[[5]]$model,
+                         model4[[6]]$model,
+                         model4[[7]]$model,
+                         model4[[8]]$model)
+
+marginal_effects(model4)
+fixef(model4)
+```
+
+
+# Average rating of subject correlated with normative data
+```{r echo = FALSE}
+# Loading data
+load("U:/Projects/schemaVR/schemaVR2/data/dataSchemaVR2_cleaned.RData")
+load('U:/Projects/schemaVR/schemaVR3/data/schemaVR3_closestLocation.RData')
+
+# Make subNum character
+dataSchemaVR2$subNum <- as.character(dataSchemaVR2$subNum)
+dataSchemaVR3$subNum <- as.character(dataSchemaVR3$subNum)
+
+# Create remember variable
+remembered <- rep(0, dim(dataSchemaVR2)[1])
+remembered[dataSchemaVR2$resCon == 1] <- 1
+dataSchemaVR2$remembered <- remembered
+
+# Create remember variable
+remembered <- rep(0, dim(dataSchemaVR3)[1])
+remembered[dataSchemaVR3$resCon == 1] <- 1
+dataSchemaVR3$remembered <- remembered
+
+# Combine datasets
+combinedData <- data.frame(subNum = c(dataSchemaVR2$subNum, dataSchemaVR3$subNum),
+                           objNum = c(dataSchemaVR2$objNum, dataSchemaVR3$objNum),
+                           objNam = c(as.character(dataSchemaVR2$objName), as.character(dataSchemaVR3$objNam)),
+                           targetLocation =c(dataSchemaVR2$targetLocation, dataSchemaVR3$targetLocation),
+                           resCon = c(dataSchemaVR2$resCon, dataSchemaVR3$resCon),
+                           objLocTargetNorm = c(dataSchemaVR2$objLocTargetNorm, dataSchemaVR3$objLocTargetNorm),
+                           objLocTargetRating = c(dataSchemaVR2$objLocTargetRating, dataSchemaVR3$objLocTargetRating),
+                           remembered = c(dataSchemaVR2$remembered, dataSchemaVR3$remembered),
+                           accRecall = c(dataSchemaVR2$accRecall, dataSchemaVR3$accRecall))
+
+# Scaling based on Gelman et al. (2008) and https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
+# Mean = 0 and SD = 0.5
+combinedData$Exp_ind  <- combinedData$objLocTargetRating 
+combinedData$sExp_ind <- (combinedData$Exp_ind - mean(combinedData$Exp_ind))/(sd(combinedData$Exp_ind)/0.5)
+
+combinedData$Exp_norm  <- combinedData$objLocTargetNorm 
+combinedData$sExp_norm <- (combinedData$Exp_norm - mean(combinedData$Exp_norm))/(sd(combinedData$Exp_norm)/0.5)
+```
+
+
+```{r echo = FALSE}
+# Aggregating to correlate
+combinedData_agg <- ddply(combinedData, 
+                          c('objNum', 'targetLocation'), 
+                          summarise, 
+                          Individual    = mean(sExp_ind),
+                          Individual_sd = sd(sExp_ind),
+                          Normative  = mean(sExp_norm),
+                          remNum    = sum(remembered),
+                          remPer    = mean(remembered))
+
+ggplot(combinedData_agg, aes(x = Normative, y = Individual)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm')
+cor.test(combinedData_agg$Individual, combinedData_agg$Individual)
+```
+
+As expected, normative and indiviual ratings are highly correlated per object and location. Interestingly, normative ratings have negative linear relationship the SD of individual ratings.
+
+```{r echo = FALSE}
+ggplot(combinedData_agg, aes(x = Normative, y = Individual_sd)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm') +
+  labs(y = "sd(Indiviudal)")
+cor.test(combinedData_agg$Individual, combinedData_agg$Individual_sd)
+```
+
+This is surprising because there is u-shape relationship (as expected because we're approaching the extreme) if I plot it against the indiviudal mean ratings. 
+
+```{r echo = FALSE}
+ggplot(combinedData_agg, aes(x = Individual, y = Individual_sd)) + 
+  geom_point() + 
+  geom_smooth() +
+  labs(y = "sd(Indiviudal)")
+```
+
+# Average data predicting percentage of remember responses
+## Individual
+
+```{r}
+ggplot(combinedData_agg, aes(x = Individual, y = remPer)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm') +
+  labs(y = "Remembered %")
+cor.test(combinedData_agg$Individual, combinedData_agg$remPer)
+```
+
+## Normative
+```{r}
+ggplot(combinedData_agg, aes(x = Normative, y = remPer)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm') +
+  labs(y = "Remembered %")
+cor.test(combinedData_agg$Normative, combinedData_agg$remPer)
+```
+
+
+```{r}
+ggplot(combinedData, aes(x = objLocTargetRating, y = remembered, colour = subNum)) + 
+  geom_jitter(height = 0.1) +
+  geom_smooth(se = FALSE, method = 'loess') +
+  geom_smooth(combinedData, mapping = aes(x = objLocTargetNorm, y = remembered), method = 'lm', colour = 'red') +
+  geom_smooth(combinedData, mapping = aes(x = objLocTargetRating, y = remembered), colour = 'black') +
+  theme(legend.position = "none") +
+  labs(x = "Expectancy", y = 'Percentage remembered')
+
+```
+
+
+
+```{r}
+combinedData$objNum <- as.factor(combinedData$objNum)
+
+# Colour code objects
+colouredObjects <- c('mug', 'saucepan')
+colourCode <- rep(0, dim(combinedData)[1])
+colourCode[combinedData$objNam %in% colouredObjects] <- 1
+combinedData$colourCode <- as.factor(colourCode)
+
+
+ggplot(combinedData, aes(x = objLocTargetNorm, y = remembered, colour = colourCode))+ 
+  geom_jitter(height = 0.1) +
+  geom_point(aes(x = 85, y = 0), size = 30, shape = 1, color = "red") +
+  theme(legend.position = "none") +
+  labs(x = "Expectancy (norm)", y = 'Percentage remembered', title = 'Indentifying cluster with a lot of zeros')
+```
+
+```{r}
+ggplot(combinedData, aes(x = objLocTargetRating, y = remembered, colour = colourCode))+ 
+  geom_jitter(height = 0.1) +
+    geom_point(aes(x = 85, y = 0), size = 30, shape = 1, color = "red") +
+  theme(legend.position = "none") +
+  labs(x = "Expectancy", y = 'Percentage remembered', title = 'Spread of the pairs of the cluster above')
+```
+
+The mug in location 13 had a massive effect on this
+
+![](11_3.png)
+
+as well as the sauce pan at location 2.
+![](3_2.png)
+
+If we now, exlude those objects:
+
+```{r}
+combinedData_sub <- combinedData[!combinedData$objNam %in% colouredObjects,]
+
+ggplot(combinedData_sub, aes(x = objLocTargetRating, y = remembered, colour = objNam)) + 
+  geom_jitter(height = 0.1) +
+  geom_smooth(combinedData_sub, mapping = aes(x = objLocTargetNorm, y = remembered), method = 'lm', colour = 'red') +
+  geom_smooth(combinedData_sub, mapping = aes(x = objLocTargetRating, y = remembered), colour = 'black') +
+  guides(colour=guide_legend(ncol=2))+
+  labs(x = "Expectancy", y = 'Percentage remembered', title = 'Exlcuding pairs of that cluster')
+```
+
+As you see above, that is high number of trials with a rating of 100 that are rememberd, which are absent in the average (in this case normative) data. If you color those trials in the normative data, you see that they're all over the place
+
+```{r}
+# Colour code objects
+colourCode <- rep(0, dim(combinedData)[1])
+colourCode[combinedData$objLocTargetRating == 100] <- 1
+combinedData$colourCode <- as.factor(colourCode)
+
+
+ggplot(combinedData, aes(x = objLocTargetNorm, y = remembered, colour = colourCode))+ 
+  geom_jitter(height = 0.1) +
+  theme(legend.position = "none") +
+  labs(x = "Averaged", y = 'Percentage remembered', title = 'Spread of pairs that were rated 100 on that trial')
+```
+```{r}
+# Colour code objects
+colourCode <- rep(0, dim(combinedData)[1])
+colourCode[combinedData$objLocTargetRating == -100] <- 1
+combinedData$colourCode <- as.factor(colourCode)
+
+
+ggplot(combinedData, aes(x = objLocTargetNorm, y = remembered, colour = colourCode))+ 
+  geom_jitter(height = 0.1) +
+  theme(legend.position = "none") +
+  labs(x = "Averaged", y = 'Percentage remembered', title = 'Spread of pairs that were rated -100 on that trial')
+```
+
+
+```{r}
+ggplot(dataSchemaVR2, aes(x = objLocTargetRating, y = remembered, colour = objName))+ 
+  geom_jitter(height = 0.1) +
+  guides(colour=guide_legend(ncol=2))+
+  labs(x = "Expectancy", y = 'Percentage remembered', title = 'Exp 2 with objects coloured')
+```
+
+```{r}
+rightShift <- abs(-100 - combinedData$objLocTargetNorm[combinedData$objLocTargetRating == -100])
+leftShift  <- abs(100 - combinedData$objLocTargetNorm[combinedData$objLocTargetRating == 100])
+
+t.test(leftShift, rightShift, var.equal = FALSE)
+```

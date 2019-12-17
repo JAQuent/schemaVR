@@ -1,0 +1,109 @@
+---
+title: "Analysis of  two line stimulation"
+author: "Jörn Alexander Quent"
+date: "15 November 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+# Libraries
+library(ggplot2)
+library(MRColour)
+library(knitr)
+library(reshape2)
+library(plyr)
+
+options(scipen = 10)
+
+# Loading data
+load('onePoint_sim_results.RData')
+onePoint_false_uShapes <- false_uShapes
+
+load('searchLight_sim_results.RData')
+searchLight_false_uShapes <- false_uShapes
+
+
+```
+
+# Distribution of Bayes factors
+Note that the BF below are like the analysis that I used order-restricted i.e. $H_0: \beta = 0 \lor H_1: \beta > 0$ or $H_1: \beta < 0$ for the slope low values. 
+
+```{r}
+table1 <- data.frame(Method = c('One point', 'One point', 'Search light', 'Search light'),
+                     Values = c('Low Values', 'High values', 'Low Values', 'High values'),
+                     Maximum = c(max(onePoint_false_uShapes$xlow_OR.BF10), 
+                                 max(onePoint_false_uShapes$xhigh_OR.BF10),
+                                 max(searchLight_false_uShapes$xlow_OR.BF10),
+                                 max(searchLight_false_uShapes$xhigh_OR.BF10)),
+                     Median  = c(median(onePoint_false_uShapes$xlow_OR.BF10), 
+                                 median(onePoint_false_uShapes$xhigh_OR.BF10),
+                                 median(searchLight_false_uShapes$xlow_OR.BF10),
+                                 median(searchLight_false_uShapes$xhigh_OR.BF10)))
+kable(table1)
+```
+
+Above, you can see the raw maximum and median BFs for both methods. The searchlight method does indeed produce higher false BFs.
+
+```{r}
+# Create on df
+bothMethods <- data.frame(Method = c(rep('One point', dim(onePoint_false_uShapes)[1]),
+                                     rep('Search light', dim(searchLight_false_uShapes)[1])),
+                          `Low Values` = c(onePoint_false_uShapes$xlow_OR.BF10,
+                                           searchLight_false_uShapes$xlow_OR.BF10),
+                          `High Values` = c(onePoint_false_uShapes$xhigh_OR.BF10, 
+                                           searchLight_false_uShapes$xhigh_OR.BF10))
+
+# Plotting distribution
+bothMethods <- melt(bothMethods, id.vars=c("Method"))
+bothMethods$value <- log(bothMethods$value)
+names(bothMethods) <- c('Method', 'Values', 'log(BF10)')
+
+ggplot(bothMethods, aes(x = Method, y = `log(BF10)`, colour = Values)) +
+  geom_hline(yintercept = c(log(3), log(10)), linetype = "dashed") +
+
+  geom_boxplot(outlier.shape = NA, alpha = 0.7) + #avoid plotting outliers twice
+  geom_point(position = position_jitterdodge()) +
+  labs(title = 'Distribution of Bayes factors with 10000 runs for each method', y = 'log(BF10)') +
+  scale_color_mrc() +
+  theme(legend.position = c(0, 1),
+        legend.justification = c(0, 1)) +
+  annotate('text', x = c(0.5, 0.5), y = c(log(3), log(10)) + 0.2, label = c('BF > 3', 'BF > 10')) 
+```
+
+This is also evident in the distribution of the log BFs in the figure above. However, as you see only a small number of BFs are actually above 10. Below you see the conditional probabilities that a BF is above 10 given that a U-shape was assumed.
+
+```{r}
+# Getting conditional p that BF > 10
+onePoint_false_uShapes$low_over10  <- as.numeric(onePoint_false_uShapes$xlow_OR.BF10 > 10)
+onePoint_false_uShapes$high_over10 <- as.numeric(onePoint_false_uShapes$xhigh_OR.BF10 > 10)
+onePoint_false_uShapes$both_over10 <- as.numeric(onePoint_false_uShapes$xlow_OR.BF10 > 10 &
+                                                 onePoint_false_uShapes$xhigh_OR.BF10 > 10)
+
+searchLight_false_uShapes$low_over10  <- as.numeric(searchLight_false_uShapes$xlow_OR.BF10 > 10)
+searchLight_false_uShapes$high_over10 <- as.numeric(searchLight_false_uShapes$xhigh_OR.BF10 > 10)
+searchLight_false_uShapes$both_over10 <- as.numeric(searchLight_false_uShapes$xlow_OR.BF10 > 10 &
+                                                    searchLight_false_uShapes$xhigh_OR.BF10 > 10)
+# What the p for getting one or both BF over 10
+searchLight_agg <- ddply(searchLight_false_uShapes, 
+                         c('br'), 
+                         summarise,
+                         low_over10 = sum(low_over10),
+                         high_over10 = sum(high_over10),
+                         both_over10 = sum(both_over10))
+
+table2 <- data.frame(Method = c('One point', 'Search light'),
+                     Var1 = c(mean(onePoint_false_uShapes$low_over10 != 0), 
+                              mean(searchLight_agg$low_over10 != 0)),
+                     var2 = c(mean(onePoint_false_uShapes$high_over10 != 0), 
+                              mean(searchLight_agg$high_over10 != 0)),
+                     var3 = c(mean(onePoint_false_uShapes$both_over10 != 0), 
+                              mean(searchLight_agg$both_over10 != 0)))
+names(table2) <- c('Method', 'p(BF_low > 10)', 'p(BF_high > 10)', 'p(BF_both > 10)')
+kable(table2)
+```
+
+The probability of finding a U-shape (i.e. CI that are not overlapping with 0 for both slopes) is p = `r dim(onePoint_false_uShapes)[1]/10000` for the one point method and p = `r sum(df_agg$uShape != 0)/1000` for the searchlight method. The estimated probability that we get an BF over 10 for the one point method is p = 0, while it is p =`r round((sum(df_agg$uShape != 0)/1000)* mean(searchLight_agg$both_over10 != 0), 4)` for the search light method. Note there are more than 70 points in the plot above for the searchlight because I count only one u-shape per run but for a simulated dataset there were multiple breaking point that showed a u-shape. 
+
+My conclusion is that the searchlight method does introduce a bias but the probability of getting anything but anecdotal evidence per chance is still quite conservative.  

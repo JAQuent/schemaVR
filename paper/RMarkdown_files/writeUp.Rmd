@@ -1,0 +1,926 @@
+---
+title: "U-schape in iVR"
+author: "Joern Alexander Quent"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    df_print: paged
+  pdf_document:
+    keep_tex: yes
+  word_document: default
+geometry: left=3cm,right=2cm,top=2.5cm,bottom=2cm
+header-includes:
+- \usepackage{setspace}
+- \onehalfspacing
+fontsize: 12pt
+abstract: "bla \\newpage  \n"
+toc: yes
+toc_depth: 6
+---
+ 
+```{r setup, include=FALSE}
+# Libraries
+library(assortedRFunctions) # install via devtools::install_github("JAQuent/assortedRFunctions")
+library(knitr)
+library(ggplot2)
+library(brms)
+library(plyr)
+library(MRColour)
+library(BayesFactor)
+library(polspline)
+
+options(scipen=999)
+opts_knit$set(eval.after = 'fig.cap')
+opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, include = FALSE)
+```
+
+# Introduction
+An abundance of research demonstrates that episodes are perceived, interpreted and encoded into memory by making use of prior knowledge. Based on prior knowledge, we create prediction of what we expect in our environment. This research often uses the concept of a “schema” to describe a knowledge structure that influences which aspect of an event will be retrievable at a later time. To understand how schemas affect episodic memory is not a mere academic matter; it has important consequences for example for the reliability of eyewitness testimonies [@Kleider2008]. Research on the relationship between schemas and memory is not new but can be traced back to the beginnings of cognitive psychology [e.g. see @Bartlett1932]. An example of everyday schema is a typical kitchen, which entails a stove, maybe a microwave, a work-surface. We not only have expectations concerning the objects we might find in a kitchen, but also expect certain objects to be in certain places. For instance, we expect a saucepan to be in cupboard or on the stove and we probably would be surprised to find a knife on the floor in the middle of the room. 
+
+add McVee 2005 and van Kesteren 2018 (generally look for sources here), Preston and Eichenbaum
+  
+  The role of schemas in learning and memory seems to be paradoxical. On one hand, schemas can enhance encoding and expedite consolidation of new information [@Tse2007]. On the other hand, there are a number of studies showing a memory advantage for unexpected information that is incongruent with a schema [e.g. @Kleider2008], which fits well with the idea that prediction error can drive memory performance [@Henson2010].These findings suggest that there is a U-shape relationship between schema-congruency and memory, with best memory for highly congruent or highly incongruent information. @VanKesteren2012 developed the SLIMM model to explain this paradoxical pattern, and postulated that different memory systems underlie memory performance on the two ends of this congruency continuum (namely a ventral medial prefrontal system that rapidly consolidates information congruent with a schema and a medial temporal lobe system encoding snapshots of unexpected events).
+  
+  Only one study so far that has shown this U-shaped relationship of memory against congruency within a single paradigm [@Greve2017]. The authors trained participants to learn rules (i.e. acquired schemas) about the ordinal relationship between pairs of objects and then tested memory for unique events that were either congruent, unrelated or incongruent with those rules. Furthermore, using a number of other manipulations, this study was able to functionally dissociate the two ends of the U-shape function, consistent with the SLIMM proposal that they reflect different brain systems. However, the schemas used in this study were somewhat artificial and learned during the experiments. The main aim of the present experiments was to test for the U-shape function in a more realistic setting in which participants can use prior (pre-experimental) schemas. To achieve this, we used immersive virtual reality (iVR).
+
+add rational and theory here (relate to Andrea's paper)
+
+  This paradigm was inspired by study [@Lew2016] that used realistic photos of schema-evoking rooms (bathroom, kitchen, living room and office) to investigate how expectedness of locations for specific objects affected memory for those objects and for their locations. The photos showed room-congruent objects at expected and unexpected locations, as well as room-incongruent objects. At test, objects either stayed in same location or shifted to a different location. Recognition memory for objects was better for room-incongruent objects as well as room-congruent objects at unexpected locations, relative to room-congruent objects at expected locations. When memory was tested by recall of an object’s location, memory for objects at unexpected locations was impaired relative to room-congruent objects at expected locations. The authors explained their findings in terms of schemas acting differently on item and associative (location) memory, whereby an unexpected location attracts attention, but also activates schema-congruent bindings that interfere with memory [see also @Bower1979].
+  
+  However, another possible explanation for Lew and Howe’s finding of impaired recall of the location of objects at unexpected locations is that, if participants forgot the location, then they guessed based on a schema. For example, if you forget where you saw the saucepan, then you can use prior knowledge to guess that it was on the stove. A similar guessing bias has been used to explain the advantage of schema-congruent information in source memory [e.g. @Bayen2000; though also see @VanderLinden2017]. This guessing bias could have obscured any advantage in memory for the location of objects at unexpected locations. One way to address this bias (as used here) is to test memory with forced-choice tests, in which the target (saucepan on stove) and foil (saucepan in cupboard) are matched on their expectancy. Furthermore, Lew and Howe only had two levels of expectancy, so could not test for a U-shaped function of memory. We therefore used a continuous (parametric) range of expectancies, based on the participants’ own subjective ratings.
+  
+ In summary, four experiments are reported here that had two main objectives: 1) to replicate the U-shaped function of memory against expectancy but in a more ecologically-valid setting than @Greve2017, while 2) avoiding the methodological limitations of @Lew2016 more realistic but still photo-based paradigm. Before describing the two experiments, I will briefly review the advantages of using iVR for psychological experiments, since this will be key to my thesis .
+
+add recollection
+
+## Advantage of using (immersive) VR
+iVR is a technology that allow its user to explore a virtual world freely by walking around in physical world. In the experiments reported here, participants explored a 5.15 by 4.40 virtual meter (vm) kitchen (Figure 1), where 1 vm corresponds to approximately to 1 m in the real world.
+
+screen shot of VE
+
+The only other iVR experiment investigating memory for objects related to a schema was by @Draschkow2017. In this study, the authors examined how room schemas (e.g. bathroom) influence interaction with, and memory for, objects. Their theoretical framework was based on “scene grammar”, which separates the semantic predictions about relationships between objects and their contexts, from syntactic predictions about the spatial relationship between objects in a scene. Participants were asked to either arrange objects in a virtual room in a manner that was consistent or inconsistent with the expected set-up. They found that participants spent more time handling and searching for inconsistently arranged objects, and that consistently arranged objects were recalled more accurately than inconsistently arranged objects (possibly reflecting the guessing bias described above). While this study is a nice illustration of the use of iVR to study the effect of schema, it did not explicitly examine the continuous relationship between expectancy and memory
+
+@Draschkow2017 highlight the advantages of iVR over the use of photos or stories. Foremost is the importance of being physically present in a 3D space, which is more likely to engage real-world knowledge and both egocentric and allocentric encoding of object locations. In the context of SLIMM, this is more likely to engender strong predictions of objects and their locations (compared to photoshopping objects onto photos, no matter how carefully done). Indeed, self-motion cues are very important for the use of spatial representations and memory in general [@Burgess2002]. While there have been some real-world studies of memory for objects and their locations [e.g., in which the experimenter manually moves objects within an office between the participant leaving and returning; e.g. @Prull2015], iVR offers several other advantages. Foremost, the experimenter has complete control about every aspect of the virtual environment (VE), which can be manipulated much more easily. Additionally, iVR allows the tracking of the participant and of all objects within a 3D environment. In the present experiments, for instance, this enabled calculation of the displacement error (Euclidean distance) between the correct and the recalled location of objects.
+
+## Normative study
+Twenty objects were chosen from the Unity asset store and https://archive3d.net/: 12 were typically found in a kitchen and 8 were not typically found in a kitchen (see Table 1 for full list). Twenty locations were also identified within the kitchen VE. In order to select where to place each object, in order to get a range of expectancy values, a group of 6 participants were shown screenshots of each object at each location (i.e, 400 trials in total) and asked to rate how expected that object was in that location, from -100 (unexpected) to +100 (expected). They were then asked to also rate the general expectancy of each object in a kitchen (a further 20 trials). Four additional objects (kitchen: peppers and white pot; non-kitchen: dumbbells and wrench) were used to create 8 object/location practice trials, to give participants an idea about the task and calibrate their ratings. Responses were given by moving a slider across a scale. A more detailed analysis of these ratings can be found in my open, online lab-book (https://jaquent.github.io/2018/0110_ratingAnalysis.html). The ratings were then ranked from 1 and 400 within each participant (since different participants used different ranges), and the ranks were averaged over participants. Then  a search algorithm was run in which one location was randomly chosen for each object on each iteration, and the iteration with the maximal spread of expectancy ranks across the 20 objects chosen for the experiment (together with the constraint of suitable recognition foils being available; see Methods).
+
+# General hypotheses
+My main hypothesis was that there would be a U-shape relationship for the 3AFC test of memory against schema-expectancy, as predicted by the SLIMM model. For the recall test however, the advantage of high expectancy was expected to increase (potentially overcoming any advantage for low expectancy trials) because of the bias to guess congruent locations when memory fails (see Introduction).
+
+Two experiments have been run so far. Both experiments revealed the predicted U-shape, but the first experiment was confounded by the fact that the central points on the expectancy dimension (around zero) were predominantly from non-kitchen objects, which showed an overall memory advantage. Experiment 2 addressed this confound by re-selecting the locations (from normative study above) such that the spread of expectancy values was maximized even within the kitchen objects, i.e, so that some kitchen objects contributed to data on central expectancy values. 
+
+# Normative data
+Twenty objects were chosen from the Unity asset store and from https://archive3d.net/. 12 of these are typically found in a kitchen while 8 are not (see Table 1 for full list). Twenty locations were identified within the kitchen VE. In order to select where to place each object with the aim to get a range of expectancy values from unexpected, neutral to expected, a group of 6 participants were presented with screenshots of each object at each location (i.e, 400 trials in total) and asked to rate how expected that object was in that location, from -100 (unexpected) to +100 (expected). In addition, they were then asked to rate the general expectancy of each object in a kitchen (a further 20 trials). Four additional objects (kitchen: peppers and white pot; non-kitchen: dumbbells and wrench) were used to create 8 object/location practice trials, to give participants an idea about the task and calibrate their ratings. Responses were given by moving a slider across a scale. A more detailed analysis of these ratings can be found in my open, online lab-book (https://jaquent.github.io/2018/0110_ratingAnalysis.html). The ratings were then ranked from 1 and 400 within each participant (since different participants used different ranges internally), and the ranks were averaged over participants. Then  a search algorithm was run in which one location was randomly chosen for each object on each iteration, and the iteration with the maximal spread of expectancy ranks across the 20 objects was chosen for the experiment (together with the constraint of suitable recognition foils being available; see Methods for each experiment for details).
+
+# Experiment 1
+```{r}
+load("U:/Projects/schemaVR/schemaVR1/analysis/schemaVR1_recall_20191011_131446.RData")
+
+aggGender <- table(dataSchemaVR1_demo$gender)
+```
+
+## Population & demographics
+In total, we tested `r dim(dataSchemaVR1_demo)[1]` participants. Due to different instructions given, one participant was excluded from this analysis. Of those participants, `r aggGender[1]` identified as female and `r aggGender[2]` as male. Their mean age was `r round(mean(dataSchemaVR1_demo$age), 2)`  (SD = `r round(sd(dataSchemaVR1_demo$age), 2)`) years.
+
+Due a handling error, one recall trial was not recorded for one participant. For the same participant, there is also no information available whether the participant actually saw the object (i.e. no memory trial). Nevertheless, this participants was included in this analysis because mixed linear models are robust against missing data. 
+
+## Method
+The 12 kitchen objects and 8 non-kitchen objects were based on those used in Lew & Howe (2017); only objects for which no 3D model could be imported to unity3D online were replaced (Table 1). The twenty locations were the same as those in the normative study. The selection maximised the spread across the expectancy values at the same time as minimizing the difference between the target and each of the two foils used in the three-alternative forced choice (3AFC) recognition test (for full details, see  XXX). Due to these tight constraints, only one set was selected, which was used for all participants. Maximising the spread was our priority because we think that previous studies did not find a U-shape relationship because they did not assay the whole range of expectedness (or schema-congruency).
+
+## Statistical analysis
+All analysis was done in R (CITE). For the main analysis, we used Bayesian mutli-level models to test our hypotheses. This analysis was done with *brms* (Bürkner, 2017, 2018), which itself is based on Stan (Carpenter et al., 2017). In all these models, individual responses for each trial are modeled as function of participants' object/location expectancy ratings given at the end of the experiment without any from of aggregation across trials. For all logistic regression models, we scaled the data to have a mean of zero and a standard deviation (SD) of 0.5 and used Student's t priors for the coefficients, T(*df* = 3, *$\mu$* = 0, *$\sigma$* = 2.5), and for the intercept, T(*df* = 3, *$\mu$* = 0, *$\sigma$* = 10), in line with Gelman et al. (2008) and [online recommendations](https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations). For those models, we used the the Bernoulli link function implemented in *bmrs*. For all models using a Gamma link function, we scaled the data to have a mean of 0 and a SD of 1 with a unit prior based derived from the standard normal distribution, N(*$\mu$* = 0, *$\sigma$* = 1). These generic weakly informative priors are chosen to regularise unexpectedly large effects (Gelman et al., 2008). Four Markov chain Monte Carlo (MCMC) chains were run per model with 1000 warm-up and 1000 regular iterations with a total of 4000 samples per model. All of our models converged with an $\hat{R}$ of 1 and the minimum number of effective samples was XXX for parameters subject to statistical test. For these analyses, evidence in favour of  or against our hypotheses were quantified with Bayes factors (BF). Those BFs were calculated with the Savage-Dickey method (Wagenmakers et al. 2010). All tested comparisons were order-restricted according to our hypotheses that were pre-registered if not otherwise specified. In short, we compared the density of the truncated and renormalised prior distributions at zero with the logspline non-parametric density estimate of the truncated and renormalised posterior distributions of our parameters at zero (based on the 4000 post-warm-up samples). For unrestricted comparisons, BFs were just density ratios at zero: of *prior/posterior* (*BF10*) or *posterior/prior* (*BF01*) without truncation and renormalisation. Prior densities were estimated by using the parameters and the respective density functions (*dnorm* and *dstudent_t*). For the analysis, we adapted code from Eric-Jan Wagenmerks' [website](http://www.ejwagenmakers.com/papers.html). In addition to BFs, we report 95 % credible intervals around our parameters, which can be interpreted as evidence against the null hypotheses if they do not include zero. This is because Bayesian confidence interval are constructed so that the true value lies between this interval with a probability of 95 %. BFs for model comparisons between model with or without varying slopes are calculated from marginal likelihoods based on bridge sampling (see Gronau et al., 2017). 
+
+For simple mean comparisons against zero, we used Bayesian *t*-tests (Morey & Rouder, 2018) using the package 'Bayes factor' (version 0.9.12-4.2) with the default scale parameter of $\sqrt{2}/2$ that were unrestricted. 
+
+## Results
+### Overall memory performance
+```{r}
+# Legend: 1 = Did not see object| 2 = Guess the object was there | 3 = Know the object was there
+schemaVR1_table1 <- table(dataSchemaVR1$resCon)
+
+
+# Looking at no memory trials and confidence responses for each object
+schemaVR1_table3 <- ddply(dataSchemaVR1, c('objName', 'objNum'), summarise, 
+                noMemory = sum(recallNoMemory, na.rm = TRUE), 
+                notSeen  = table(resCon)[1], 
+                guessed  = table(resCon)[2], 
+                knew     = table(resCon)[3])
+
+schemaVR1_cor1 <- cor.test(schemaVR1_table3$noMemory, schemaVR1_table3$notSeen, method = 'pearson')
+```
+The average number of objects that were reported as not seen was `r round(mean(schemaVR1_table3$noMemory), 2)` (SD = `r round(sd(schemaVR1_table3$noMemory), 2)`) in the recall task and `r round(mean(schemaVR1_table3$notSeen), 2)` (SD = `r round(sd(schemaVR1_table3$notSeen), 2)`) in the 3AFC task. This was most commonly the knife (in half the participants), likely due to its small size.
+
+```{r}
+dataSchemaVR1_recallData      <- subset(dataSchemaVR1, dataSchemaVR1$recallNoMemory == 0 | is.na(dataSchemaVR1$recallNoMemory))
+dataSchemaVR1_recallData_agg  <- ddply(dataSchemaVR1_recallData, 
+                                       c('subNum'), 
+                                       summarise, 
+                                       accRecall = mean(accRecall, na.rm = TRUE))
+
+dataSchemaVR1_afcData     <- subset(dataSchemaVR1, dataSchemaVR1$resCon != 1)
+dataSchemaVR1_afcData_agg <- ddply(dataSchemaVR1, 
+                                   c('subNum'), 
+                                   summarise, 
+                                   accAFC = mean(accAFC, na.rm = TRUE))
+
+# Calculateing tests
+schemaVR1_tTest1 <- round(as.numeric(as.vector(ttestBF(dataSchemaVR1_recallData_agg$accRecall - 1/20))))
+schemaVR1_tTest2 <- round(as.numeric(as.vector(ttestBF(dataSchemaVR1_afcData_agg$accAFC - 1/3))))
+```
+
+Accuracy in the recall task was in a good range (M = `r round(mean(dataSchemaVR1_recallData_agg$accRecall), 2)`, SD = `r round(sd(dataSchemaVR1_recallData_agg$accRecall), 2)`) and above chance of 0.05, *BF10* = `r schemaVR1_tTest1`. 
+The same was true for the 3AFC task (M = `r round(mean(dataSchemaVR1_afcData_agg$accAFC), 2)`, SD = `r round(sd(dataSchemaVR1_afcData_agg$accAFC), 2)`), which was clearly above chance`r round(1/3, 2)`, *BF10* = `r schemaVR1_tTest2`. 
+
+### Relationship between memory performance and expectancy
+#### Recall task
+##### Accuracy
+```{r}
+BF_recall_randomEffect <- round(1/as.numeric(BF_randomEffect)[1]) # Convert for evidence for intercept model
+
+fixef_schemaVR1_recall <- fixef(model_schemaVR1_recall2)
+report1                <- brms_fixef_report(fixef_schemaVR1_recall[2,])
+report2                <- brms_fixef_report(fixef_schemaVR1_recall[3,])
+
+# Extracting posterior distribution
+postDist_schemaVR1_recall <- posterior_samples(model_schemaVR1_recall2)$b_IsExpMUsExp
+
+# Calculating Bayes Factor
+# Wagenmakers et al. (2010) order-restricted method 1 based on renormalisation: beta = 0 vs. beta > 0 
+### Code pasted and adapted from Wagenmakers et al. (2010) found here: http://www.ejwagenmakers.com/papers.html
+fit.posterior <- logspline(postDist_schemaVR1_recall)
+# Normalising by areas of posterior and prior that are included in the intervall to get density of 1
+areaPosterior <- sum(postDist_schemaVR1_recall > 0)/length(postDist_schemaVR1_recall)
+posterior     <- dlogspline(0, fit.posterior) 
+posterior.OR  <- posterior/areaPosterior    
+areaPrior     <- integrate(dstudent_t, 
+                           mu = 0,
+                           df = 3, 
+                           sigma = 2.5, 
+                           lower = 0, 
+                           upper = Inf, 
+                           abs.tol = 0)$value 
+prior.OR      <- dstudent_t(0 , 3, 0, 2.5)/areaPrior
+bf_recall1    <- round(prior.OR/posterior.OR, 2)
+```
+
+In the first step, we identified the appropriate model to analysis our data. In the first model, we allowed the intercepts and all slopes to vary across objects and participants, while in the second model only the intercepts varied. In a comparison we found that the second model fit the data better (*BF* = `r BF_recall_randomEffect`). Therefore, we used this model for our inferences. In this model, there was no clear linear effect, $\beta$`r report1`, however there was large positive quadratic effect, $\beta$`r report2`, *BF10* = `r bf_recall1`, as we predicted. 
+
+##### Euclidean distance
+```{r}
+load("U:/Projects/schemaVR/schemaVR1/analysis/schemaVR1_euclid_20191011_160302.RData")
+
+BF_euclid_randomEffect <- round(1/as.numeric(BF_randomEffect)[1]) # Convert for evidence for intercept model
+
+fixef_schemaVR1_euclid  <- fixef(model_schemaVR1_euclid2)
+report3                <- brms_fixef_report(fixef_schemaVR1_euclid[2,])
+report4                <- brms_fixef_report(fixef_schemaVR1_euclid[3,])
+
+# Extracting posterior distribution
+postDist_schemaVR1_euclid <- posterior_samples(model_schemaVR1_euclid2)$b_IsExpMUsExp
+
+# Calculating Bayes Factor
+# Wagenmakers et al. (2010) order-restricted method 1 based on renormalisation: beta = 0 vs. beta > 0 
+### Code pasted and adapted from Wagenmakers et al. (2010) found here: http://www.ejwagenmakers.com/papers.html
+fit.posterior <- logspline(postDist_schemaVR1_euclid)
+# Normalising by areas of posterior and prior that are included in the intervall to get density of 1
+areaPosterior <- sum(postDist_schemaVR1_euclid < 0)/length(postDist_schemaVR1_euclid)
+posterior     <- dlogspline(0, fit.posterior) 
+posterior.OR  <- posterior/areaPosterior    
+areaPrior     <- integrate(dnorm, 
+                           mean = 0,
+                           sd = 1, 
+                           lower = -Inf, 
+                           upper = 0, 
+                           abs.tol = 0)$value 
+prior.OR      <- dnorm(0 , 0, 1)/areaPrior
+bf_euclid1    <- round(prior.OR/posterior.OR, 2)
+```
+
+Like for recall accuracy, we identified the appropriate data to analysis our data. Since Euclidean distance is bound to zero, we used a Gamma regression model to predict memory performance. Note that because this we predicted a negative quadratic term as being consistent with our hypothesis. Comparing the varying intercept model with the model where slopes vary across objects and participants, we found that the varying intercept model fit the data better (*BF* = `r BF_euclid_randomEffect`). Therefore, we used this model for inference. In this model, there was clear linear effect, $\beta$`r report3`, as well as a was large negative quadratic effect, $\beta$`r report4`, *BF10* = `r bf_euclid1`, as we predicted. 
+
+##### Bias towards congruent locations
+```{r}
+# Finding the expectancy of the closest location for an object
+dataSchemaVR1$closestObjLocNorm <- NA
+# Add normative location rating
+for(i in 1:dim(dataSchemaVR1)[1]){
+  if(!is.na(dataSchemaVR1$closestLoc[i])){
+    # Necessary to use if statement because some values are NA and cannot be used to index
+   dataSchemaVR1$closestObjLocNorm[i] <- dataSchemaVR1[i, paste("loc", dataSchemaVR1$closestLoc[i], sep = "")] 
+  }
+}
+
+schemaVR1_recallBias_data <- ddply(subset(dataSchemaVR1, recallNoMemory == 0 & !is.na(dataSchemaVR1$accRecall)),
+                                   c('subNum', 'accRecall'),
+                                   summarise, 
+                                   closestObjLocNorm = mean(closestObjLocNorm, na.rm = TRUE))
+
+schemaVR1_recallBias     <- ddply(schemaVR1_recallBias_data, 
+                                  c('accRecall'),
+                                  summarise, 
+                                  mean = mean(closestObjLocNorm, na.rm = TRUE),
+                                  sd = sd(closestObjLocNorm, na.rm = TRUE))
+
+x <- schemaVR1_recallBias_data[schemaVR1_recallBias_data$accRecall == 0, 3]
+y <- schemaVR1_recallBias_data[schemaVR1_recallBias_data$accRecall == 1, 3]
+schemaVR1_tTest3 <- round(as.numeric(as.vector(ttestBF(x, y, paired = TRUE))))
+d1 <- round(mean(x-y)/sd(x-y), 2)
+```
+
+If participants showed no guessing bias (see Introduction), then the expectancy of the location closest to the position they recalled (based on the normative data) should to be the same for correctly and incorrectly placed objects with both being close to zero. However,  the average expectancy for incorrectly placed objects  (M = `r round(schemaVR1_recallBias[1,2], 2)`, SD = `r round(schemaVR1_recallBias[1,3], 2)`) was clearly higher than for correctly placed objects  (M = `r round(schemaVR1_recallBias[2,2], 2)`, SD = `r round(schemaVR1_recallBias[2,3], 2)`), *BF10* = `r schemaVR1_tTest3`, *d* = `r d1`. 
+
+#### 3AFC task
+```{r}
+load("U:/Projects/schemaVR/schemaVR1/analysis/schemaVR1_AFC_20191015_142930.RData")
+
+BF_AFC_randomEffect <- round(1/as.numeric(BF_randomEffect)[1]) # Convert for evidence for intercept model
+
+fixef_schemaVR1_AFC <- fixef(model_schemaVR1_AFC2)
+report5             <- brms_fixef_report(fixef_schemaVR1_AFC[2,])
+report6             <- brms_fixef_report(fixef_schemaVR1_AFC[3,])
+
+# Extracting posterior distribution
+postDist_schemaVR1_AFC <- posterior_samples(model_schemaVR1_AFC2)$b_IsExpMUsExp
+
+# Calculating Bayes Factor
+# Wagenmakers et al. (2010) order-restricted method 1 based on renormalisation: beta = 0 vs. beta > 0 
+### Code pasted and adapted from Wagenmakers et al. (2010) found here: http://www.ejwagenmakers.com/papers.html
+fit.posterior <- logspline(postDist_schemaVR1_AFC)
+# Normalising by areas of posterior and prior that are included in the intervall to get density of 1
+areaPosterior <- sum(postDist_schemaVR1_AFC > 0)/length(postDist_schemaVR1_AFC)
+posterior     <- dlogspline(0, fit.posterior) 
+posterior.OR  <- posterior/areaPosterior    
+areaPrior     <- integrate(dstudent_t, 
+                           mu = 0,
+                           df = 3, 
+                           sigma = 2.5, 
+                           lower = 0, 
+                           upper = Inf, 
+                           abs.tol = 0)$value 
+prior.OR     <- dstudent_t(0 , 3, 0, 2.5)/areaPrior
+bf_AFC1      <- round(prior.OR/posterior.OR, 2)
+```
+
+For modelling 3AFC performance, we used the same model and priors as for recall accuracy. Comparing the varying intercept model with the model where slopes vary across objects and participants, we found that the varying intercept model fit the data better (*BF* = `r BF_AFC_randomEffect`). Therefore, we used this model for our inferences. In this model, there was no clear linear effect, $\beta$`r report5`, as well as a was no clear quadratic effect, $\beta$`r report6`, *BF10* = `r bf_AFC1`. 
+
+## Discussion
+This experiment confirmed the SLIMM prediction of a U-shaped function relating object-location memory to the expectancy of that location, with better memory for highly expected or highly unexpected locations . This replicates the pattern of Greve et al (under review), but using much more realistic stimuli and pre-experimental knowledge, rather than arbitrary rules learned during an experiment. It also extends the prior work of @Lew2016 in examining a range of expectancy ratings, rather than just comparing the two end-points of highly expected and highly unexpected (as is required to detect a U-shape). Furthermore, the experiment addressed the methodological problem of guessing at test, which would improve performance for highly expected locations (even if memory is not in fact superior). The presence of this guessing bias was confirmed by looking at incorrect recall trials, but it was not sufficient to overcome the additional advantage of unexpected locations that was seen in the recall accuracy and recall error. Furthermore, guessing would be unlikely to help performance on the 3AFC test, since the foils were approximately matched on expectancy, and yet the 3AFC data still showed the same numerical advantage for highly expected locations (with a quadratic component that would be significant under a one-tailed test in the predicted direction). In contrast to what we expected there was a U-shaped relation for the recall task, too. 
+
+There was also a memory advantage of general expectancy of each object appearing in the kitchen. This was driven largely by the 8 non-kitchen objects. However, these non-kitchen objects also tended to have location expectancy values close to zero (which is to be expected, since if for example a hardhat is rarely encountered in a kitchen, then one does not have strong predictions about where in the kitchen it should be). It is possible that the quadratic fit to object-location memory was influenced by the reduced performance predicted after adjusting for the overall advantage of non-kitchen objects. In fact, the quadratic component remained significant in the above analyses even if general expectancy was removed from the model. Nonetheless, an important aim of Experiment 2 was to replicate the U-shape even when some kitchen objects were placed in locations with middling expectancy values (by re-selecting locations from the normative data), so that the quadratic fit was not overly-influenced by the overall memory advantage for non-kitchen objects.  
+
+
+# Experiment 2
+## Population & demographics
+```{r}
+# Loading data
+load("U:/Projects/schemaVR/schemaVR2/analysis/schemaVR2_recall_20191015_122558.RData")
+
+aggGender2 <- table(dataSchemaVR2_demo$gender)
+```
+Five participants were excluded because they rated different stimuli. In total, `r dim(dataSchemaVR2_demo)[1]` participants are included in the final dataset. Due to different instructions given, one participant was excluded from this analysis. Of those participants, `r aggGender2[1]` identified as female and `r aggGender2[2]` as male and `r aggGender2[3]` as non-binary. Their mean age was `r round(mean(dataSchemaVR2_demo$age), 2)`  (SD = `r round(sd(dataSchemaVR2_demo$age), 2)`) years.
+
+## Statistical analysis
+For the second experiment, we used the same approach to analyse the data. The only difference was that we used the posterior distributions of Experiment 1 where ever possible as prior distributions. That means that for logistic regression models, we estimated the family specific parameters of the Student's t-distribution, and for Gamma regression models, we used the mean and the SD of the posterior distribution as parameters for the normal prior. 
+
+## Rationale for changes and hypotheses 
+Experiment 2 involved two main changes. Firstly, the twenty object-location combinations were re-selected from the normative data such that the expected expectancy for the kitchen objects included those locations with ratings close to zero. This was our priority because in Experiment 1 kitchen objects tended to be at either very expected or unexpected locations. 
+The second change was to add a 'remember/know' judgment to the recall and 3AFC tasks. It is possible that the advantage of highly unexpected or highly expected locations are driven by different processes, such as recollection and familiarity respectively. Since recollection has been associated with hippocampal activity, while familiarity has been associated with cortical activity (xxx), the SLIMM model would appear to predict recollection of context for events that do not conform to a schema, but familiarity for objects that do. This is consistent with a report Lampinen2000 that atypical actions  in a story recall task are associated with a higher number of remember responses, while typical actions were associated with a higher number of know responses [though see Kleider2008].  
+
+Originally, we had planned to correlate the average expectancy of an object with how often that object is remembered or judged familiar (see Supplement for original pre-registered analysis). Our predictions were that probability of remember judgement would decrease with expectancy with the reverse relationship for familiar judgements. However plotting individual trials revealed a quadratic relationship, hence we added a quadratic term to our models. To quantify evidence for remember and familiar judgements, we used unrestricted (i.e. two-sided) BFs because they do not conform with our initial hypotheses. We used the same standard priors for intercept and coefficients and model structure (varying intercepts) as for the other logistic models (see above). Familiar judgements were modeled under two assumptions: redundancy and independence. Under redundancy both trials remembered and judged familiar were coded as 1. Under independence, trials with remember judgements were excluded by coding them as NA.
+
+cite Wang with schema and familiarity
+
+## Results
+### Relationship between memory performance and expectancy
+#### Recall task
+##### Accuracy
+```{r}
+# Extracting fixef
+fixef_schemaVR2_recall <- fixef(model_schemaVR2_recall)
+report7                <- brms_fixef_report(fixef_schemaVR2_recall[2,])
+report8                <- brms_fixef_report(fixef_schemaVR2_recall[3,])
+
+# Extracting df, mu and sigma
+# Intercept
+df1    <- round(posterior_summary(as.data.frame(intercept_schemaVR_recall))[3], 2)
+mu1    <- round(posterior_summary(as.data.frame(intercept_schemaVR_recall))[1], 2)
+sigma1 <- round(posterior_summary(as.data.frame(intercept_schemaVR_recall))[2], 2)
+
+# Linear term
+df2    <- round(posterior_summary(as.data.frame(b_sExp_schemaVR_recall))[3], 2)
+mu2    <- round(posterior_summary(as.data.frame(b_sExp_schemaVR_recall))[1], 2)
+sigma2 <- round(posterior_summary(as.data.frame(b_sExp_schemaVR_recall))[2], 2)
+
+# Quadratic term
+df3    <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR_recall))[3], 2)
+mu3    <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR_recall))[1], 2)
+sigma3 <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR_recall))[2], 2)
+
+# Extracting posterior distribution
+postDist_schemaVR2_recall <- posterior_samples(model_schemaVR2_recall)$b_IsExpMUsExp
+
+# Calculating Bayes Factor
+# Wagenmakers et al. (2010) order-restricted method 1 based on renormalisation: beta = 0 vs. beta > 0 
+### Code pasted and adapted from Wagenmakers et al. (2010) found here: http://www.ejwagenmakers.com/papers.html
+fit.posterior <- logspline(postDist_schemaVR2_recall)
+# Normalising by areas of posterior and prior that are included in the intervall to get density of 1
+areaPosterior <- sum(postDist_schemaVR2_recall > 0)/length(postDist_schemaVR2_recall)
+posterior     <- dlogspline(0, fit.posterior) 
+posterior.OR  <- posterior/areaPosterior    
+areaPrior     <- integrate(dstudent_t, 
+                           mu = mu3,
+                           df = df3, 
+                           sigma = sigma3, 
+                           lower = 0, 
+                           upper = Inf, 
+                           abs.tol = 0)$value 
+prior.OR      <- dstudent_t(0 , df3, mu3, sigma3)/areaPrior
+bf_recall2    <- round(prior.OR/posterior.OR, 2)
+bf_recall2_up <- round(bf_recall1 * bf_recall2)
+```
+
+For this analysis we used the posterior distributions of Experiment 1 as priors for the current analysis. Therefore, we placed the following priors: intercept, T(*df* = `r df1`, *$\mu$* = `r mu1`, *$\sigma$* = `r sigma1`), linear term, T(*df* = `r df2`, *$\mu$* = `r mu2`, *$\sigma$* = `r sigma2`), and quadratic term, T(*df* = `r df3`, *$\mu$* = `r mu3`, *$\sigma$* = `r sigma3`). The analysis revealed a clear linear term, $\beta$`r report6`, and a clear quadratic term, $\beta$`r report7`, *BF10* = `r bf_recall2`. The updated evidence across the first two experiments now is very high, *BF10* = `r bf_recall2_up`.
+
+##### Euclidean distance
+```{r}
+# Loading data
+load("U:/Projects/schemaVR/schemaVR2/analysis/schemaVR2_euclid_20191015_135827.RData")
+
+# Extracting fixef
+fixef_schemaVR2_euclid <- fixef(model_schemaVR2_euclid)
+report9   <- brms_fixef_report(fixef_schemaVR2_euclid[2,])
+report10  <- brms_fixef_report(fixef_schemaVR2_euclid[3,])
+
+# Extracting df, mu and sigma
+# Intercept
+mu1    <- round(fixef_schemaVR1_euclid[1, 1], 2)
+sigma1 <- round(fixef_schemaVR1_euclid[1, 2], 2)
+
+# Linear term
+mu2    <- round(fixef_schemaVR1_euclid[2, 1], 2)
+sigma2 <- round(fixef_schemaVR1_euclid[2, 2], 2)
+
+# Quadratic term
+mu3    <- round(fixef_schemaVR1_euclid[3, 1], 2)
+sigma3 <- round(fixef_schemaVR1_euclid[3, 2], 2)
+
+# Extracting posterior distribution
+postDist_schemaVR2_euclid <- posterior_samples(model_schemaVR2_euclid)$b_IsExpMUsExp
+
+# Calculating Bayes Factor
+# Wagenmakers et al. (2010) order-restricted method 1 based on renormalisation: beta = 0 vs. beta > 0 
+### Code pasted and adapted from Wagenmakers et al. (2010) found here: http://www.ejwagenmakers.com/papers.html
+fit.posterior <- logspline(postDist_schemaVR2_euclid)
+# Normalising by areas of posterior and prior that are included in the intervall to get density of 1
+areaPosterior <- sum(postDist_schemaVR2_euclid < 0)/length(postDist_schemaVR2_euclid)
+posterior     <- dlogspline(0, fit.posterior) 
+posterior.OR  <- posterior/areaPosterior    
+areaPrior     <- integrate(dnorm, 
+                           mean = mu3,
+                           sd = sigma3, 
+                           lower = -Inf, 
+                           upper = 0, 
+                           abs.tol = 0)$value 
+prior.OR      <- dnorm(0 , mu3, sigma3)/areaPrior
+bf_euclid2    <- round(prior.OR/posterior.OR, 2)
+bf_euclid2_up <- round(bf_euclid1 * bf_euclid2)
+```
+
+Based on Experiment 1, we placed the following priors: intercept, N(*$\mu$* = `r mu1`, *$\sigma$* = `r sigma1`), linear term, N(*$\mu$* = `r mu2`, *$\sigma$* = `r sigma2`), and quadratic term, N(*$\mu$* = `r mu3`, *$\sigma$* = `r sigma3`). The analysis revealed a clear linear term, $\beta$`r report9`, and a clear quadratic term, $\beta$`r report10`, *BF10* = `r bf_euclid2`. The updated evidence across the first two experiments was extremely strong, *BF10* = `r bf_euclid2_up`.
+
+##### Bias towards congruent locations
+```{r}
+# 5.	Incorrectly placed objects will be placed at more expected locations because if participants guess they will be biased to more expected locations.
+# Test:
+# We going to compare the average object/location expectancy of correctly placed items with the average object/location expectancy of incorrectly placed objects using a t test (Number of tests: 1).
+# Finding the expectancy of the closest location for an object
+dataSchemaVR2$closestObjLocNorm <- NA
+# Add normative location rating
+for(i in 1:dim(dataSchemaVR2)[1]){
+  if(!is.na(dataSchemaVR2$closestLoc[i])){
+    # Necessary to use if statement because some values are NA and cannot be used to index
+   dataSchemaVR2$closestObjLocNorm[i] <- dataSchemaVR2[i, paste("loc", dataSchemaVR2$closestLoc[i], sep = "")] 
+  }
+}
+
+schemaVR2_recallBias_data <- ddply(subset(dataSchemaVR2, recallMemory != 0),
+                                   c('subNum', 'accRecall'),
+                                   summarise, 
+                                   closestObjLocNorm = mean(closestObjLocNorm, na.rm = TRUE))
+
+schemaVR2_recallBias     <- ddply(schemaVR2_recallBias_data, 
+                                  c('accRecall'),
+                                  summarise, 
+                                  mean = mean(closestObjLocNorm, na.rm = TRUE),
+                                  sd = sd(closestObjLocNorm, na.rm = TRUE))
+
+x <- schemaVR2_recallBias_data[schemaVR2_recallBias_data$accRecall == 0, 3]
+y <- schemaVR2_recallBias_data[schemaVR2_recallBias_data$accRecall == 1, 3]
+schemaVR2_tTest3 <- round(as.numeric(as.vector(ttestBF(x, y, paired = TRUE))))
+d2 <- round(mean(x-y)/sd(x-y), 2)
+```
+
+Like Experiment 1, the average expectancy for incorrectly-placed objects (`r round(schemaVR2_recallBias[1,2], 2)`, SD = `r round(schemaVR2_recallBias[1,3], 2)`) was clearly higher than for correctly-placed objects (M = `r round(schemaVR2_recallBias[2,2], 2)`, SD = `r round(schemaVR2_recallBias[2,3], 2)`), *BF10* = `r schemaVR2_tTest3`, *d* = `r d2`.
+
+#### 3AFC task
+```{r}
+# Loading data
+load("U:/Projects/schemaVR/schemaVR2/analysis/schemaVR2_AFC_20191015_143912.RData")
+
+# Extracting fixef
+fixef_schemaVR2_AFC <- fixef(model_schemaVR2_AFC)
+report11                <- brms_fixef_report(fixef_schemaVR2_AFC[2,])
+report12                <- brms_fixef_report(fixef_schemaVR2_AFC[3,])
+
+# Extracting df, mu and sigma
+# Intercept
+df1    <- round(posterior_summary(as.data.frame(intercept_schemaVR2_AFC))[3], 2)
+mu1    <- round(posterior_summary(as.data.frame(intercept_schemaVR2_AFC))[1], 2)
+sigma1 <- round(posterior_summary(as.data.frame(intercept_schemaVR2_AFC))[2], 2)
+
+# Linear term
+df2    <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_AFC))[3], 2)
+mu2    <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_AFC))[1], 2)
+sigma2 <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_AFC))[2], 2)
+
+# Quadratic term
+df3    <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_AFC))[3], 2)
+mu3    <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_AFC))[1], 2)
+sigma3 <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_AFC))[2], 2)
+
+# Extracting posterior distribution
+postDist_schemaVR2_AFC <- posterior_samples(model_schemaVR2_AFC)$b_IsExpMUsExp
+
+# Calculating Bayes Factor
+# Wagenmakers et al. (2010) order-restricted method 1 based on renormalisation: beta = 0 vs. beta > 0 
+### Code pasted and adapted from Wagenmakers et al. (2010) found here: http://www.ejwagenmakers.com/papers.html
+fit.posterior <- logspline(postDist_schemaVR2_AFC)
+# Normalising by areas of posterior and prior that are included in the intervall to get density of 1
+areaPosterior <- sum(postDist_schemaVR2_AFC > 0)/length(postDist_schemaVR2_AFC)
+posterior     <- dlogspline(0, fit.posterior) 
+posterior.OR  <- posterior/areaPosterior    
+areaPrior     <- integrate(dstudent_t, 
+                           mu = mu3,
+                           df = df3, 
+                           sigma = sigma3, 
+                           lower = 0, 
+                           upper = Inf, 
+                           abs.tol = 0)$value 
+prior.OR      <- dstudent_t(0, df3, mu3, sigma3)/areaPrior
+bf_AFC2    <- round(prior.OR/posterior.OR, 2)
+bf_AFC2_up <- round(bf_AFC1 * bf_AFC2)
+```
+
+Based on Experiment 1, we placed the following priors: intercept, T(*df* = `r df1`, *$\mu$* = `r mu1`, *$\sigma$* = `r sigma1`), linear term, T(*df* = `r df2`, *$\mu$* = `r mu2`, *$\sigma$* = `r sigma2`), and quadratic term, T(*df* = `r df3`, *$\mu$* = `r mu3`, *$\sigma$* = `r sigma3`). In contrast to Experiment 1, we now found a clear linear term, $\beta$`r report11`, and a clear quadratic term, $\beta$`r report12`, *BF10* = `r bf_AFC2`. The updated evidence across the first two experiments now is strong, *BF10* = `r bf_AFC2_up`.
+
+### Relationship between expectancy and remember/familiar judgements
+```{r}
+# Loading data
+load("U:/Projects/schemaVR/schemaVR2/analysis/schemaVR2_RK_20191015_154626.RData")
+
+# Extracting fixef
+fixef_schemaVR2_rem <- fixef(model_schemaVR2_rem)
+report13            <- brms_fixef_report(fixef_schemaVR2_rem[2,])
+report14            <- brms_fixef_report(fixef_schemaVR2_rem[3,])
+
+# Linear term
+# Extracting posterior distribution
+postDist_schemaVR2_rem <- posterior_samples(model_schemaVR2_rem)$b_sExp
+
+# Calculating Bayes Factor
+fit.posterior <- logspline(postDist_schemaVR2_rem)
+posterior     <- dlogspline(0, fit.posterior) 
+prior         <- dstudent_t(0, 3, 0, 2.5)
+bf_rem_lin1  <- round(prior/posterior, 2)
+
+# Quadratic term
+# Extracting posterior distribution
+postDist_schemaVR2_rem <- posterior_samples(model_schemaVR2_rem)$b_IsExpMUsExp
+
+# Calculating Bayes Factor
+fit.posterior <- logspline(postDist_schemaVR2_rem)
+posterior     <- dlogspline(0, fit.posterior) 
+prior         <- dstudent_t(0, 3, 0, 2.5)
+bf_rem_quad1  <- round(prior/posterior, 2)
+```
+
+For remember judgements, the results showed that there is no clear linear term, $\beta$`r report13`, *BF10* = `r bf_rem_lin1` but in effect moderate evidence in favour of the absence of a linear term, *BF01* = `r round(1/bf_rem_lin1, 2)`. However there is a clear and very strong evidence for a qaudratic term, $\beta$`r report14`, *BF10* = `r bf_rem_quad1`. This means that both very incongruent location as well as very congruent locations are more likely to be remembered.
+
+```{r}
+# Extracting fixef
+fixef_schemaVR2_fam_red <- fixef(model_schemaVR2_familiar_red)
+report15                <- brms_fixef_report(fixef_schemaVR2_fam_red[2,])
+report16                <- brms_fixef_report(fixef_schemaVR2_fam_red[3,])
+fixef_schemaVR2_fam_ind <- fixef(model_schemaVR2_familiar_ind)
+report17                <- brms_fixef_report(fixef_schemaVR2_fam_ind[2,])
+report18                <- brms_fixef_report(fixef_schemaVR2_fam_ind[3,])
+
+######################## redundancy
+# Linear term
+# Extracting posterior distribution
+postDist_schemaVR2_fam_red <- posterior_samples(model_schemaVR2_familiar_red)$b_sExp
+
+# Calculating Bayes Factor
+fit.posterior <- logspline(postDist_schemaVR2_fam_red)
+posterior     <- dlogspline(0, fit.posterior) 
+prior         <- dstudent_t(0, 3, 0, 2.5)
+bf_fam_red_lin1  <-  round(posterior/prior, 2)
+
+# Quadratic term
+# Extracting posterior distribution
+postDist_schemaVR2_fam_red <- posterior_samples(model_schemaVR2_familiar_red)$b_IsExpMUsExp
+
+# Calculating Bayes Factor
+fit.posterior <- logspline(postDist_schemaVR2_fam_red)
+posterior     <- dlogspline(0, fit.posterior) 
+prior         <- dstudent_t(0, 3, 0, 2.5)
+bf_fam_red_quad1  <- round(posterior/prior, 2)
+
+######################## independence.
+# Linear term
+# Extracting posterior distribution
+postDist_schemaVR2_fam_ind <- posterior_samples(model_schemaVR2_familiar_ind)$b_sExp
+
+# Calculating Bayes Factor
+fit.posterior <- logspline(postDist_schemaVR2_fam_ind)
+posterior     <- dlogspline(0, fit.posterior) 
+prior         <- dstudent_t(0, 3, 0, 2.5)
+bf_fam_ind_lin1  <- round(posterior/prior, 2)
+
+# Quadratic term
+# Extracting posterior distribution
+postDist_schemaVR2_fam_ind <- posterior_samples(model_schemaVR2_familiar_ind)$b_IsExpMUsExp
+
+# Calculating Bayes Factor
+fit.posterior <- logspline(postDist_schemaVR2_fam_ind)
+posterior     <- dlogspline(0, fit.posterior) 
+prior         <- dstudent_t(0, 3, 0, 2.5)
+bf_fam_ind_quad1  <- round(posterior/prior, 2)
+```
+
+Both under redundancy, $\beta$`r report15`, *BF01* = `r bf_fam_red_lin1`, and independence, $\beta$`r report17`, *BF01* = `r bf_fam_ind_lin1`, there was moderate evidence against a linear term. On the other hand, evidence against a quadratic term under redundancy, $\beta$`r report16`, *BF01* = `r bf_fam_red_quad1`, and independence, $\beta$`r report18`, *BF01* = `r bf_fam_ind_quad1`, was only anecdotal. 
+
+## Discussion
+The main aim of Experiment 2 was to show that the U-shaped function in Experiment 1 was not an artifact of the fact that the kitchen objects were at the extremes of location expectancy, while the neutral expectancy region was occupied by non-kitchen objects. A new set of object/location combinations was created that maximised the spread of the kitchen items in terms of their object/location expectancy. The U-shape was replicated for Euclidean error and for 3AFC accuracy, and approached significance for recall accuracy.
+
+A further aim was to test whether the two ends of the U-shape were associated with different phenomenological experiences during retrieval, specifically recollection for unexpected locations and familiarity for expected locations, as predicted by SLIMM. A categorical comparison based on expected versus unexpected locations  did not show an obvious difference, but there was some hint of this in a correlational analysis , where a negative correlation between the percentage of remember responses and the object/location expectancy of object approached significance, while the reverse was true for the percentage of know responses. These results need to be interpreted with caution because the correlations were based on just twenty objects. Future attempts should optimise the design to have more power for detecting such an effect.
+
+Finally, unlike the first experiment, higher general expectancy ratings were not associated with worse recall (e.g,, not benefit for non-kitchen objects). The reason for this is unclear.
+
+The effect that remember responses are generally faster than know responses were also replicated [e.g. @Rotello2008]. 
+
+# Experiment 3
+This experiment was originally planned to increase our ability to detect that the average expectancy of an object at specific location is negatively correlated with proportion of remember judgements (see Experiment 2). For this aim, we used five sets of object/location combiniations to increase the number of data points for our regression analysis (see Supplmenent). However, we changed our analysis plan after collecting the data because averaging hid a U-shape relationship that is in fact different from that we have predicted. 
+
+## Population & demographics
+```{r}
+# Loading data
+load("U:/Projects/schemaVR/schemaVR3/analysis/schemaVR3_recall_20191016_144708.RData")
+
+aggGender3 <- table(dataSchemaVR3_demo$gender)
+```
+One participant was excluded because they rated different stimuli. In total, `r dim(dataSchemaVR3_demo)[1]` participants are included in the final dataset. Due to different instructions given, one participant was excluded from this analysis. Of those participants, `r aggGender3[1]` identified as female and `r aggGender3[2]` as male. Their mean age was `r round(mean(dataSchemaVR3_demo$age), 2)`  (SD = `r round(sd(dataSchemaVR3_demo$age), 2)`) years.
+
+## Statistical analysis
+We analysed the data in the same way as specified above. 
+
+## Results
+### Relationship between memory performance and expectancy
+#### Recall task
+##### Accuracy
+```{r}
+# Correct wrong name
+b_IsExpMUsExp_schemaVR2_recall  <- b_IsExpMUsExp2_schemaVR2_recall
+rm(b_IsExpMUsExp2_schemaVR2_recall)
+
+# Extracting fixef
+fixef_schemaVR3_recall <- fixef(model_schemaVR3_recall)
+report19                <- brms_fixef_report(fixef_schemaVR3_recall[2,])
+report20                <- brms_fixef_report(fixef_schemaVR3_recall[3,])
+
+# Extracting df, mu and sigma
+# Intercept
+df1    <- round(posterior_summary(as.data.frame(intercept_schemaVR2_recall))[3], 2)
+mu1    <- round(posterior_summary(as.data.frame(intercept_schemaVR2_recall))[1], 2)
+sigma1 <- round(posterior_summary(as.data.frame(intercept_schemaVR2_recall))[2], 2)
+
+# Linear term
+df2    <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_recall))[3], 2)
+mu2    <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_recall))[1], 2)
+sigma2 <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_recall))[2], 2)
+
+# Quadratic term
+df3    <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_recall))[3], 2)
+mu3    <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_recall))[1], 2)
+sigma3 <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_recall))[2], 2)
+
+# Extracting posterior distribution
+postDist_schemaVR3_recall <- posterior_samples(model_schemaVR3_recall)$b_IsExpMUsExp
+
+# Calculating Bayes Factor
+# Wagenmakers et al. (2010) order-restricted method 1 based on renormalisation: beta = 0 vs. beta > 0 
+### Code pasted and adapted from Wagenmakers et al. (2010) found here: http://www.ejwagenmakers.com/papers.html
+fit.posterior <- logspline(postDist_schemaVR3_recall)
+# Normalising by areas of posterior and prior that are included in the intervall to get density of 1
+areaPosterior <- sum(postDist_schemaVR3_recall > 0)/length(postDist_schemaVR3_recall)
+posterior     <- dlogspline(0, fit.posterior) 
+posterior.OR  <- posterior/areaPosterior    
+areaPrior     <- integrate(dstudent_t, 
+                           mu = mu3,
+                           df = df3, 
+                           sigma = sigma3, 
+                           lower = 0, 
+                           upper = Inf, 
+                           abs.tol = 0)$value 
+prior.OR      <- dstudent_t(0 , df3, mu3, sigma3)/areaPrior
+bf_recall3    <- round(prior.OR/posterior.OR, 2)
+bf_recall3_up <- round(bf_recall1 * bf_recall2 * bf_recall3)
+```
+
+Based on Experiment 2, we placed the following priors: intercept, T(*df* = `r df1`, *$\mu$* = `r mu1`, *$\sigma$* = `r sigma1`), linear term, T(*df* = `r df2`, *$\mu$* = `r mu2`, *$\sigma$* = `r sigma2`), and quadratic term, T(*df* = `r df3`, *$\mu$* = `r mu3`, *$\sigma$* = `r sigma3`). The result was that we have a clear linear term, $\beta$`r report19`, and a clear quadratic term, $\beta$`r report20`, *BF10* = `r bf_recall3`. In this case, the BF slightly decreased our posterior belief that there was an quadratic relationship because it was lower than 1. However, the 95% credible intervall did not include zero and the evidence combined across three experiments now was still extreme, *BF10* = `r bf_recall3_up`.
+
+##### Euclidean distance
+```{r}
+# Loading data
+load("U:/Projects/schemaVR/schemaVR3/analysis/schemaVR3_euclid_20191016_151725.RData")
+
+# Extracting fixef
+fixef_schemaVR3_euclid <- fixef(model_schemaVR3_euclid)
+report21  <- brms_fixef_report(fixef_schemaVR3_euclid[2,])
+report22  <- brms_fixef_report(fixef_schemaVR3_euclid[3,])
+
+# Extracting df, mu and sigma
+# Intercept
+mu1    <- round(fixef_schemaVR2_euclid[1, 1], 2)
+sigma1 <- round(fixef_schemaVR2_euclid[1, 2], 2)
+
+# Linear term
+mu2    <- round(fixef_schemaVR2_euclid[2, 1], 2)
+sigma2 <- round(fixef_schemaVR2_euclid[2, 2], 2)
+
+# Quadratic term
+mu3    <- round(fixef_schemaVR2_euclid[3, 1], 2)
+sigma3 <- round(fixef_schemaVR2_euclid[3, 2], 2)
+
+# Extracting posterior distribution
+postDist_schemaVR3_euclid <- posterior_samples(model_schemaVR3_euclid)$b_IsExpMUsExp
+
+# Calculating Bayes Factor
+# Wagenmakers et al. (2010) order-restricted method 1 based on renormalisation: beta = 0 vs. beta > 0 
+### Code pasted and adapted from Wagenmakers et al. (2010) found here: http://www.ejwagenmakers.com/papers.html
+fit.posterior <- logspline(postDist_schemaVR3_euclid)
+# Normalising by areas of posterior and prior that are included in the intervall to get density of 1
+areaPosterior <- sum(postDist_schemaVR3_euclid < 0)/length(postDist_schemaVR3_euclid)
+posterior     <- dlogspline(0, fit.posterior) 
+posterior.OR  <- posterior/areaPosterior    
+areaPrior     <- integrate(dnorm, 
+                           mean = mu3,
+                           sd = sigma3, 
+                           lower = -Inf, 
+                           upper = 0, 
+                           abs.tol = 0)$value 
+prior.OR      <- dnorm(0 , mu3, sigma3)/areaPrior
+bf_euclid3    <- round(prior.OR/posterior.OR, 2)
+bf_euclid3_up <- round(bf_euclid1 * bf_euclid2 * bf_euclid3)
+```
+
+Based on Experiment 2, we placed the following priors: intercept, N(*$\mu$* = `r mu1`, *$\sigma$* = `r sigma1`), linear term, N(*$\mu$* = `r mu2`, *$\sigma$* = `r sigma2`), and quadratic term, N(*$\mu$* = `r mu3`, *$\sigma$* = `r sigma3`). The result was that we have a clear linear term, $\beta$`r report21`, and a clear quadratic term, $\beta$`r report22` even though we had to lower our posterior believe, *BF10* = `r bf_euclid3`. The updated evidence across three experiments was still strong, *BF10* = `r bf_euclid3_up`, and the credible interval again did not include zero. 
+
+##### Bias towards congruent locations
+```{r}
+load('U:/Projects/schemaVR/schemaVR3/data/schemaVR3_closestLocation.RData')
+schemaVR3_recallBias_data <- ddply(subset(dataSchemaVR3, recallMemory != 0),
+                                   c('subNum', 'accRecall'),
+                                   summarise, 
+                                   closestObjLocNorm = mean(closestObjLocNorm, na.rm = TRUE))
+
+schemaVR3_recallBias     <- ddply(schemaVR3_recallBias_data, 
+                                  c('accRecall'),
+                                  summarise, 
+                                  mean = mean(closestObjLocNorm, na.rm = TRUE),
+                                  sd = sd(closestObjLocNorm, na.rm = TRUE))
+
+x <- schemaVR3_recallBias_data[schemaVR3_recallBias_data$accRecall == 0, 3]
+y <- schemaVR3_recallBias_data[schemaVR3_recallBias_data$accRecall == 1, 3]
+schemaVR3_tTest3 <- round(as.numeric(as.vector(ttestBF(x, y, paired = TRUE))))
+d3 <- round(mean(x-y)/sd(x-y), 2)
+```
+
+Like Experiment 1 and 2, the average expectancy for incorrectly-placed objects (`r round(schemaVR3_recallBias[1,2], 2)`, SD = `r round(schemaVR3_recallBias[1,3], 2)`) was clearly higher than for correctly-placed objects (M = `r round(schemaVR3_recallBias[2,2], 2)`, SD = `r round(schemaVR3_recallBias[2,3], 2)`), *BF10* = `r schemaVR3_tTest3`, *d* = `r d3`.
+
+#### 3AFC task
+```{r}
+# Loading data
+load("U:/Projects/schemaVR/schemaVR3/analysis/schemaVR3_AFC_20191016_164921.RData")
+
+# Extracting fixef
+fixef_schemaVR3_AFC <- fixef(model_schemaVR3_AFC)
+report23            <- brms_fixef_report(fixef_schemaVR3_AFC[2,])
+report24            <- brms_fixef_report(fixef_schemaVR3_AFC[3,])
+
+# Extracting df, mu and sigma
+# Intercept
+df1    <- round(posterior_summary(as.data.frame(intercept_schemaVR2_AFC))[3], 2)
+mu1    <- round(posterior_summary(as.data.frame(intercept_schemaVR2_AFC))[1], 2)
+sigma1 <- round(posterior_summary(as.data.frame(intercept_schemaVR2_AFC))[2], 2)
+
+# Linear term
+df2    <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_AFC))[3], 2)
+mu2    <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_AFC))[1], 2)
+sigma2 <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_AFC))[2], 2)
+
+# Quadratic term
+df3    <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_AFC))[3], 2)
+mu3    <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_AFC))[1], 2)
+sigma3 <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_AFC))[2], 2)
+
+# Extracting posterior distribution
+postDist_schemaVR3_AFC <- posterior_samples(model_schemaVR3_AFC)$b_IsExpMUsExp
+
+# Calculating Bayes Factor
+# Wagenmakers et al. (2010) order-restricted method 1 based on renormalisation: beta = 0 vs. beta > 0 
+### Code pasted and adapted from Wagenmakers et al. (2010) found here: http://www.ejwagenmakers.com/papers.html
+fit.posterior <- logspline(postDist_schemaVR3_AFC)
+# Normalising by areas of posterior and prior that are included in the intervall to get density of 1
+areaPosterior <- sum(postDist_schemaVR3_AFC > 0)/length(postDist_schemaVR3_AFC)
+posterior     <- dlogspline(0, fit.posterior) 
+posterior.OR  <- posterior/areaPosterior    
+areaPrior     <- integrate(dstudent_t, 
+                           mu = mu3,
+                           df = df3, 
+                           sigma = sigma3, 
+                           lower = 0, 
+                           upper = Inf, 
+                           abs.tol = 0)$value 
+prior.OR   <- dstudent_t(0, df3, mu3, sigma3)/areaPrior
+bf_AFC3    <- round(prior.OR/posterior.OR, 2)
+bf_AFC3_up <- round(bf_AFC1 * bf_AFC2 * bf_AFC3)
+```
+
+Based on Experiment 2, we placed the following priors: intercept, T(*df* = `r df1`, *$\mu$* = `r mu1`, *$\sigma$* = `r sigma1`), linear term, T(*df* = `r df2`, *$\mu$* = `r mu2`, *$\sigma$* = `r sigma2`), and quadratic term, T(*df* = `r df3`, *$\mu$* = `r mu3`, *$\sigma$* = `r sigma3`). The result was that we had a clear linear term, $\beta$`r report23`, and a clear quadratic term, $\beta$`r report24`, *BF10* = `r bf_AFC3`. The updated evidence across the first two experiments was very strong, *BF10* = `r bf_AFC3_up`.
+
+### Relationship between expectancy and remember/familiar judgements
+```{r}
+# Loading data
+load("U:/Projects/schemaVR/schemaVR3/analysis/schemaVR3_RK_20191016_173423.RData")
+
+# Extracting fixef
+fixef_schemaVR3_rem <- fixef(model_schemaVR3_rem)
+report25            <- brms_fixef_report(fixef_schemaVR3_rem[2,])
+report26            <- brms_fixef_report(fixef_schemaVR3_rem[3,])
+
+# Extracting df, mu and sigma
+# Intercept
+df1    <- round(posterior_summary(as.data.frame(intercept_schemaVR2_RK_rem))[3], 2)
+mu1    <- round(posterior_summary(as.data.frame(intercept_schemaVR2_RK_rem))[1], 2)
+sigma1 <- round(posterior_summary(as.data.frame(intercept_schemaVR2_RK_rem))[2], 2)
+
+# Linear term
+df2    <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_RK_rem))[3], 2)
+mu2    <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_RK_rem))[1], 2)
+sigma2 <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_RK_rem))[2], 2)
+
+# Quadratic term
+df3    <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_RK_rem))[3], 2)
+mu3    <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_RK_rem))[1], 2)
+sigma3 <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_RK_rem))[2], 2)
+
+# Linear term
+# Extracting posterior distribution
+postDist_schemaVR3_rem <- posterior_samples(model_schemaVR3_rem)$b_sExp
+
+# Calculating Bayes Factor
+fit.posterior <- logspline(postDist_schemaVR3_rem)
+posterior     <- dlogspline(0, fit.posterior) 
+prior         <- dstudent_t(0, df2, mu2, sigma2)
+bf_rem_lin2   <- round(prior/posterior, 2)
+bf_rem_lin2_up <- (bf_rem_lin1 * bf_rem_lin2)
+
+# Quadratic term
+# Extracting posterior distribution
+postDist_schemaVR3_rem <- posterior_samples(model_schemaVR3_rem)$b_IsExpMUsExp
+
+# Calculating Bayes Factor
+fit.posterior <- logspline(postDist_schemaVR3_rem)
+posterior     <- dlogspline(0, fit.posterior) 
+prior         <- dstudent_t(0, df3, mu3, sigma3)
+bf_rem_quad2  <- round(prior/posterior, 2)
+bf_rem_quad2_up <- round(bf_rem_quad1 * bf_rem_quad2, 2)
+```
+
+For remember judgements, we placed the following priors: intercept, T(*df* = `r df1`, *$\mu$* = `r mu1`, *$\sigma$* = `r sigma1`), linear term, T(*df* = `r df2`, *$\mu$* = `r mu2`, *$\sigma$* = `r sigma2`), and the quadratic term, T(*df* = `r df3`, *$\mu$* = `r mu3`, *$\sigma$* = `r sigma3`) based on Experiment 2. The result was that we have no clear linear term, $\beta$`r report25`, *BF10* = `r bf_rem_lin2`, with the cummulative evidence was still moderately in favour of null, *BF01* = `r round(1/bf_rem_lin2_up, 2)`, but a clear quadratic term, $\beta$`r report26`, *BF10* = `r bf_rem_quad2`. The updated evidence across Experiment 2 and 3 was very strong, *BF10* = `r bf_rem_quad2_up`.
+
+
+```{r}
+######################## redundancy
+# Extracting fixef
+fixef_schemaVR3_fam_red <- fixef(model_schemaVR3_familiar_red)
+report27                <- brms_fixef_report(fixef_schemaVR3_fam_red[2,])
+report28                <- brms_fixef_report(fixef_schemaVR3_fam_red[3,])
+
+# Extracting df, mu and sigma
+# Intercept
+df1    <- round(posterior_summary(as.data.frame(intercept_schemaVR2_RK_fam_red))[3], 2)
+mu1    <- round(posterior_summary(as.data.frame(intercept_schemaVR2_RK_fam_red))[1], 2)
+sigma1 <- round(posterior_summary(as.data.frame(intercept_schemaVR2_RK_fam_red))[2], 2)
+
+# Linear term
+df2    <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_RK_fam_red))[3], 2)
+mu2    <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_RK_fam_red))[1], 2)
+sigma2 <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_RK_fam_red))[2], 2)
+
+# Quadratic term
+df3    <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_RK_fam_red))[3], 2)
+mu3    <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_RK_fam_red))[1], 2)
+sigma3 <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_RK_fam_red))[2], 2)
+
+# Linear term
+# Extracting posterior distribution
+postDist_schemaVR3_fam_red <- posterior_samples(model_schemaVR3_familiar_red)$b_sExp
+
+# Calculating Bayes Factor
+fit.posterior      <- logspline(postDist_schemaVR3_fam_red)
+posterior          <- dlogspline(0, fit.posterior) 
+prior              <- dstudent_t(0, df2, mu2, sigma2)
+bf_fam_red_lin2    <- round(posterior/prior, 2)
+bf_fam_red_lin2_up <- round(bf_fam_red_lin1 * bf_fam_red_lin2, 2)
+
+# Quadratic term
+# Extracting posterior distribution
+postDist_schemaVR3_fam_red <- posterior_samples(model_schemaVR2_familiar_red)$b_IsExpMUsExp
+
+# Calculating Bayes Factor
+fit.posterior       <- logspline(postDist_schemaVR3_fam_red)
+posterior           <- dlogspline(0, fit.posterior) 
+prior               <- dstudent_t(0, df3, mu3, sigma3)
+bf_fam_red_quad2    <- round(posterior/prior, 2)
+bf_fam_red_quad2_up <- round(bf_fam_red_quad1 * bf_fam_red_quad2, 2)
+```
+
+For familiar judgements under redundancy, we placed the following priors: intercept, T(*df* = `r df1`, *$\mu$* = `r mu1`, *$\sigma$* = `r sigma1`), linear term, T(*df* = `r df2`, *$\mu$* = `r mu2`, *$\sigma$* = `r sigma2`), and quadratic term, T(*df* = `r df3`, *$\mu$* = `r mu3`, *$\sigma$* = `r sigma3`) basead on Experiment 2. The result was that we have no clear linear term, $\beta$`r report27`, *BF01* = `r bf_fam_red_lin2`, with the cummulative evidence being low as well, *BF01* = `r bf_fam_red_lin2_up`, as well as no clear quadratic term, $\beta$`r report28`, *BF01* = `r bf_fam_red_quad2`. The updated evidence across the Experiment 2 and 3 was anecdotal, *BF01* = `r bf_fam_red_quad2_up`.
+
+
+```{r}
+######################## independence.
+# Extracting fixef
+fixef_schemaVR3_fam_ind <- fixef(model_schemaVR3_familiar_ind)
+report29                <- brms_fixef_report(fixef_schemaVR3_fam_ind[2,])
+report30                <- brms_fixef_report(fixef_schemaVR3_fam_ind[3,])
+
+# Extracting df, mu and sigma
+# Intercept
+df1    <- round(posterior_summary(as.data.frame(intercept_schemaVR2_RK_fam_ind))[3], 2)
+mu1    <- round(posterior_summary(as.data.frame(intercept_schemaVR2_RK_fam_ind))[1], 2)
+sigma1 <- round(posterior_summary(as.data.frame(intercept_schemaVR2_RK_fam_ind))[2], 2)
+
+# Linear term
+df2    <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_RK_fam_ind))[3], 2)
+mu2    <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_RK_fam_ind))[1], 2)
+sigma2 <- round(posterior_summary(as.data.frame(b_sExp_schemaVR2_RK_fam_ind))[2], 2)
+
+# Quadratic term
+df3    <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_RK_fam_ind))[3], 2)
+mu3    <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_RK_fam_ind))[1], 2)
+sigma3 <- round(posterior_summary(as.data.frame(b_IsExpMUsExp_schemaVR2_RK_fam_ind))[2], 2)
+
+# Linear term
+# Extracting posterior distribution
+postDist_schemaVR3_fam_ind <- posterior_samples(model_schemaVR3_familiar_ind)$b_sExp
+
+# Calculating Bayes Factor
+fit.posterior      <- logspline(postDist_schemaVR3_fam_ind)
+posterior          <- dlogspline(0, fit.posterior) 
+prior              <- dstudent_t(0, df2, mu2, sigma2)
+bf_fam_ind_lin2    <- round(posterior/prior, 2)
+bf_fam_ind_lin2_up <- round(bf_fam_ind_lin1 * bf_fam_ind_lin2, 2)
+
+# Quadratic term
+# Extracting posterior distribution
+postDist_schemaVR3_fam_ind <- posterior_samples(model_schemaVR3_familiar_ind)$b_IsExpMUsExp
+
+# Calculating Bayes Factor
+fit.posterior       <- logspline(postDist_schemaVR3_fam_ind)
+posterior           <- dlogspline(0, fit.posterior) 
+prior               <- dstudent_t(0, df3, mu3, sigma3)
+bf_fam_ind_quad2    <- round(posterior/prior, 2)
+bf_fam_ind_quad2_up <- round(bf_fam_ind_quad1 * bf_fam_ind_quad2, 2)
+```
+
+For familiar judgements under independence, we placed the following priors: intercept, T(*df* = `r df1`, *$\mu$* = `r mu1`, *$\sigma$* = `r sigma1`), linear term, T(*df* = `r df2`, *$\mu$* = `r mu2`, *$\sigma$* = `r sigma2`), and quadratic term, T(*df* = `r df3`, *$\mu$* = `r mu3`, *$\sigma$* = `r sigma3`) based on Experiment 2. The result was that we have no clear linear term, $\beta$`r report29`, *BF01* = `r bf_fam_ind_lin2`, with the cummulative evidence being low as well, *BF01* = `r bf_fam_ind_lin2_up`, and also no clear quadratic term, $\beta$`r report30`, *BF01* = `r bf_fam_ind_quad2`. The updated evidence across the Experiment 2 and 3 was moderate, *BF01* = `r bf_fam_ind_quad2_up`.
+
+
+## Discussion
+
+# Experiment 4
+maybe add item lures to study incidental memory
+
+# Acknowledgement
+We thank Adina Lew to kindly share her stimuli with us. 
+Buerkner
+
+\pagebreak
+
+# References
+
+\scriptsize
