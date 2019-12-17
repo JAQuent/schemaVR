@@ -1,0 +1,250 @@
+---
+title: "Power analysis for correlational analysis (schemaVR3)"
+author: "Jörn Alexander Quent"
+date: "2 October 2018"
+output:
+  html_document:
+    theme: united
+    toc: yes
+    toc_depth: 6
+---
+
+```{r setup, include=FALSE}
+# Libraries
+library(plyr)
+library(knitr)
+library(pracma)
+library(ggplot2)
+
+# Settings
+opts_chunk$set(echo = TRUE,
+               warning = FALSE,
+               message = FALSE,
+               eval = TRUE,                     
+               fig.width = 10, 
+               fig.height = 7, 
+               dpi = 300)
+opts_knit$set(eval.after = 'fig.cap')
+```
+
+# Introduction
+After the power analysis based on the mixed effect models indicated that it won't be possible to adequately power schemaVR3 so that we find a significant negative effect of object/location expectancy. To this end, I re-analysed the data to understand the relationship between recollection, familiarity, memory and expectancy better (see here). 
+
+In this document, I do a power analysis for the correlational analysis based on a power analysis from Rik Henson written in Matlab. Here, I re-run this simulation in R to include it in the pre-registration of schemaVR3 and in my notebook. 
+
+```{r}
+####################################
+# Loading and excluding data
+load("U:/Projects/schemaVR/report_firstYear/report/data/exp2Data.RData")
+dataSchemaVR2 <- combData
+rm(combData)
+
+# Loading normative data
+normativeData <- read.csv('ratingsForSets.csv')
+
+#Add (non-)kitchen object factor to data
+dataSchemaVR2$expectedInKitchen                                      <- 'non-kitchen'
+dataSchemaVR2[which(dataSchemaVR2$objNum < 13), 'expectedInKitchen'] <- 'kitchen'
+
+# Notes and decision on participants:
+# Participant #20 to #24: Exclude participants because they did the  wrong objLocTargetRating
+dataSchemaVR2 <- subset(dataSchemaVR2, subNum >= 25)
+# Participant #20 to #27: Foil2 for umbrella was not saved.
+# Participant #25 to #27: Rated object 16 at location 1 instead of 14. This value is therefore missing.
+# Participant #22: Seen objects twice but is excluded anyway. 
+# Participant #26: Check recall microwave because it was correct (it is). The 2nd rating was 100 not 0.
+dataSchemaVR2[which(dataSchemaVR2$subNum == 26 & dataSchemaVR2$objNum == 3), 'generalRatingPost'] <- 100
+
+# Response given for judgement (0 = no memory, 1 = remember, 2 = familiar, 3 = guess)
+dataSchemaVR2$recallMemory[which(dataSchemaVR2$recallMemory == -1)] <- NA # Code missing value
+
+####################################
+# Aggregating
+corrData <- ddply(dataSchemaVR2,
+                  c('objNum', 'objName'),
+                  summarise,
+                  objLocTargetRating = mean(objLocTargetRating, na.rm = TRUE),
+                  AFCNoMemory        = table(resCon)[1],
+                  AFCRecollection    = table(resCon)[2],
+                  AFCFamiliarity     = table(resCon)[3],
+                  AFCGuess           = table(resCon)[4],
+                  AFCN               = sum(table(resCon)),
+                  AFCRec_per         = (AFCRecollection/AFCN),
+                  AFCFam_per         = (AFCFamiliarity/AFCN),
+                  AFCFam_per_ind     = (AFCFamiliarity/(AFCN - AFCRecollection)),
+                  AFCGuess_per       = (AFCGuess/(AFCN - AFCRecollection - AFCFamiliarity)))
+
+cor.test(corrData$objLocTargetRating, corrData$AFCRecollection)
+```
+
+The correlation above is the correlation we mainly seek to replicate. As noted elsewhere, the main aim of schemaVR3 is to show that there is a dissociation between the probability that an object's location is recollected and the memory performance advantage for unexpected locations as well as the probability that an object's location is familiar and the memory advantage for expected locations.
+
+To this end, we want to show with schemaVR3 first that object/location expectancy is negatively correlated with the probability that an object's location is recollected and second that that correlation is different from the correlation between the probability that an object's location is familiar and object/location expectancy. 
+
+# Power analysis
+## Explanation
+A linear regression for each dependent variable (recollection/familiarity) is run in order to find the best linear fit based on the results of schemaVR2. The resulting $\beta$ values are saved (see bRec and bFam) and used to predict the probability of recollection and familiarity in the simulation. Furthermore, the SDs of the respective residuals are used to simulate the noise for the prediction. 
+
+Probability of recollection and familiarity is predicted based on the normative expectancy values for each set (see [here](https://jaquent.github.io/2018/0110_ratingAnalysis.html])). A simulated trial is counted as recollected/familiar if a pseudo random number drawn from a uniform distribution is below the predicted value. The correlations and the William test are then calculated based on the 86 unique combinations of object/locations. This number is not 100 because some objects are at the same locations in two sets (see [here](https://jaquent.github.io/2018/0917_schemaVR3_stimulusSelection.html)).
+
+## Preparation
+```{r}
+####################################
+# Calculating the best linear fit for recollection
+X           <- matrix(c(corrData$objLocTargetRating, rep(1, 20)), ncol = 2)
+yRec        <- corrData$AFCRec_per
+# Performing a matrix multiplication of the pseudoinverse of X and y
+bRec        <- pinv(X) %*% yRec
+resid_rec   <- yRec - X %*% bRec
+residSD_rec <- sd(resid_rec)
+
+# Calculating the best linear fit for familairity
+yFam        <- corrData$AFCFam_per_ind
+# Performing a matrix multiplication of the pseudoinverse of X and y
+bFam        <- pinv(X) %*% yFam
+resid_fam   <- yFam - X %*% bFam
+residSD_fam <- sd(resid_fam)
+
+####################################
+# William's test following Rik Henson's Matlab version
+williamsTest <- function(x, y1, y2){
+  # Calculate correlation and peform Fisher transformation
+  z1  <- atanh(cor(x, y1))
+  z2  <- atanh(cor(x, y2))
+  z3  <- atanh(cor(y1, y2))
+  df  <- length(x) - 3
+  
+  # Calculate test statistic
+  rm2 <- (z1^2 + z2^2)/2
+  f   <- (1 - z3) / (2 * (1 - rm2))
+  h   <- (1 - f * rm2) / (1 - rm2)
+  Z   <- (z1 - z2) * sqrt(df / (2 * ( 1 - z3)* h))
+  return(c(Z, df))
+}
+
+# Preparation for simulation
+set.seed(16)
+nSims       <- 10000
+sets        <- 1:5
+nObj        <- 20
+nSubs       <- 5
+rValues_rec <- matrix(0, ncol = 1, nrow = nSims) # Used to save correlation results
+rValues_fam <- matrix(0, ncol = 1, nrow = nSims) # Used to save correlation results
+tValues     <- matrix(0, ncol = 1, nrow = nSims) # Used to save Williams test results
+```
+
+## Simulation
+```{r}
+# Simulation
+for(i in 1:nSims){
+ # Simulation loop 
+  meanExp <- c()
+  probRec <- c()
+  probFam <- c()
+  
+ for(j in sets){
+   # Loop to iterate through all sets
+   # Select the respective expectancy values for the set
+   meanExpTemp <- normativeData[normativeData$set == j, 'expectancy']
+   
+   # Calculate prediction for new data points 
+   # The slope and intercept (e.g. bRec) is based on schemaVR2. The ratings are based on normative data
+   # Recollection
+   pred          <- matrix(matrix(c(meanExpTemp, rep(1, nObj)), ncol = 2) %*% bRec, ncol = nSubs, nrow = nObj)
+   predPlusNoise <- pred + matrix(rnorm(nSubs * nObj), ncol = nSubs, nrow = nObj)*residSD_rec
+   # Calculate the probability that an object's location is recollected
+   probRecTemp   <- rowMeans(matrix(runif(nSubs * nObj, 0, 1), ncol = nSubs, nrow = nObj) <= predPlusNoise) 
+   
+   # Familar
+   pred          <- matrix(matrix(c(meanExpTemp, rep(1, nObj)), ncol = 2) %*% bFam, ncol = nSubs, nrow = nObj)
+   predPlusNoise <- pred + matrix(rnorm(nSubs * nObj), ncol = nSubs, nrow = nObj)*residSD_fam
+   # Calculate the probability that an object's location is familiar
+   probFamTemp   <- rowMeans(matrix(runif(nSubs * nObj, 0, 1), ncol = nSubs, nrow = nObj) <= predPlusNoise)
+   
+   # Concatenate vectors
+   meanExp <- c(meanExp, meanExpTemp)
+   probRec <- c(probRec, probRecTemp)
+   probFam <- c(probFam, probFamTemp)
+   
+ }
+  # Exclude duplicates
+  probRec <- probRec[!duplicated(meanExp)]
+  probFam <- probFam[!duplicated(meanExp)]
+  meanExp <- meanExp[!duplicated(meanExp)]
+    
+  # Calculate results for this run
+  rValues_rec[i] <- cor(meanExp, probRec)
+  rValues_fam[i] <- cor(meanExp, probFam)
+  tValues[i]     <- williamsTest(meanExp, probRec, probFam)[1]
+}
+
+N <- length(meanExp[!duplicated(meanExp)])
+```
+
+# Results & conclusion
+```{r}
+####################################
+# Calculate power
+# Recollection
+tRec     <- rValues_rec * sqrt((N - 2)/ (1 - rValues_rec^2))
+pRec     <- pt(tRec, N - 2)
+powerRec <- sum(pRec < 0.05)/nSims
+
+# Plot
+ggplot(data.frame(pRec), aes(pRec)) + 
+  geom_histogram(binwidth = 0.001) + 
+  theme(panel.margin = unit(2, "cm"), 
+        text = element_text(size = 12),  
+        plot.margin = margin(10, 10, 10, 10)) + 
+  labs(y = 'Number of occurences', 
+       x = 'P value', 
+       title = 'P-values for the correlation with recollection') + 
+  coord_cartesian(expand = FALSE)
+
+# Familarity
+tFam     <- rValues_fam * sqrt((100 - 2)/ (1 - rValues_fam^2))
+pFam     <- pt(tFam, N - 2)
+powerFam <- sum(pFam < 0.05)/nSims
+
+# Plot
+ggplot(data.frame(pFam), aes(pFam)) + 
+  geom_histogram(binwidth = 0.001) + 
+  theme(panel.margin = unit(2, "cm"), 
+        text = element_text(size = 12),  
+        plot.margin = margin(10, 10, 10, 10)) + 
+  labs(y = 'Number of occurences', 
+       x = 'P value', 
+       title = 'P-values for the correlation with familiarity') + 
+  coord_cartesian(expand = FALSE)
+
+# Williams
+pWill     <- pt(tValues, N - 2)
+powerWill <- sum(pWill < 0.05)/nSims
+
+# Plot
+ggplot(data.frame(pWill), aes(pWill)) + 
+  geom_histogram(binwidth = 0.001) + 
+  theme(panel.margin = unit(2, "cm"), 
+        text = element_text(size = 12),  
+        plot.margin = margin(10, 10, 10, 10)) + 
+  labs(y = 'Number of occurences', 
+       x = 'P value', 
+       title = 'P-values for Williams test') + 
+  coord_cartesian(expand = FALSE)
+```
+
+Based on the simulation above, the power of the design when testing 25 people (i.e. 5 per sets) is very high. The power is `r powerRec * 100` % to detect a significant correlation between the probability that an object is recollected and object/location expectancy. It's `r powerWill * 100` % to find that the correlation of recollection and familiarity are significantly different. Unsurprisingly, the simulated power is only `r powerFam * 100` % to find a significant correlation between familiarity and object/location expectancy.
+
+Because schemaVR1 and schemaVR2 have approxamitely the same sample size, we will go with the 25 participants used in this simulation. The massive increase in power compared to schemaVR2 stems from the fact that the correlation is now based on 86 instead of 20 values. 
+
+# Side note
+The equation underlying the simulation is 
+$$y = X\beta + \epsilon$$
+where $y$ is the predicted probability, $X$ is the design matrix, which consists of the same ratings for each simulated participant, $\beta$  is the intercept and slope based on schemaVR2, and $\epsilon$ is the Gaussian error term. 
+
+In the actual analysis in schemaVR3, the correlation will be based on the ratings of the participants, who will give different ratings for each object/location combination. If this is modeled by adding random noise to the mean expectancy values like this
+```{r eval = FALSE}
+meanExpTemp         <- normativeData[normativeData$set == j, 'expectancy'] + rnorm(nObj, 0, expSD)
+```
+
+where expSD is the mean SD based on the SD of the ratings in schemaVR2, then the power raises to 100 %. One reason for this might be that values become artificially extreme (i.e. surpassing the range of -100 to 100).

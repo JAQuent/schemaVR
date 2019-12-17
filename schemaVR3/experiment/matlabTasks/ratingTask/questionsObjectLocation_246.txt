@@ -1,0 +1,60 @@
+1_13	How expected is this microwave in that location?
+2_14	How expected is this kitchen roll in that location?
+3_16	How expected is this saucepan in that location?
+4_18	How expected is this toaster in that location?
+5_9	How expected is this bowl of fruits  in that location?
+6_11	How expected is this tea pot in that location?
+7_17	How expected is this knife in that location?
+8_15	How expected is this mixer  in that location?
+9_4	How expected is this bread in that location?
+10_6	How expected is this glass jug in that location?
+11_3	How expected is this mug in that location?
+12_19	How expected are these dishes in that location?
+13_5	How expected are these towels in that location?
+14_7	How expected is this toy in that location?
+15_10	How expected is this pile of books in that location?
+16_2	How expected is this umbrella in that location?
+17_8	How expected is this hat in that location?
+18_20	How expected is this helmet in that location?
+19_1	How expected is this calendar in that location?
+20_12	How expected is this fan in that location?
+1_11	How expected is this microwave in that location?
+2_18	How expected is this kitchen roll in that location?
+3_17	How expected is this saucepan in that location?
+4_12	How expected is this toaster in that location?
+5_8	How expected is this bowl of fruits  in that location?
+6_3	How expected is this tea pot in that location?
+7_19	How expected is this knife in that location?
+8_9	How expected is this mixer  in that location?
+9_4	How expected is this bread in that location?
+10_16	How expected is this glass jug in that location?
+11_7	How expected is this mug in that location?
+12_13	How expected are these dishes in that location?
+13_1	How expected are these towels in that location?
+14_5	How expected is this toy in that location?
+15_10	How expected is this pile of books in that location?
+16_14	How expected is this umbrella in that location?
+17_2	How expected is this hat in that location?
+18_15	How expected is this helmet in that location?
+19_6	How expected is this calendar in that location?
+20_20	How expected is this fan in that location?
+1_18	How expected is this microwave in that location?
+2_10	How expected is this kitchen roll in that location?
+3_7	How expected is this saucepan in that location?
+4_15	How expected is this toaster in that location?
+5_16	How expected is this bowl of fruits  in that location?
+6_9	How expected is this tea pot in that location?
+7_14	How expected is this knife in that location?
+8_2	How expected is this mixer  in that location?
+9_5	How expected is this bread in that location?
+10_12	How expected is this glass jug in that location?
+11_8	How expected is this mug in that location?
+12_3	How expected are these dishes in that location?
+13_20	How expected are these towels in that location?
+14_4	How expected is this toy in that location?
+15_17	How expected is this pile of books in that location?
+16_1	How expected is this umbrella in that location?
+17_6	How expected is this hat in that location?
+18_19	How expected is this helmet in that location?
+19_11	How expected is this calendar in that location?
+20_13	How expected is this fan in that location?

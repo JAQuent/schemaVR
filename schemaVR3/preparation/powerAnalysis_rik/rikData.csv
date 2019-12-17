@@ -1,0 +1,481 @@
+"subNum","objNum","kitchen","expectancy","recollection","familiar","guess","noMemory"
+25,"microwave","kitchen",46.254072,"not recollected","familiar","not guessed",0
+25,"kitchen roll","kitchen",93.811075,"not recollected","not familiar","guessed",0
+25,"saucepan","kitchen",83.713355,"recollected","not familiar","not guessed",0
+25,"toaster","kitchen",-88.110749,"not recollected","not familiar","guessed",0
+25,"bowl of fruits","kitchen",-26.872964,"recollected","not familiar","not guessed",0
+25,"tea pot","kitchen",-73.289902,"recollected","not familiar","not guessed",0
+25,"knife","kitchen",-71.986971,"recollected","not familiar","not guessed",0
+25,"mixer","kitchen",95.602606,"not recollected","familiar","not guessed",0
+25,"bread","kitchen",57.81759,"not recollected","not familiar","guessed",0
+25,"glass jug","kitchen",94.788274,"not recollected","familiar","not guessed",0
+25,"mug","kitchen",94.788274,"not recollected","not familiar","guessed",0
+25,"dishes","kitchen",-91.530945,"recollected","not familiar","not guessed",0
+25,"towels","non-kitchen",84.364821,"not recollected","not familiar","guessed",0
+25,"toy","non-kitchen",64.332248,"not recollected","not familiar","guessed",0
+25,"pile of books","non-kitchen",29.153094,"recollected","not familiar","not guessed",0
+25,"umbrella","non-kitchen",54.397394,"not recollected","not familiar","not guessed",1
+25,"hat","non-kitchen",-61.563518,"recollected","not familiar","not guessed",0
+25,"helmet","non-kitchen",9.446254,"recollected","not familiar","not guessed",0
+25,"calendar","non-kitchen",16.775244,"recollected","not familiar","not guessed",0
+25,"fan","non-kitchen",-49.837134,"not recollected","not familiar","guessed",0
+26,"microwave","kitchen",100,"recollected","not familiar","not guessed",0
+26,"kitchen roll","kitchen",51.791531,"not recollected","familiar","not guessed",0
+26,"saucepan","kitchen",85.179153,"not recollected","not familiar","not guessed",1
+26,"toaster","kitchen",-100,"not recollected","not familiar","guessed",0
+26,"bowl of fruits","kitchen",-100,"not recollected","not familiar","guessed",0
+26,"tea pot","kitchen",100,"not recollected","not familiar","guessed",0
+26,"knife","kitchen",-100,"not recollected","familiar","not guessed",0
+26,"mixer","kitchen",62.214984,"not recollected","not familiar","guessed",0
+26,"bread","kitchen",100,"recollected","not familiar","not guessed",0
+26,"glass jug","kitchen",92.508143,"not recollected","not familiar","not guessed",1
+26,"mug","kitchen",0.651466,"not recollected","familiar","not guessed",0
+26,"dishes","kitchen",-98.697068,"recollected","not familiar","not guessed",0
+26,"towels","non-kitchen",77.361564,"recollected","not familiar","not guessed",0
+26,"toy","non-kitchen",-23.778502,"recollected","not familiar","not guessed",0
+26,"pile of books","non-kitchen",-55.211726,"not recollected","not familiar","not guessed",1
+26,"umbrella","non-kitchen",92.508143,"not recollected","not familiar","not guessed",1
+26,"hat","non-kitchen",-100,"not recollected","familiar","not guessed",0
+26,"helmet","non-kitchen",-71.335505,"not recollected","not familiar","not guessed",1
+26,"calendar","non-kitchen",-11.563518,"recollected","not familiar","not guessed",0
+26,"fan","non-kitchen",-95.765472,"not recollected","not familiar","not guessed",1
+28,"microwave","kitchen",16.123779,"not recollected","familiar","not guessed",0
+28,"kitchen roll","kitchen",86.970684,"not recollected","familiar","not guessed",0
+28,"saucepan","kitchen",92.345277,"not recollected","familiar","not guessed",0
+28,"toaster","kitchen",-61.563518,"recollected","not familiar","not guessed",0
+28,"bowl of fruits","kitchen",-69.869707,"not recollected","familiar","not guessed",0
+28,"tea pot","kitchen",88.599349,"not recollected","familiar","not guessed",0
+28,"knife","kitchen",25.732899,"recollected","not familiar","not guessed",0
+28,"mixer","kitchen",87.785016,"recollected","not familiar","not guessed",0
+28,"bread","kitchen",-19.869707,"recollected","not familiar","not guessed",0
+28,"glass jug","kitchen",67.42671,"not recollected","familiar","not guessed",0
+28,"mug","kitchen",54.071661,"not recollected","not familiar","guessed",0
+28,"dishes","kitchen",-39.413681,"recollected","not familiar","not guessed",0
+28,"towels","non-kitchen",-7.491857,"recollected","not familiar","not guessed",0
+28,"toy","non-kitchen",18.241042,"recollected","not familiar","not guessed",0
+28,"pile of books","non-kitchen",-4.071661,"not recollected","familiar","not guessed",0
+28,"umbrella","non-kitchen",-76.221498,"recollected","not familiar","not guessed",0
+28,"hat","non-kitchen",-16.449511,"recollected","not familiar","not guessed",0
+28,"helmet","non-kitchen",-96.254072,"not recollected","not familiar","not guessed",1
+28,"calendar","non-kitchen",17.263844,"recollected","not familiar","not guessed",0
+28,"fan","non-kitchen",15.309446,"not recollected","not familiar","guessed",0
+29,"microwave","kitchen",100,"not recollected","not familiar","guessed",0
+29,"kitchen roll","kitchen",92.18241,"not recollected","not familiar","guessed",0
+29,"saucepan","kitchen",-14.006515,"not recollected","not familiar","guessed",0
+29,"toaster","kitchen",-100,"recollected","not familiar","not guessed",0
+29,"bowl of fruits","kitchen",-65.635179,"not recollected","familiar","not guessed",0
+29,"tea pot","kitchen",-53.908795,"not recollected","familiar","not guessed",0
+29,"knife","kitchen",-100,"not recollected","not familiar","guessed",0
+29,"mixer","kitchen",71.986971,"not recollected","not familiar","guessed",0
+29,"bread","kitchen",-30.781759,"recollected","not familiar","not guessed",0
+29,"glass jug","kitchen",71.824104,"not recollected","not familiar","not guessed",1
+29,"mug","kitchen",86.970684,"not recollected","familiar","not guessed",0
+29,"dishes","kitchen",-68.078176,"recollected","not familiar","not guessed",0
+29,"towels","non-kitchen",-35.830619,"recollected","not familiar","not guessed",0
+29,"toy","non-kitchen",100,"recollected","not familiar","not guessed",0
+29,"pile of books","non-kitchen",52.442997,"recollected","not familiar","not guessed",0
+29,"umbrella","non-kitchen",-100,"not recollected","not familiar","not guessed",1
+29,"hat","non-kitchen",-75.570033,"recollected","not familiar","not guessed",0
+29,"helmet","non-kitchen",-100,"not recollected","familiar","not guessed",0
+29,"calendar","non-kitchen",44.95114,"not recollected","familiar","not guessed",0
+29,"fan","non-kitchen",-0.162866,"not recollected","not familiar","not guessed",1
+30,"microwave","kitchen",94.95114,"recollected","not familiar","not guessed",0
+30,"kitchen roll","kitchen",79.80456,"not recollected","not familiar","not guessed",1
+30,"saucepan","kitchen",84.690554,"not recollected","familiar","not guessed",0
+30,"toaster","kitchen",-100,"recollected","not familiar","not guessed",0
+30,"bowl of fruits","kitchen",20.19544,"recollected","not familiar","not guessed",0
+30,"tea pot","kitchen",39.90228,"not recollected","not familiar","guessed",0
+30,"knife","kitchen",-95.439739,"recollected","not familiar","not guessed",0
+30,"mixer","kitchen",-39.90228,"not recollected","not familiar","not guessed",1
+30,"bread","kitchen",-94.788274,"recollected","not familiar","not guessed",0
+30,"glass jug","kitchen",71.986971,"not recollected","familiar","not guessed",0
+30,"mug","kitchen",89.739414,"not recollected","familiar","not guessed",0
+30,"dishes","kitchen",-100,"recollected","not familiar","not guessed",0
+30,"towels","non-kitchen",20.19544,"not recollected","familiar","not guessed",0
+30,"toy","non-kitchen",84.85342,"recollected","not familiar","not guessed",0
+30,"pile of books","non-kitchen",-30.130293,"recollected","not familiar","not guessed",0
+30,"umbrella","non-kitchen",49.837134,"recollected","not familiar","not guessed",0
+30,"hat","non-kitchen",12.703583,"not recollected","familiar","not guessed",0
+30,"helmet","non-kitchen",-57.003257,"not recollected","not familiar","guessed",0
+30,"calendar","non-kitchen",85.179153,"recollected","not familiar","not guessed",0
+30,"fan","non-kitchen",-74.7557,"recollected","not familiar","not guessed",0
+31,"microwave","kitchen",86.807818,"not recollected","familiar","not guessed",0
+31,"kitchen roll","kitchen",39.739414,"recollected","not familiar","not guessed",0
+31,"saucepan","kitchen",85.504886,"not recollected","not familiar","guessed",0
+31,"toaster","kitchen",-30.781759,"not recollected","familiar","not guessed",0
+31,"bowl of fruits","kitchen",49.022801,"recollected","not familiar","not guessed",0
+31,"tea pot","kitchen",7.654723,"not recollected","not familiar","guessed",0
+31,"knife","kitchen",-19.218241,"recollected","not familiar","not guessed",0
+31,"mixer","kitchen",-14.983713,"not recollected","familiar","not guessed",0
+31,"bread","kitchen",18.241042,"recollected","not familiar","not guessed",0
+31,"glass jug","kitchen",65.960912,"recollected","not familiar","not guessed",0
+31,"mug","kitchen",89.087948,"not recollected","familiar","not guessed",0
+31,"dishes","kitchen",-47.23127,"recollected","not familiar","not guessed",0
+31,"towels","non-kitchen",55.700326,"not recollected","familiar","not guessed",0
+31,"toy","non-kitchen",61.400651,"recollected","not familiar","not guessed",0
+31,"pile of books","non-kitchen",-34.690554,"not recollected","not familiar","guessed",0
+31,"umbrella","non-kitchen",-19.381107,"recollected","not familiar","not guessed",0
+31,"hat","non-kitchen",-9.446254,"recollected","not familiar","not guessed",0
+31,"helmet","non-kitchen",-64.820847,"not recollected","not familiar","guessed",0
+31,"calendar","non-kitchen",53.745928,"recollected","not familiar","not guessed",0
+31,"fan","non-kitchen",-9.771987,"recollected","not familiar","not guessed",0
+32,"microwave","kitchen",94.788274,"recollected","not familiar","not guessed",0
+32,"kitchen roll","kitchen",82.410423,"not recollected","not familiar","guessed",0
+32,"saucepan","kitchen",89.739414,"recollected","not familiar","not guessed",0
+32,"toaster","kitchen",-90.716612,"recollected","not familiar","not guessed",0
+32,"bowl of fruits","kitchen",-78.175896,"not recollected","not familiar","guessed",0
+32,"tea pot","kitchen",-54.885993,"not recollected","not familiar","guessed",0
+32,"knife","kitchen",-23.941368,"recollected","not familiar","not guessed",0
+32,"mixer","kitchen",40.065147,"not recollected","not familiar","guessed",0
+32,"bread","kitchen",-54.560261,"recollected","not familiar","not guessed",0
+32,"glass jug","kitchen",65.472313,"recollected","not familiar","not guessed",0
+32,"mug","kitchen",86.482085,"not recollected","familiar","not guessed",0
+32,"dishes","kitchen",-100,"not recollected","familiar","not guessed",0
+32,"towels","non-kitchen",69.543974,"recollected","not familiar","not guessed",0
+32,"toy","non-kitchen",47.71987,"recollected","not familiar","not guessed",0
+32,"pile of books","non-kitchen",-60.09772,"not recollected","familiar","not guessed",0
+32,"umbrella","non-kitchen",-68.078176,"recollected","not familiar","not guessed",0
+32,"hat","non-kitchen",-70.032573,"not recollected","not familiar","guessed",0
+32,"helmet","non-kitchen",8.143322,"not recollected","familiar","not guessed",0
+32,"calendar","non-kitchen",-50.325733,"recollected","not familiar","not guessed",0
+32,"fan","non-kitchen",79.967427,"not recollected","not familiar","guessed",0
+33,"microwave","kitchen",47.23127,"not recollected","not familiar","not guessed",1
+33,"kitchen roll","kitchen",100,"recollected","not familiar","not guessed",0
+33,"saucepan","kitchen",38.925081,"not recollected","not familiar","guessed",0
+33,"toaster","kitchen",100,"recollected","not familiar","not guessed",0
+33,"bowl of fruits","kitchen",-55.537459,"not recollected","familiar","not guessed",0
+33,"tea pot","kitchen",-100,"not recollected","not familiar","guessed",0
+33,"knife","kitchen",100,"recollected","not familiar","not guessed",0
+33,"mixer","kitchen",-54.234528,"not recollected","not familiar","guessed",0
+33,"bread","kitchen",65.635179,"recollected","not familiar","not guessed",0
+33,"glass jug","kitchen",-24.429967,"not recollected","not familiar","not guessed",1
+33,"mug","kitchen",-18.403909,"not recollected","not familiar","not guessed",1
+33,"dishes","kitchen",100,"recollected","not familiar","not guessed",0
+33,"towels","non-kitchen",-77.687296,"not recollected","not familiar","guessed",0
+33,"toy","non-kitchen",100,"recollected","not familiar","not guessed",0
+33,"pile of books","non-kitchen",39.576547,"not recollected","familiar","not guessed",0
+33,"umbrella","non-kitchen",69.055375,"not recollected","familiar","not guessed",0
+33,"hat","non-kitchen",100,"recollected","not familiar","not guessed",0
+33,"helmet","non-kitchen",19.218241,"not recollected","familiar","not guessed",0
+33,"calendar","non-kitchen",100,"recollected","not familiar","not guessed",0
+33,"fan","non-kitchen",100,"recollected","not familiar","not guessed",0
+34,"microwave","kitchen",70.521173,"not recollected","familiar","not guessed",0
+34,"kitchen roll","kitchen",19.381107,"recollected","not familiar","not guessed",0
+34,"saucepan","kitchen",80.618893,"recollected","not familiar","not guessed",0
+34,"toaster","kitchen",-83.550489,"recollected","not familiar","not guessed",0
+34,"bowl of fruits","kitchen",31.107492,"recollected","not familiar","not guessed",0
+34,"tea pot","kitchen",51.791531,"not recollected","familiar","not guessed",0
+34,"knife","kitchen",-50.162866,"recollected","not familiar","not guessed",0
+34,"mixer","kitchen",19.869707,"recollected","not familiar","not guessed",0
+34,"bread","kitchen",-17.100977,"not recollected","familiar","not guessed",0
+34,"glass jug","kitchen",88.925081,"not recollected","familiar","not guessed",0
+34,"mug","kitchen",92.18241,"not recollected","not familiar","guessed",0
+34,"dishes","kitchen",-84.364821,"not recollected","not familiar","guessed",0
+34,"towels","non-kitchen",-55.700326,"not recollected","not familiar","guessed",0
+34,"toy","non-kitchen",-30.130293,"not recollected","not familiar","guessed",0
+34,"pile of books","non-kitchen",0.162866,"recollected","not familiar","not guessed",0
+34,"umbrella","non-kitchen",-45.439739,"not recollected","familiar","not guessed",0
+34,"hat","non-kitchen",-28.827362,"not recollected","familiar","not guessed",0
+34,"helmet","non-kitchen",26.221498,"recollected","not familiar","not guessed",0
+34,"calendar","non-kitchen",48.534202,"recollected","not familiar","not guessed",0
+34,"fan","non-kitchen",-34.85342,"recollected","not familiar","not guessed",0
+35,"microwave","kitchen",99.674267,"recollected","not familiar","not guessed",0
+35,"kitchen roll","kitchen",0.325733,"not recollected","familiar","not guessed",0
+35,"saucepan","kitchen",89.90228,"recollected","not familiar","not guessed",0
+35,"toaster","kitchen",-99.511401,"recollected","not familiar","not guessed",0
+35,"bowl of fruits","kitchen",-12.703583,"recollected","not familiar","not guessed",0
+35,"tea pot","kitchen",-43.973941,"recollected","not familiar","not guessed",0
+35,"knife","kitchen",-67.589577,"not recollected","familiar","not guessed",0
+35,"mixer","kitchen",-13.843648,"recollected","not familiar","not guessed",0
+35,"bread","kitchen",-35.993485,"not recollected","familiar","not guessed",0
+35,"glass jug","kitchen",18.729642,"not recollected","familiar","not guessed",0
+35,"mug","kitchen",92.833876,"recollected","not familiar","not guessed",0
+35,"dishes","kitchen",-85.34202,"recollected","not familiar","not guessed",0
+35,"towels","non-kitchen",100,"recollected","not familiar","not guessed",0
+35,"toy","non-kitchen",65.798046,"recollected","not familiar","not guessed",0
+35,"pile of books","non-kitchen",-91.205212,"recollected","not familiar","not guessed",0
+35,"umbrella","non-kitchen",-56.840391,"recollected","not familiar","not guessed",0
+35,"hat","non-kitchen",-64.006515,"not recollected","familiar","not guessed",0
+35,"helmet","non-kitchen",-100,"recollected","not familiar","not guessed",0
+35,"calendar","non-kitchen",96.579805,"recollected","not familiar","not guessed",0
+35,"fan","non-kitchen",-64.65798,"not recollected","not familiar","not guessed",1
+36,"microwave","kitchen",52.442997,"not recollected","not familiar","guessed",0
+36,"kitchen roll","kitchen",40.716612,"not recollected","familiar","not guessed",0
+36,"saucepan","kitchen",88.436482,"not recollected","not familiar","guessed",0
+36,"toaster","kitchen",-100,"recollected","not familiar","not guessed",0
+36,"bowl of fruits","kitchen",-34.527687,"not recollected","familiar","not guessed",0
+36,"tea pot","kitchen",76.872964,"not recollected","not familiar","guessed",0
+36,"knife","kitchen",-100,"recollected","not familiar","not guessed",0
+36,"mixer","kitchen",23.778502,"not recollected","not familiar","not guessed",1
+36,"bread","kitchen",-49.185668,"recollected","not familiar","not guessed",0
+36,"glass jug","kitchen",10.260586,"not recollected","not familiar","not guessed",1
+36,"mug","kitchen",100,"not recollected","familiar","not guessed",0
+36,"dishes","kitchen",-100,"recollected","not familiar","not guessed",0
+36,"towels","non-kitchen",-7.980456,"not recollected","familiar","not guessed",0
+36,"toy","non-kitchen",81.433225,"recollected","not familiar","not guessed",0
+36,"pile of books","non-kitchen",-44.625407,"not recollected","not familiar","guessed",0
+36,"umbrella","non-kitchen",-100,"not recollected","not familiar","not guessed",1
+36,"hat","non-kitchen",-4.234528,"recollected","not familiar","not guessed",0
+36,"helmet","non-kitchen",-100,"not recollected","not familiar","not guessed",1
+36,"calendar","non-kitchen",-5.537459,"not recollected","not familiar","guessed",0
+36,"fan","non-kitchen",-3.257329,"recollected","not familiar","not guessed",0
+37,"microwave","kitchen",-100,"recollected","not familiar","not guessed",0
+37,"kitchen roll","kitchen",100,"not recollected","familiar","not guessed",0
+37,"saucepan","kitchen",8.306189,"not recollected","not familiar","guessed",0
+37,"toaster","kitchen",100,"not recollected","familiar","not guessed",0
+37,"bowl of fruits","kitchen",51.302932,"not recollected","familiar","not guessed",0
+37,"tea pot","kitchen",49.185668,"not recollected","familiar","not guessed",0
+37,"knife","kitchen",-100,"not recollected","not familiar","not guessed",1
+37,"mixer","kitchen",100,"not recollected","not familiar","guessed",0
+37,"bread","kitchen",47.71987,"not recollected","familiar","not guessed",0
+37,"glass jug","kitchen",-57.32899,"not recollected","not familiar","not guessed",1
+37,"mug","kitchen",100,"not recollected","not familiar","guessed",0
+37,"dishes","kitchen",100,"recollected","not familiar","not guessed",0
+37,"towels","non-kitchen",-100,"not recollected","not familiar","not guessed",1
+37,"toy","non-kitchen",-100,"recollected","not familiar","not guessed",0
+37,"pile of books","non-kitchen",0,"not recollected","not familiar","not guessed",1
+37,"umbrella","non-kitchen",0.162866,"not recollected","not familiar","not guessed",1
+37,"hat","non-kitchen",100,"recollected","not familiar","not guessed",0
+37,"helmet","non-kitchen",0.162866,"recollected","not familiar","not guessed",0
+37,"calendar","non-kitchen",95.928339,"not recollected","familiar","not guessed",0
+37,"fan","non-kitchen",0,"not recollected","familiar","not guessed",0
+38,"microwave","kitchen",97.23127,"recollected","not familiar","not guessed",0
+38,"kitchen roll","kitchen",21.009772,"recollected","not familiar","not guessed",0
+38,"saucepan","kitchen",56.514658,"not recollected","not familiar","guessed",0
+38,"toaster","kitchen",-96.416938,"recollected","not familiar","not guessed",0
+38,"bowl of fruits","kitchen",18.566775,"not recollected","not familiar","guessed",0
+38,"tea pot","kitchen",-62.540717,"recollected","not familiar","not guessed",0
+38,"knife","kitchen",-39.087948,"not recollected","familiar","not guessed",0
+38,"mixer","kitchen",-84.85342,"recollected","not familiar","not guessed",0
+38,"bread","kitchen",-80.618893,"recollected","not familiar","not guessed",0
+38,"glass jug","kitchen",-84.039088,"not recollected","familiar","not guessed",0
+38,"mug","kitchen",71.335505,"not recollected","familiar","not guessed",0
+38,"dishes","kitchen",-90.879479,"not recollected","familiar","not guessed",0
+38,"towels","non-kitchen",-60.749186,"not recollected","familiar","not guessed",0
+38,"toy","non-kitchen",-6.188925,"recollected","not familiar","not guessed",0
+38,"pile of books","non-kitchen",30.618893,"not recollected","familiar","not guessed",0
+38,"umbrella","non-kitchen",-53.094463,"not recollected","not familiar","guessed",0
+38,"hat","non-kitchen",-86.319218,"recollected","not familiar","not guessed",0
+38,"helmet","non-kitchen",-49.837134,"not recollected","familiar","not guessed",0
+38,"calendar","non-kitchen",30.944625,"not recollected","familiar","not guessed",0
+38,"fan","non-kitchen",-84.039088,"recollected","not familiar","not guessed",0
+27,"microwave","kitchen",87.13355,"not recollected","familiar","not guessed",0
+27,"kitchen roll","kitchen",100,"recollected","not familiar","not guessed",0
+27,"saucepan","kitchen",-44.95114,"not recollected","familiar","not guessed",0
+27,"toaster","kitchen",100,"recollected","not familiar","not guessed",0
+27,"bowl of fruits","kitchen",49.185668,"not recollected","not familiar","guessed",0
+27,"tea pot","kitchen",57.81759,"not recollected","familiar","not guessed",0
+27,"knife","kitchen",29.80456,"not recollected","familiar","not guessed",0
+27,"mixer","kitchen",100,"not recollected","familiar","not guessed",0
+27,"bread","kitchen",-100,"recollected","not familiar","not guessed",0
+27,"glass jug","kitchen",32.247557,"not recollected","familiar","not guessed",0
+27,"mug","kitchen",-27.035831,"not recollected","familiar","not guessed",0
+27,"dishes","kitchen",34.85342,"not recollected","not familiar","guessed",0
+27,"towels","non-kitchen",10.09772,"not recollected","familiar","not guessed",0
+27,"toy","non-kitchen",100,"recollected","not familiar","not guessed",0
+27,"pile of books","non-kitchen",13.355049,"not recollected","not familiar","guessed",0
+27,"umbrella","non-kitchen",41.042345,"not recollected","not familiar","guessed",0
+27,"hat","non-kitchen",100,"recollected","not familiar","not guessed",0
+27,"helmet","non-kitchen",37.13355,"not recollected","familiar","not guessed",0
+27,"calendar","non-kitchen",-100,"not recollected","familiar","not guessed",0
+27,"fan","non-kitchen",34.690554,"recollected","not familiar","not guessed",0
+39,"microwave","kitchen",96.416938,"not recollected","not familiar","guessed",0
+39,"kitchen roll","kitchen",63.355049,"recollected","not familiar","not guessed",0
+39,"saucepan","kitchen",95.276873,"not recollected","not familiar","guessed",0
+39,"toaster","kitchen",-95.602606,"not recollected","not familiar","not guessed",1
+39,"bowl of fruits","kitchen",-72.312704,"not recollected","familiar","not guessed",0
+39,"tea pot","kitchen",82.410423,"not recollected","familiar","not guessed",0
+39,"knife","kitchen",-90.553746,"not recollected","not familiar","guessed",0
+39,"mixer","kitchen",79.641694,"not recollected","familiar","not guessed",0
+39,"bread","kitchen",-9.283388,"not recollected","not familiar","guessed",0
+39,"glass jug","kitchen",94.462541,"not recollected","not familiar","not guessed",1
+39,"mug","kitchen",90.879479,"not recollected","not familiar","guessed",0
+39,"dishes","kitchen",-98.859935,"recollected","not familiar","not guessed",0
+39,"towels","non-kitchen",-8.143322,"not recollected","familiar","not guessed",0
+39,"toy","non-kitchen",-79.967427,"not recollected","not familiar","guessed",0
+39,"pile of books","non-kitchen",-4.560261,"recollected","not familiar","not guessed",0
+39,"umbrella","non-kitchen",4.723127,"not recollected","not familiar","guessed",0
+39,"hat","non-kitchen",-93.485342,"recollected","not familiar","not guessed",0
+39,"helmet","non-kitchen",-64.495114,"not recollected","familiar","not guessed",0
+39,"calendar","non-kitchen",-13.355049,"not recollected","familiar","not guessed",0
+39,"fan","non-kitchen",-53.094463,"not recollected","not familiar","guessed",0
+40,"microwave","kitchen",100,"recollected","not familiar","not guessed",0
+40,"kitchen roll","kitchen",100,"recollected","not familiar","not guessed",0
+40,"saucepan","kitchen",47.23127,"not recollected","not familiar","guessed",0
+40,"toaster","kitchen",100,"recollected","not familiar","not guessed",0
+40,"bowl of fruits","kitchen",79.641694,"recollected","not familiar","not guessed",0
+40,"tea pot","kitchen",44.136808,"not recollected","familiar","not guessed",0
+40,"knife","kitchen",-22.149837,"not recollected","not familiar","guessed",0
+40,"mixer","kitchen",65.14658,"not recollected","familiar","not guessed",0
+40,"bread","kitchen",100,"recollected","not familiar","not guessed",0
+40,"glass jug","kitchen",100,"recollected","not familiar","not guessed",0
+40,"mug","kitchen",32.247557,"not recollected","not familiar","guessed",0
+40,"dishes","kitchen",35.016287,"not recollected","not familiar","guessed",0
+40,"towels","non-kitchen",100,"recollected","not familiar","not guessed",0
+40,"toy","non-kitchen",100,"recollected","not familiar","not guessed",0
+40,"pile of books","non-kitchen",14.495114,"not recollected","not familiar","guessed",0
+40,"umbrella","non-kitchen",100,"recollected","not familiar","not guessed",0
+40,"hat","non-kitchen",100,"recollected","not familiar","not guessed",0
+40,"helmet","non-kitchen",-11.400651,"not recollected","not familiar","guessed",0
+40,"calendar","non-kitchen",100,"recollected","not familiar","not guessed",0
+40,"fan","non-kitchen",100,"recollected","not familiar","not guessed",0
+41,"microwave","kitchen",90.228013,"not recollected","familiar","not guessed",0
+41,"kitchen roll","kitchen",84.364821,"recollected","not familiar","not guessed",0
+41,"saucepan","kitchen",69.70684,"not recollected","not familiar","guessed",0
+41,"toaster","kitchen",-100,"recollected","not familiar","not guessed",0
+41,"bowl of fruits","kitchen",-19.381107,"recollected","not familiar","not guessed",0
+41,"tea pot","kitchen",-69.70684,"recollected","not familiar","not guessed",0
+41,"knife","kitchen",-19.869707,"recollected","not familiar","not guessed",0
+41,"mixer","kitchen",45.114007,"recollected","not familiar","not guessed",0
+41,"bread","kitchen",-29.967427,"recollected","not familiar","not guessed",0
+41,"glass jug","kitchen",90.228013,"recollected","not familiar","not guessed",0
+41,"mug","kitchen",100,"not recollected","not familiar","guessed",0
+41,"dishes","kitchen",-100,"recollected","not familiar","not guessed",0
+41,"towels","non-kitchen",60.586319,"recollected","not familiar","not guessed",0
+41,"toy","non-kitchen",100,"recollected","not familiar","not guessed",0
+41,"pile of books","non-kitchen",74.592834,"recollected","not familiar","not guessed",0
+41,"umbrella","non-kitchen",-70.358306,"recollected","not familiar","not guessed",0
+41,"hat","non-kitchen",28.990228,"recollected","not familiar","not guessed",0
+41,"helmet","non-kitchen",30.130293,"not recollected","familiar","not guessed",0
+41,"calendar","non-kitchen",50,"recollected","not familiar","not guessed",0
+41,"fan","non-kitchen",-90.390879,"recollected","not familiar","not guessed",0
+42,"microwave","kitchen",98.534202,"recollected","not familiar","not guessed",0
+42,"kitchen roll","kitchen",-7.81759,"not recollected","not familiar","not guessed",1
+42,"saucepan","kitchen",83.061889,"not recollected","not familiar","guessed",0
+42,"toaster","kitchen",-92.833876,"not recollected","not familiar","guessed",0
+42,"bowl of fruits","kitchen",-16.449511,"recollected","not familiar","not guessed",0
+42,"tea pot","kitchen",-25.895765,"not recollected","not familiar","guessed",0
+42,"knife","kitchen",-98.859935,"not recollected","not familiar","not guessed",1
+42,"mixer","kitchen",12.214984,"recollected","not familiar","not guessed",0
+42,"bread","kitchen",-49.022801,"recollected","not familiar","not guessed",0
+42,"glass jug","kitchen",83.713355,"not recollected","not familiar","not guessed",1
+42,"mug","kitchen",0,"not recollected","not familiar","not guessed",1
+42,"dishes","kitchen",-71.986971,"not recollected","not familiar","not guessed",1
+42,"towels","non-kitchen",95.765472,"recollected","not familiar","not guessed",0
+42,"toy","non-kitchen",21.335505,"recollected","not familiar","not guessed",0
+42,"pile of books","non-kitchen",75.2443,"recollected","not familiar","not guessed",0
+42,"umbrella","non-kitchen",3.908795,"not recollected","not familiar","not guessed",1
+42,"hat","non-kitchen",-32.247557,"not recollected","not familiar","guessed",0
+42,"helmet","non-kitchen",7.32899,"not recollected","not familiar","guessed",0
+42,"calendar","non-kitchen",52.442997,"not recollected","not familiar","not guessed",1
+42,"fan","non-kitchen",-5.700326,"recollected","not familiar","not guessed",0
+43,"microwave","kitchen",55.374593,"not recollected","familiar","not guessed",0
+43,"kitchen roll","kitchen",30.618893,"not recollected","not familiar","not guessed",1
+43,"saucepan","kitchen",77.198697,"not recollected","familiar","not guessed",0
+43,"toaster","kitchen",-98.045603,"not recollected","not familiar","guessed",0
+43,"bowl of fruits","kitchen",-83.061889,"recollected","not familiar","not guessed",0
+43,"tea pot","kitchen",-88.273616,"not recollected","not familiar","not guessed",1
+43,"knife","kitchen",-91.205212,"recollected","not familiar","not guessed",0
+43,"mixer","kitchen",-56.026059,"not recollected","not familiar","guessed",0
+43,"bread","kitchen",-76.547231,"recollected","not familiar","not guessed",0
+43,"glass jug","kitchen",59.771987,"recollected","not familiar","not guessed",0
+43,"mug","kitchen",48.534202,"recollected","not familiar","not guessed",0
+43,"dishes","kitchen",-81.270358,"recollected","not familiar","not guessed",0
+43,"towels","non-kitchen",36.970684,"recollected","not familiar","not guessed",0
+43,"toy","non-kitchen",-36.807818,"not recollected","not familiar","not guessed",1
+43,"pile of books","non-kitchen",-11.400651,"recollected","not familiar","not guessed",0
+43,"umbrella","non-kitchen",-60.912052,"not recollected","not familiar","not guessed",1
+43,"hat","non-kitchen",0.325733,"not recollected","familiar","not guessed",0
+43,"helmet","non-kitchen",-13.843648,"not recollected","familiar","not guessed",0
+43,"calendar","non-kitchen",-71.335505,"recollected","not familiar","not guessed",0
+43,"fan","non-kitchen",-96.091205,"not recollected","familiar","not guessed",0
+44,"microwave","kitchen",96.905537,"not recollected","familiar","not guessed",0
+44,"kitchen roll","kitchen",88.273616,"not recollected","not familiar","not guessed",1
+44,"saucepan","kitchen",71.498371,"not recollected","not familiar","guessed",0
+44,"toaster","kitchen",-100,"not recollected","not familiar","guessed",0
+44,"bowl of fruits","kitchen",-18.566775,"not recollected","not familiar","guessed",0
+44,"tea pot","kitchen",-40.716612,"not recollected","not familiar","guessed",0
+44,"knife","kitchen",-22.801303,"not recollected","not familiar","guessed",0
+44,"mixer","kitchen",-7.32899,"not recollected","not familiar","not guessed",1
+44,"bread","kitchen",-17.263844,"not recollected","not familiar","guessed",0
+44,"glass jug","kitchen",82.247557,"not recollected","not familiar","guessed",0
+44,"mug","kitchen",46.416938,"not recollected","not familiar","not guessed",1
+44,"dishes","kitchen",-82.899023,"not recollected","not familiar","not guessed",1
+44,"towels","non-kitchen",8.143322,"not recollected","not familiar","not guessed",1
+44,"toy","non-kitchen",-7.980456,"not recollected","familiar","not guessed",0
+44,"pile of books","non-kitchen",5.863192,"not recollected","not familiar","guessed",0
+44,"umbrella","non-kitchen",-41.368078,"not recollected","not familiar","not guessed",1
+44,"hat","non-kitchen",-57.166124,"not recollected","not familiar","guessed",0
+44,"helmet","non-kitchen",-28.990228,"not recollected","not familiar","guessed",0
+44,"calendar","non-kitchen",29.641694,"not recollected","not familiar","not guessed",1
+44,"fan","non-kitchen",-14.006515,"not recollected","familiar","not guessed",0
+45,"microwave","kitchen",81.107492,"recollected","not familiar","not guessed",0
+45,"kitchen roll","kitchen",72.312704,"not recollected","not familiar","guessed",0
+45,"saucepan","kitchen",38.762215,"not recollected","not familiar","guessed",0
+45,"toaster","kitchen",-100,"recollected","not familiar","not guessed",0
+45,"bowl of fruits","kitchen",-50.651466,"recollected","not familiar","not guessed",0
+45,"tea pot","kitchen",-77.361564,"not recollected","familiar","not guessed",0
+45,"knife","kitchen",-100,"recollected","not familiar","not guessed",0
+45,"mixer","kitchen",78.013029,"not recollected","not familiar","not guessed",1
+45,"bread","kitchen",15.635179,"not recollected","familiar","not guessed",0
+45,"glass jug","kitchen",-18.241042,"not recollected","not familiar","guessed",0
+45,"mug","kitchen",90.716612,"not recollected","not familiar","not guessed",1
+45,"dishes","kitchen",-100,"recollected","not familiar","not guessed",0
+45,"towels","non-kitchen",37.459283,"not recollected","not familiar","guessed",0
+45,"toy","non-kitchen",44.95114,"not recollected","familiar","not guessed",0
+45,"pile of books","non-kitchen",70.358306,"recollected","not familiar","not guessed",0
+45,"umbrella","non-kitchen",-94.299674,"recollected","not familiar","not guessed",0
+45,"hat","non-kitchen",-85.667752,"not recollected","familiar","not guessed",0
+45,"helmet","non-kitchen",15.472313,"not recollected","not familiar","guessed",0
+45,"calendar","non-kitchen",-35.667752,"recollected","not familiar","not guessed",0
+45,"fan","non-kitchen",-65.960912,"not recollected","not familiar","not guessed",1
+46,"microwave","kitchen",100,"recollected","not familiar","not guessed",0
+46,"kitchen roll","kitchen",83.550489,"recollected","not familiar","not guessed",0
+46,"saucepan","kitchen",90.228013,"not recollected","not familiar","not guessed",1
+46,"toaster","kitchen",-100,"not recollected","not familiar","guessed",0
+46,"bowl of fruits","kitchen",-100,"recollected","not familiar","not guessed",0
+46,"tea pot","kitchen",-21.009772,"not recollected","not familiar","guessed",0
+46,"knife","kitchen",-100,"recollected","not familiar","not guessed",0
+46,"mixer","kitchen",-66.938111,"recollected","not familiar","not guessed",0
+46,"bread","kitchen",-100,"not recollected","not familiar","guessed",0
+46,"glass jug","kitchen",-62.37785,"recollected","not familiar","not guessed",0
+46,"mug","kitchen",100,"not recollected","not familiar","guessed",0
+46,"dishes","kitchen",-100,"recollected","not familiar","not guessed",0
+46,"towels","non-kitchen",18.566775,"not recollected","not familiar","guessed",0
+46,"toy","non-kitchen",58.631922,"recollected","not familiar","not guessed",0
+46,"pile of books","non-kitchen",88.273616,"recollected","not familiar","not guessed",0
+46,"umbrella","non-kitchen",34.690554,"recollected","not familiar","not guessed",0
+46,"hat","non-kitchen",-100,"not recollected","familiar","not guessed",0
+46,"helmet","non-kitchen",-100,"recollected","not familiar","not guessed",0
+46,"calendar","non-kitchen",75.2443,"recollected","not familiar","not guessed",0
+46,"fan","non-kitchen",-100,"not recollected","not familiar","guessed",0
+47,"microwave","kitchen",97.394137,"not recollected","familiar","not guessed",0
+47,"kitchen roll","kitchen",47.882736,"recollected","not familiar","not guessed",0
+47,"saucepan","kitchen",100,"not recollected","familiar","not guessed",0
+47,"toaster","kitchen",100,"recollected","not familiar","not guessed",0
+47,"bowl of fruits","kitchen",-100,"not recollected","not familiar","guessed",0
+47,"tea pot","kitchen",68.078176,"not recollected","not familiar","guessed",0
+47,"knife","kitchen",-37.785016,"not recollected","not familiar","guessed",0
+47,"mixer","kitchen",-68.729642,"not recollected","not familiar","guessed",0
+47,"bread","kitchen",64.65798,"recollected","not familiar","not guessed",0
+47,"glass jug","kitchen",61.563518,"not recollected","not familiar","guessed",0
+47,"mug","kitchen",51.140065,"not recollected","not familiar","guessed",0
+47,"dishes","kitchen",100,"recollected","not familiar","not guessed",0
+47,"towels","non-kitchen",-82.57329,"recollected","not familiar","not guessed",0
+47,"toy","non-kitchen",100,"recollected","not familiar","not guessed",0
+47,"pile of books","non-kitchen",48.208469,"not recollected","not familiar","not guessed",1
+47,"umbrella","non-kitchen",34.690554,"not recollected","not familiar","guessed",0
+47,"hat","non-kitchen",100,"recollected","not familiar","not guessed",0
+47,"helmet","non-kitchen",18.892508,"not recollected","not familiar","not guessed",1
+47,"calendar","non-kitchen",-100,"not recollected","familiar","not guessed",0
+47,"fan","non-kitchen",87.62215,"recollected","not familiar","not guessed",0
+48,"microwave","kitchen",100,"recollected","not familiar","not guessed",0
+48,"kitchen roll","kitchen",50.162866,"recollected","not familiar","not guessed",0
+48,"saucepan","kitchen",69.869707,"not recollected","not familiar","guessed",0
+48,"toaster","kitchen",-89.576547,"recollected","not familiar","not guessed",0
+48,"bowl of fruits","kitchen",-14.820847,"not recollected","familiar","not guessed",0
+48,"tea pot","kitchen",69.869707,"recollected","not familiar","not guessed",0
+48,"knife","kitchen",-40.390879,"not recollected","not familiar","guessed",0
+48,"mixer","kitchen",49.348534,"recollected","not familiar","not guessed",0
+48,"bread","kitchen",-39.576547,"recollected","not familiar","not guessed",0
+48,"glass jug","kitchen",79.80456,"not recollected","not familiar","guessed",0
+48,"mug","kitchen",80.456026,"not recollected","not familiar","guessed",0
+48,"dishes","kitchen",-79.80456,"recollected","not familiar","not guessed",0
+48,"towels","non-kitchen",80.456026,"not recollected","familiar","not guessed",0
+48,"toy","non-kitchen",29.967427,"recollected","not familiar","not guessed",0
+48,"pile of books","non-kitchen",20.032573,"not recollected","familiar","not guessed",0
+48,"umbrella","non-kitchen",-15.309446,"recollected","not familiar","not guessed",0
+48,"hat","non-kitchen",-20.521173,"not recollected","familiar","not guessed",0
+48,"helmet","non-kitchen",-19.869707,"not recollected","not familiar","guessed",0
+48,"calendar","non-kitchen",24.592834,"not recollected","familiar","not guessed",0
+48,"fan","non-kitchen",-29.641694,"not recollected","familiar","not guessed",0

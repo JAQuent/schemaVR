@@ -1,0 +1,19 @@
+---
+title: "Readme of schemaV3"
+author: "Jörn Alexander Quent"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Explanation 
+This experiment is 
+
+# Content
+https://osf.io/kcr2q/
+
+# List of entries
+A list of entries dealing with schemaVR3 will be published here in due time. 

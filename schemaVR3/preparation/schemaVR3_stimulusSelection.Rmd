@@ -1,0 +1,397 @@
+---
+title: "Stimulus selection for schemaVR3"
+author: "Jörn Alexander Quent"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 6
+    theme: united
+---
+```{r setup, include=FALSE}
+knitr::opts_knit$set(eval.after = 'fig.cap')
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE,
+                      fig.width = 10, 
+                      fig.height= 7, 
+                      dpi=300, 
+                      out.width="1200px", 
+                      out.height="700px")
+options(scipen = 30)
+```
+
+# Introduction
+As stated [here](https://jaquent.me/2018/08/01/282/), I am planning a final experiment in the series of schemaVR, [schemaVR3](https://jaquent.me/category/schemavr3/). The reason for running another experiment is to make sure that the U-shape relationship does not depend on a specific combination of objects and locations and furthermore to see whether recollection and familiarity might indeed be helpful to differentiate that U-shape. Because the 3AFC task did not yield additional evidence beyond what 3D location recall task provides, we decided to drop the 3AFC task. This will reduce limitations in selecting appropriate sets because there is no need to take the expectedness of foils into account. For schemaVR3, I will select five sets that will be used in the experiment (for rationale look [here](https://jaquent.me/2018/08/01/282/)). 
+
+# Libraries
+```{r}
+library(ggplot2)
+library(tidyr)
+library(knitr)
+library(gridExtra)
+library(grid)
+```
+
+
+# The algorithm
+```{r , eval = FALSE}
+###############################################################
+# Functions
+convertSeconds <- function(seconds){
+  seconds <- round(seconds)
+  if(seconds < 60){
+    # Less than a minute
+    time    <- paste(round(seconds), 'sec')
+  } 
+  if(seconds >= 60 & seconds < 3600){
+    # Less than an hour
+    minutes <- (seconds - seconds %% 60)/60
+    seconds <- seconds %% 60
+    time    <- paste(minutes, 'min,', round(seconds), 'sec')
+  } 
+  if(seconds >= 3600 & seconds < 86400){
+    # Less than a day
+    hours   <-  (seconds - seconds %% 3600)/3600
+    minutes <-  ((seconds %% 3600) - (seconds %% 3600) %% 60)/60
+    seconds <-  (seconds %% 3600) %% 60
+    time    <- paste(hours, 'h,', minutes, 'min,', round(seconds), 'sec')
+  } 
+  if(seconds >= 86400){
+    # More than a day
+    days    <- (seconds - seconds %% 86400)/86400
+    hours   <- ((seconds %% 86400) - (seconds %% 86400) %% 3600)/3600
+    minutes <- (((seconds %% 86400) %% 3600) - ((seconds %% 86400) %% 3600) %% 60)/60
+    seconds <- ((seconds %% 86400) %% 3600) %% 60
+    time    <- paste(days, 'd, ', hours, 'h,', minutes, 'min,', round(seconds), 'sec')
+  }
+  return(time)
+}
+
+progressDisplay <- function(i, iterations, startTime){
+  startTime     <- as.numeric(startTime)
+  currentTime   <- as.numeric(Sys.time())
+  elapsedTime   <- currentTime - startTime
+  predictedTime <- elapsedTime * (1/(i/iterations))
+  cat('\rProgress: |',rep('=',floor((i/iterations)*50)),rep(' ',50 - floor((i/iterations)*50)),'|',
+      '\tElapsed time:', convertSeconds(elapsedTime),
+      '\tTotal time:',    convertSeconds(predictedTime), '\t\t',
+      sep = '')
+}
+
+###############################################################
+# Loading data
+# Preparing
+subNo                <- 1:6
+N                    <- length(subNo)
+numberObjects        <- 20
+kitchenOjects        <- 1:12
+numberKitchenObjects <- length(kitchenOjects)
+nonKitchenObjets     <- 13:30
+locationRatings      <- array(data = NA, dim = c(numberObjects, numberObjects, N))
+
+# Sequently loading data
+for(i in 1:N){
+  locationRatings[,,i] <- matrix(scan(paste('/home/aq01/Projects/schemaVR/schemaVR3/preparation/schemaVR2_stimulusSelection/data/locationRatings_', as.character(subNo[i]) ,'.dat', sep = '')), byrow = TRUE, ncol = 20)
+}
+
+# Calculating ranks
+rankedRatings <- array(data = NA, dim = c(numberObjects, numberObjects, N))
+
+for(i in 1:N){
+  rankedRatings[,,i] <- rank(locationRatings[,,i])
+}
+
+# Calculating mean rank per object/ location
+meanRankedRatings <- apply(rankedRatings, 1:2, mean)
+
+
+###############################################################
+# Calculating sum of squares
+# Setting up variables
+iterations <- 10000000
+SS_target  <- rep(NA, iterations)
+targets    <- matrix(NA, nrow = numberObjects, ncol = iterations)
+
+# Calculating the targetspread of the 12 kitchen objects
+targetSpread <- seq(1, 400,length = numberKitchenObjects)
+
+# Main loop
+for(i in 1:iterations){
+  if(i == 1){
+    startTime <- Sys.time()
+  } 
+  progressDisplay(i, iterations, startTime)
+  targets[, i] <- sample(numberObjects)
+  
+  # Calculating target SS based only on the 12 kitchen objects
+  kitchenTargets <- targets[seq(kitchenOjects), i]
+  SS_target[i]   <- sum((sort(meanRankedRatings[cbind(seq_along(kitchenTargets),  kitchenTargets)]) - targetSpread)^2)
+}
+
+###############################################################
+# Save data
+save.image(paste('schemaVR3_selectionData_',format(Sys.time(), "%Y%m%d_%H%M"), '.RData', sep = ""))
+```
+
+# Loading data
+```{r}
+# The part above was execute at a computer cluster with more power and the result of saved so that it can be loaded.
+load("schemaVR3_selectionData_20180823_1852.RData")
+```
+
+# Selcting sets 
+```{r}
+# Displaying distribution
+ggplot(data.frame(SS_target), aes(SS_target)) + 
+  geom_histogram(binwidth = 100) + 
+  theme(panel.margin = unit(2, "cm"), 
+        text = element_text(size = 12),  
+        plot.margin = margin(10, 10, 10, 10)) + 
+  labs(y = 'Number of occurences', 
+       x = 'Sum of squared differences', 
+       title = paste('Distribution of SS of targets N =', iterations)) + 
+  coord_cartesian(expand = FALSE)
+```
+
+Since the we do not need foils anymore, the only criterion for a good set is the spread of the kitchen objects (i.e. that this spread is equally spaced). The way I select the sets now is to sort them by their sum of squares (SS), print the twenty sets that have the lowest SS. After that, the best sets will be tested in the VR set-up to see whether they would work. I repeat this until I have five working sets. 
+
+# Sorting and printing
+```{r}
+# Sorting the sets
+sortedtargets                   <- targets[,order(SS_target)]
+objectOrientations              <- read.table("schemaVR3_stimulusSelection/data/objectsOrientations.txt", header = TRUE)
+objectOrientations$locationNum  <- as.numeric(gsub("([spawnPoint])", "", objectOrientations$spawnPoint))
+objectOrientations$fileName     <- as.character(objectOrientations$fileName)
+
+# To give an idea what this files contains:
+head(objectOrientations)
+nSets              <- 40
+nObj               <- 20
+objNames           <- c('microwave',
+                      'kitchenRoll',
+                      'saucepan', 
+                      'toaster',
+                      'fruitBowl',
+                      'teaPot',
+                      'knife',
+                      'mixer',
+                      'bread',
+                      'glassContainer',
+                      'mug',
+                      'dishes',
+                      'towel',
+                      'toy',
+                      'bookPile',
+                      'umbrella',
+                      'hat',
+                      'helmet',
+                      'calendar',
+                      'fan')
+
+# Displaying results
+objectLocation_sets <- data.frame(Set = rep(1:nSets, each = nObj), 
+                                  Objects = rep(objNames, nSets), 
+                                  Location = c(sortedtargets[, 1:nSets]))
+kable(head(objectLocation_sets, n = nObj))
+
+# Creating input files for VR part and rating part
+fileName_VR     <- 'schemaVR3_stimulusSelection/schemaVR3_selections/schemaVR3_inputFile_VR_'
+fileName_rating <- 'schemaVR3_stimulusSelection/schemaVR3_selections/schemaVR3_inputFile_rating_'
+for(i in 1:nSets){
+  tempSet <- subset(objectLocation_sets, objectLocation_sets$Set == i)
+  # Choosing an appropriate NA value
+  tempSet$fileName  <- NA_character_
+  tempSet$xRotation <- NA_integer_
+  tempSet$yRotation <- NA_integer_
+  tempSet$zRotation <- NA_integer_
+  tempSet$xPosition <- NA_real_
+  tempSet$yPosition <- NA_real_
+  tempSet$zPosition <- NA_real_
+  
+  for(j in 1:nObj){
+    booleanIndex <- objectOrientations$objectName  == objNames[j] & 
+                    objectOrientations$locationNum == tempSet[tempSet$Objects == objNames[j], 'Location']
+    tempSet$fileName[j]  <- objectOrientations[booleanIndex, 'fileName']
+    tempSet$xRotation[j] <- objectOrientations[booleanIndex, 'xRotation']
+    tempSet$yRotation[j] <- objectOrientations[booleanIndex, 'yRotation']
+    tempSet$zRotation[j] <- objectOrientations[booleanIndex, 'zRotation']
+    tempSet$xPosition[j] <- objectOrientations[booleanIndex, 'xPosition']
+    tempSet$yPosition[j] <- objectOrientations[booleanIndex, 'yPosition']
+    tempSet$zPosition[j] <- objectOrientations[booleanIndex, 'zPosition']
+    
+  }
+  temp1 <- data.frame(var1 = tempSet$Objects, 
+                      var2 = tempSet$xRotation, 
+                      var3 = tempSet$yRotation,
+                      var4 = tempSet$zRotation, 
+                      var5 = tempSet$xPosition, 
+                      var6 = tempSet$yPosition, 
+                      var7 = tempSet$zPosition)
+  temp2 <- data.frame(var1 = tempSet$fileName,
+                      var2 = 'How expected is/are that/these object(s) in that location?')
+  write.table(temp1, 
+            paste(fileName_VR, i, '.txt', sep = ''), 
+            row.names = FALSE, 
+            quote = FALSE, 
+            sep = '\t', 
+            col.names = FALSE)
+  write.table(temp2, 
+            paste(fileName_rating, i, '.txt', sep = ''), 
+            row.names = FALSE, 
+            quote = FALSE, 
+            sep = '\t', 
+            col.names = FALSE)
+}
+```
+
+The last chunk creates input files on my disk. 
+
+# First selection
+```{r}
+selectedSets1 <- c(3, 4, 9, 13, 16)
+```
+The sets needed to be checked in the virtual environment - as described above. This important to make sure that all objects are easily visible and nothing else weird is going on. The knife for instance cannot be located at all locations because its flatness. I selected the following sets: `r selectedSets1`. The question now is whether these sets are distinct enough from each other. I test this by examining how often objects are placed in the same location.
+
+```{r}
+selectedSets_frame <- data.frame(Objects = objNames,
+                                 Set1 = sortedtargets[,selectedSets1[1]],
+                                 Set2 = sortedtargets[,selectedSets1[2]],
+                                 Set3 = sortedtargets[,selectedSets1[3]],
+                                 Set4 = sortedtargets[,selectedSets1[4]],
+                                 Set5 = sortedtargets[,selectedSets1[5]])
+
+kable(selectedSets_frame)
+```
+
+As one can see above, a lot of locations are repeated across the sets. For instance the microwave is at the same place in 3 out of 5 sets. Therefore I will check the remaining sets and extent the number of sets beyond twenty if necessary. 
+
+# Second selection
+At first, I tried to increase the number of sets to 40 (as described above) and to select the sets myself trying to balance the number of repetitions, but this didn't work out. Therefore, I used a brute-force sampling approach to find 5 sets, which work together. The 5 sets needed to fulfill 2 conditions. The first one is that there can't be more than 2 locations that are the same for an object. Note that this means that there have to be at least 4 different locations per object. The second condition is that the knife must not be placed on one of the shelves because it can't be seen there. 
+
+```{r}
+# Preparation
+set.seed(123)
+runs        <- 10000
+samplSize   <- 1000
+setNotFound <- TRUE
+index       <- 1
+
+# Condition 1
+# Not more than 2 locations can be the same for an object, which means that there have to be
+# 4 different locations per objects
+limit <- 2
+# Condition 2
+# The knife is never at a shelf location
+shelfLocations <- c(1,5, 8, 9, 15)
+
+while(setNotFound){
+  selectedSets2 <- sample(1:samplSize, 5)
+  selectedSets_frame <- data.frame(Objects = objNames,
+                                 Set1 = sortedtargets[,selectedSets2[1]],
+                                 Set2 = sortedtargets[,selectedSets2[2]],
+                                 Set3 = sortedtargets[,selectedSets2[3]],
+                                 Set4 = sortedtargets[,selectedSets2[4]],
+                                 Set5 = sortedtargets[,selectedSets2[5]])
+  
+  setNotFound <- FALSE
+  for(i in 1:20){
+    if(max(table(as.numeric(selectedSets_frame[i, 2:6]))) > limit |
+       sum(table(as.numeric(selectedSets_frame[i, 2:6])) == limit) > 1 |
+       any(as.numeric(selectedSets_frame[7, 2:6]) %in% shelfLocations)){
+      setNotFound <- TRUE
+    }
+  }
+  if(index > runs){
+    break
+  }
+  index <- index + 1
+}
+```
+
+The five sets are selected by drawing a sample from the `r samplSize` sets that have the lowest SS. Then, I check whether the selected sets fulfill the condition if they do, the loop is exited. If the procedure worked, setNotFound is FALSE.
+```{r}
+setNotFound
+```
+
+The selected sets are `r selectedSets2` (see table below).
+
+```{r}
+kable(selectedSets_frame)
+```
+
+To illustrate, where these sets are in the SS distribution, I mark them as vertical lines in the histogram below. 
+
+```{r}
+# Getting SS values
+selectedSets2_SS <- sort(SS_target)[selectedSets2]
+
+# Displaying distribution
+ggplot(data.frame(SS_target), aes(SS_target)) + 
+  geom_histogram(binwidth = 100) + 
+  geom_vline(xintercept = selectedSets2_SS) +
+  theme(panel.margin = unit(2, "cm"), 
+        text = element_text(size = 12),  
+        plot.margin = margin(10, 10, 10, 10)) + 
+  labs(y = 'Number of occurences', 
+       x = 'Sum of squared differences', 
+       title = paste('Distribution of SS of targets N =', iterations)) + 
+  coord_cartesian(expand = FALSE)
+```
+
+To use these sets, they need to be saved in files. 
+```{r}
+# Displaying results
+objectLocation_sets <- data.frame(Set = rep(selectedSets2, each = nObj), 
+                                  Objects = rep(objNames, 5), 
+                                  Location = c(sortedtargets[, selectedSets2]))
+
+for(i in 1:5){
+  tempSet <- subset(objectLocation_sets, objectLocation_sets$Set == selectedSets2[i])
+  # Choosing an appropriate NA value
+  tempSet$fileName  <- NA_character_
+  tempSet$xRotation <- NA_integer_
+  tempSet$yRotation <- NA_integer_
+  tempSet$zRotation <- NA_integer_
+  tempSet$xPosition <- NA_real_
+  tempSet$yPosition <- NA_real_
+  tempSet$zPosition <- NA_real_
+  
+  for(j in 1:nObj){
+    booleanIndex <- objectOrientations$objectName  == objNames[j] & 
+                    objectOrientations$locationNum == tempSet[tempSet$Objects == objNames[j], 'Location']
+    tempSet$fileName[j]  <- objectOrientations[booleanIndex, 'fileName']
+    tempSet$xRotation[j] <- objectOrientations[booleanIndex, 'xRotation']
+    tempSet$yRotation[j] <- objectOrientations[booleanIndex, 'yRotation']
+    tempSet$zRotation[j] <- objectOrientations[booleanIndex, 'zRotation']
+    tempSet$xPosition[j] <- objectOrientations[booleanIndex, 'xPosition']
+    tempSet$yPosition[j] <- objectOrientations[booleanIndex, 'yPosition']
+    tempSet$zPosition[j] <- objectOrientations[booleanIndex, 'zPosition']
+    
+  }
+  temp1 <- data.frame(var1 = tempSet$Objects, 
+                      var2 = tempSet$xRotation, 
+                      var3 = tempSet$yRotation,
+                      var4 = tempSet$zRotation, 
+                      var5 = tempSet$xPosition, 
+                      var6 = tempSet$yPosition, 
+                      var7 = tempSet$zPosition)
+  temp2 <- data.frame(var1 = tempSet$fileName,
+                      var2 = 'How expected is/are that/these object(s) in that location?')
+  write.table(temp1, 
+            paste(fileName_VR, selectedSets2[i], '.txt', sep = ''), 
+            row.names = FALSE, 
+            quote = FALSE, 
+            sep = '\t', 
+            col.names = FALSE)
+  write.table(temp2, 
+            paste(fileName_rating, selectedSets2[i], '.txt', sep = ''), 
+            row.names = FALSE, 
+            quote = FALSE, 
+            sep = '\t', 
+            col.names = FALSE)
+}
+```
+
+
+As the last step, I was checking whether these sets work in VR again, which they did. 

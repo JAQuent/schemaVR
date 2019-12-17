@@ -1,0 +1,27 @@
+---
+title: "Testing Rik's data"
+author: "Jörn Alexander Quent"
+date: "28 September 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(plyr)
+```
+
+```{r}
+rikData     <- read.csv('rikData.csv')
+rikData_agg <- ddply(rikData, 
+                     c('objNum'),
+                     summarise,
+                     exp = mean(expectancy),
+                     pr = table(recollection)[2]/sum(table(recollection)))
+
+summary(rikData_agg$prsummary(rikData_agg$exp))
+cor.test(rikData_agg$pr, rikData_agg$exp)
+rikData_agg
+```

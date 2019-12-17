@@ -1,0 +1,73 @@
+---
+title: "Re-assessing correlation between R/K and expectancy"
+author: "Jörn Alexander Quent"
+date: "21 September 2018"
+output:
+  html_document:
+    theme: united
+    toc: yes
+    toc_depth: 6
+  pdf_document:
+    toc: yes
+    toc_depth: '6'
+  word_document:
+    toc: yes
+    toc_depth: '6'
+fontsize: 12pt
+geometry: left=2.54cm,right=2.54cm,top=2.54cm,bottom=2.54cm
+---
+
+```{r setup, include=FALSE}
+options(scipen = 30)
+
+# Libraries
+library(plyr)
+library(knitr)
+library(ggplot2)
+library(gridExtra)
+library(grid)
+
+# Settings
+opts_chunk$set(echo = TRUE,
+               warning = FALSE,
+               message = FALSE,
+               eval = TRUE,                     
+               fig.width = 10, 
+               fig.height = 7, 
+               dpi = 300)
+opts_knit$set(eval.after = 'fig.cap')
+```
+
+# Aim
+Before I start the next experiment, I want to make sure that the spread of the objects is actually good. Even though they were selected to be good (see [here](https://jaquent.github.io/2018/0917_schemaVR3_stimulusSelection.html)), I just want to be on the save side. 
+
+# Preparation
+```{r}
+load("schemaVR3_selectionData_20180823_1852.RData")
+```
+
+# Visualising spread of objects
+```{r}
+sets       <- c(848, 498, 388, 246, 111)
+
+getMeanRanks <- function(meanRankedRatings, sortedtargets, x){
+  return(meanRankedRatings[cbind(seq_along(sortedtargets[, x]),  sortedtargets[, x])])
+}
+
+Expectancy <- as.vector(sapply(sets, function(x)
+  getMeanRanks(meanRankedRatings, sortedtargets, x = x)), mode = "double")
+
+kitchen <- c(rep('kitchen', 12), rep('non-kitchen', 8))
+
+setSpreads <- data.frame(Set = as.factor(rep(sets, each = 20)),
+                         Kitchen = rep(kitchen, 5),
+                         Expectancy = Expectancy)
+
+ggplot(setSpreads, aes(x = Set, 
+                       y =Expectancy, 
+                       colour = Kitchen)) +
+  geom_jitter(height = 0, width = 0.05) +
+  coord_cartesian(xlim = c(0.8, 5.2), ylim = c(1, 400), expand = FALSE)
+```
+
+As can be seen above the spread of the kitchen objects is really good. In contrast the non-kitchen objects cluster in middle, which however is not surprising if one assumes that objects that are not really expected to be found in a kitchen also do not have an expected location. Therefore, it will be important to covary out general expectancy in the models of schemaVR3.  
