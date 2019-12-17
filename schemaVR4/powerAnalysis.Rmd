@@ -1,0 +1,619 @@
+---
+title: "Power analysis"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      warning = FALSE,
+                      message = FALSE)
+
+library(ggplot2)
+library(assortedRFunctions)
+library(brms)
+library(polspline)
+library(knitr)
+```
+
+
+# Introduction
+In this document, I check the fitted model with data from schemaVR1, schemaVR2 and schemaVR3 by running posterior predictive checks and then report the results of the power analyses. The power analyses are all based on the results from the previous models. 
+
+## Different hypotheses
+Here I visualise the different hypotheses and how the corresponding BFs are approximated with the Savage-Dickey-ratio. 
+
+### Unrestricted (mu = 0 vs. mu != 0)
+```{r, echo = TRUE}
+### Code pasted and adapted from Wagenmakers et al. (2010) found here: http://www.ejwagenmakers.com/papers.html
+# Generating data
+N       <- 10000
+simData <- rnorm(N, 1.5, 1)
+
+# Estimating logspline density at zero for posterior
+fit.posterior  <- logspline(simData)
+posterior      <- dlogspline(0, fit.posterior) # Gives the density at zero
+
+# Estimating logspline density at zero for prior N(0, 1)
+prior          <- dnorm(0 ,0, 1)
+
+# Calculate BF
+BF01           <- posterior/prior
+BF10           <- 1/BF01
+```
+
+```{r}
+x <- seq(-4, 4, 0.01)
+df <- data.frame(x = c(x, x),
+                 Density = c(dnorm(x ,0, 1), dnorm(x ,1.5, 1)), 
+                 Distribution = c(rep('Prior', length(x)), rep('Posterior', length(x))))
+df_point <- data.frame(x = c(0, 0),
+                       Density = c(dnorm(0 ,0, 1), dnorm(0 ,1.5, 1)),
+                       Distribution = c('Prior', 'Posterior'))
+  
+labelString <- paste('BF10 = ', 
+                     round(df_point$Density, 2)[1],
+                     '/', 
+                     round(df_point$Density, 2)[2],
+                    ' = ',
+                     round(BF10, 2), sep = '')
+ggplot(df, aes(x = x, y = Density, colour = Distribution)) + 
+  geom_vline(xintercept = 0, alpha = 0.2) +
+  geom_hline(yintercept = 0, alpha = 0.2) +
+  geom_line() + 
+  geom_point(data = df_point, aes(x = x, y = Density, colour = Distribution)) + 
+  annotate('text', x = c(0.25, 0.25), y = df_point$Density, label = as.character(round(df_point$Density, 2))) +
+  annotate('text', x = c(3), y = 0.4, label = labelString) +  
+  theme(plot.margin = unit(c(1,1,1,1), "lines"),
+        legend.position = c(0, 1),
+        legend.justification = c(0, 1)) +
+  coord_cartesian(ylim = c(0, 0.45), expand = FALSE)
+```
+
+### Order-restricted (mu = 0 vs. mu > 0)
+```{r, echo = TRUE}
+### Code pasted and adapted from Wagenmakers et al. (2010) found here: http://www.ejwagenmakers.com/papers.html
+# Estimating logspline density at zero for posterior
+areaPosterior  <- sum(simData > 0)/length(simData) # gets area over zero
+posterior.OR   <- posterior/areaPosterior # Normalises so that density is 1
+
+# Estimating logspline density at zero for prior N(0, 1)
+prior          <- dnorm(0 ,0, 1)
+areaPrior      <- integrate(dnorm, mean = 0, sd = 1, lower = 0, upper = Inf, abs.tol = 0)$value
+prior.OR       <- prior/areaPrior
+
+# Calculate BF
+BF01           <- posterior.OR/prior.OR
+BF10           <- 1/BF01
+```
+
+```{r}
+x <- seq(-4, 4, 0.01)
+df <- data.frame(x = c(x, x),
+                 Density = c(dnorm(x ,0, 1)/areaPrior, dnorm(x ,1.5, 1)/areaPosterior), 
+                 Distribution = c(rep('Prior', length(x)), rep('Posterior', length(x))))
+df_point <- data.frame(x = c(0, 0),
+                       Density = c(dnorm(0 ,0, 1)/areaPrior, dnorm(0 ,1.5, 1)/areaPosterior),
+                       Distribution = c('Prior', 'Posterior'))
+  
+labelString <- paste('BF10 = ', 
+                     round(df_point$Density, 2)[1],
+                     '/', 
+                     round(df_point$Density, 2)[2],
+                    ' = ',
+                     round(BF10, 2), sep = '')
+
+ggplot(df, aes(x = x, y = Density, colour = Distribution)) + 
+  geom_vline(xintercept = 0, alpha = 0.2) +
+  geom_hline(yintercept = 0, alpha = 0.2) +
+  geom_line() + 
+  geom_point(data = df_point, aes(x = x, y = Density, colour = Distribution)) + 
+  annotate('text', x = c(0.15, 0.15), y = df_point$Density, label = as.character(round(df_point$Density, 2))) +
+  annotate('text', x = c(2), y = 0.75, label = labelString)  +  
+  theme(plot.margin = unit(c(1,1,1,1), "lines"),
+        legend.position = c(1, 1),
+        legend.justification = c(1, 1)) +
+  coord_cartesian(xlim = c(0, 4), ylim = c(0, 0.9), expand = FALSE)
+```
+
+I decide to go for the order-restricted way to calculate BF10.
+
+# Recall
+```{r}
+load("U:/Projects/schemaVR/schemaVR4/powerAnalysis_recall_20190915_164847.RData")
+```
+
+## PPC
+Observed data (y) vs. simulated data (yrep):
+```{r}
+pp_check(combinedData_model)
+```
+
+How well did we capture the mean?
+```{r}
+pp_check(combinedData_model, type='stat', stat='mean')
+```
+
+## Results of previous experiments
+```{r}
+plot(marginal_effects(combinedData_model), points = TRUE)
+```
+
+
+```{r}
+# Extracting posterior distribution
+postDistsPrior <- posterior_samples(combinedData_model)$b_IobjLocTargetRatingMUobjLocTargetRating
+priorOdd1.1    <- hypothesis(combinedData_model, "IobjLocTargetRatingMUobjLocTargetRating = 0")$hypothesis$Evid.Ratio
+
+# Wagenmakers et al. (2010) unrestricted method: beta = 0 vs. beta != 0
+### Code pasted and adapted from Wagenmakers et al. (2010) found here: http://www.ejwagenmakers.com/papers.html
+fit.posterior  <- logspline(postDistsPrior)
+posterior      <- dlogspline(0, fit.posterior) 
+prior          <- dnorm(0 ,0, 1)
+priorOdd1.2    <- posterior/prior
+
+# Wagenmakers et al. (2010) order-restricted method 1 based on renormalisation: beta = 0 vs. beta > 0 
+posterior     <- dlogspline(0, fit.posterior) 
+# renormalize:
+area          <- sum(postDistsPrior > 0)/length(postDistsPrior)
+posterior.OR  <- posterior/area
+prior.OR      <- 2*dnorm(0 ,0, 1)
+priorOdd2     <- posterior.OR/prior.OR 
+
+# Create df
+table1 <- data.frame(Method = c('BRMS', 'UR', 'OR'),
+                     BF01   = c(priorOdd1.1, priorOdd1.2, priorOdd2))
+table1$BF10 <- 1/table1$BF01 
+table1$BF01 <- round(table1$BF01, 3)
+table1$BF10 <- round(table1$BF10, 1)
+
+# Display table
+kable(table1)
+```
+
+## Power analysis
+```{r}
+# Correcting BRMS results
+bfs1.1[bfs1.1 < 0] <- 1/length(posterior_samples(sim_recall_model)$b_objLocTargetRating)
+
+# Based on https://www.r-bloggers.com/what-does-a-bayes-factor-feel-like/
+bfs_labels_def <- c('Extreme evidence for H1',
+                    'Very strong evidence for H1',
+                    'Strong evidence for H1',
+                    'Moderate evidence for H1',
+                    'Anecdotal evidence for H1',
+                    'No evidence',
+                    'Anecdotal evidence for H0',
+                    'Moderate evidence for H0',
+                    'Strong evidence for H0',
+                    'Very strong evidence for H0',
+                    'Extreme evidence for H0')
+
+
+# Labeling Bayes factor based on strength of evidence
+BF10_1.1 <- as.data.frame(table(bayesFactor_labeling(1/(bfs1.1))))
+BF10_1.2 <- as.data.frame(table(bayesFactor_labeling(1/(bfs1.2))))
+BF10_2   <- as.data.frame(table(bayesFactor_labeling(1/(bfs2))))
+
+
+# BF after exp 1 - 3 1.909598
+
+ggplot(BF10_1.1, aes(x = Var1, y = Freq)) + 
+  geom_bar(stat = 'identity') +
+  labs(x = 'BF10', 
+       y = 'Count',
+       title = 'BRMS method: beta = 0 vs. beta != 0')
+
+ggplot(BF10_1.2, aes(x = Var1, y = Freq)) + 
+  geom_bar(stat = 'identity') +
+  labs(x = 'BF10', 
+       y = 'Count',
+       title = 'Wagenmakers method: beta = 0 vs. beta != 0')
+
+ggplot(BF10_2, aes(x = Var1, y = Freq)) + 
+  geom_bar(stat = 'identity') +
+  labs(x = 'BF10', 
+       y = 'Count',
+       title = 'Wagenmakers method: beta = 0 vs. beta > 0')
+``` 
+
+Without taking previous BF10 into account:
+```{r}
+table1 <- data.frame(Method = c('BRMS', 'UR', 'OR'),
+                     Over6  = c(mean(1/(bfs1.1) > 6),
+                                mean(1/(bfs1.2) > 6),
+                                mean(1/(bfs2) > 6)),
+                     Over10 = c(mean(1/(bfs1.1) > 10),
+                                mean(1/(bfs1.2) > 10),
+                                mean(1/(bfs2) > 10)))
+kable(table1)
+```
+
+With taking previous BF10 into account:
+```{r}
+table1 <- data.frame(Method = c('BRMS', 'UR', 'OR'),
+                     Over6  = c(mean(1/(bfs1.1*priorOdd1.1) > 6),
+                                mean(1/(bfs1.2*priorOdd1.2) > 6),
+                                mean(1/(bfs2*priorOdd2) > 6)),
+                     Over10 = c(mean(1/(bfs1.1*priorOdd1.1) > 10),
+                                mean(1/(bfs1.2*priorOdd1.2) > 10),
+                                mean(1/(bfs2*priorOdd2) > 10)))
+kable(table1)
+```
+
+#  Recollection
+```{r}
+load("U:/Projects/schemaVR/schemaVR4/powerAnalysis_recollection_20190926_080526.RData")
+```
+
+## PPC
+Observed data (y) vs. simulated data (yrep):
+```{r}
+pp_check(combinedData_rec_AFC)
+```
+
+How well did we capture the mean?
+```{r}
+pp_check(combinedData_rec_AFC, type='stat', stat='mean')
+```
+
+## Results of previous experiments
+```{r}
+plot(marginal_effects(combinedData_rec_AFC), points = TRUE)
+```
+
+
+```{r}
+# Extracting posterior distribution
+postDistsPrior <- posterior_samples(combinedData_rec_AFC)$b_objLocTargetRating
+priorOdd1.1    <- hypothesis(combinedData_rec_AFC, "objLocTargetRating = 0")$hypothesis$Evid.Ratio
+
+# Wagenmakers et al. (2010) unrestricted method: beta = 0 vs. beta != 0
+### Code pasted and adapted from Wagenmakers et al. (2010) found here: http://www.ejwagenmakers.com/papers.html
+fit.posterior  <- logspline(postDistsPrior)
+posterior      <- dlogspline(0, fit.posterior) 
+prior          <- dnorm(0 ,0, 1)
+priorOdd1.2    <- posterior/prior
+
+# Wagenmakers et al. (2010) order-restricted method 1 based on renormalisation: beta = 0 vs. beta > 0 
+posterior     <- dlogspline(0, fit.posterior) 
+# renormalize:
+area          <- sum(postDistsPrior < 0)/length(postDistsPrior)
+posterior.OR  <- posterior/area
+prior.OR      <- 2*dnorm(0 ,0, 1)
+priorOdd2     <- posterior.OR/prior.OR 
+
+# Create df
+table1 <- data.frame(Method = c('BRMS', 'UR', 'OR'),
+                     BF01   = c(priorOdd1.1, priorOdd1.2, priorOdd2))
+table1$BF10 <- 1/table1$BF01 
+table1$BF01 <- round(table1$BF01, 3)
+table1$BF10 <- round(table1$BF10, 1)
+
+# Display table
+kable(table1)
+```
+
+
+```{r}
+# Based on https://www.r-bloggers.com/what-does-a-bayes-factor-feel-like/
+bfs_labels_def <- c('Extreme evidence for H1',
+                    'Very strong evidence for H1',
+                    'Strong evidence for H1',
+                    'Moderate evidence for H1',
+                    'Anecdotal evidence for H1',
+                    'No evidence',
+                    'Anecdotal evidence for H0',
+                    'Moderate evidence for H0',
+                    'Strong evidence for H0',
+                    'Very strong evidence for H0',
+                    'Extreme evidence for H0')
+
+
+# Labeling Bayes factor based on strength of evidence
+BF10_1.1 <- as.data.frame(table(bayesFactor_labeling(1/(bfs1.1))))
+BF10_1.2 <- as.data.frame(table(bayesFactor_labeling(1/(bfs1.2))))
+BF10_2   <- as.data.frame(table(bayesFactor_labeling(1/(bfs2))))
+
+
+ggplot(BF10_1.1, aes(x = Var1, y = Freq)) + 
+  geom_bar(stat = 'identity') +
+  labs(x = 'BF10', 
+       y = 'Count',
+       title = 'BRMS method: beta = 0 vs. beta != 0')
+
+ggplot(BF10_1.2, aes(x = Var1, y = Freq)) + 
+  geom_bar(stat = 'identity') +
+  labs(x = 'BF10', 
+       y = 'Count',
+       title = 'Wagenmakers method: beta = 0 vs. beta != 0')
+
+ggplot(BF10_2, aes(x = Var1, y = Freq)) + 
+  geom_bar(stat = 'identity') +
+  labs(x = 'BF10', 
+       y = 'Count',
+       title = 'Wagenmakers method: beta = 0 vs. beta > 0')
+``` 
+
+Without taking previous BF10 into account:
+```{r}
+table1 <- data.frame(Method = c('BRMS', 'UR', 'OR'),
+                     Over6  = c(mean(1/(bfs1.1) > 6),
+                                mean(1/(bfs1.2) > 6),
+                                mean(1/(bfs2) > 6)),
+                     Over10 = c(mean(1/(bfs1.1) > 10),
+                                mean(1/(bfs1.2) > 10),
+                                mean(1/(bfs2) > 10)))
+kable(table1)
+```
+
+With taking previous BF10 into account:
+```{r}
+table1 <- data.frame(Method = c('BRMS', 'UR', 'OR'),
+                     Over6  = c(mean(1/(bfs1.1*priorOdd1.1) > 6),
+                                mean(1/(bfs1.2*priorOdd1.2) > 6),
+                                mean(1/(bfs2*priorOdd2) > 6)),
+                     Over10 = c(mean(1/(bfs1.1*priorOdd1.1) > 10),
+                                mean(1/(bfs1.2*priorOdd1.2) > 10),
+                                mean(1/(bfs2*priorOdd2) > 10)))
+kable(table1)
+```
+
+
+## Transformation
+In this context, it is also imporant to think about which transformation of the probability values of recollection. There are two different possbilities: arcsine and probit transformation. 
+
+```{r}
+pr <- seq(0, 1, 0.1)
+pr_asin <- asin(2*pr-1)
+
+pr_probit <- qnorm(pr, 0, 1)
+n <- 24
+pr_probit[pr_probit == -Inf] <- qnorm(0.5/n, 0, 1)
+pr_probit[pr_probit ==  Inf] <- qnorm((n - 0.5)/n, 0, 1)
+
+plot(pr, pr_asin)
+plot(pr, pr_probit)
+```
+
+I think we should use the probit transformation because otherwise it reduces our effect because of the assymmetry of the arcsine transformation.
+
+#  Euclidean Distance
+```{r}
+load("U:/Projects/schemaVR/schemaVR4/powerAnalysis_euclid_20190915_154723.RData")
+```
+
+## PPC
+Observed data (y) vs. simulated data (yrep):
+```{r}
+pp_check(combinedData_model)
+```
+
+How well did we capture the mean?
+```{r}
+pp_check(combinedData_model, type='stat', stat='mean')
+```
+
+## Results of previous experiments
+```{r}
+plot(marginal_effects(combinedData_model), points = TRUE)
+```
+
+
+```{r}
+# Extracting posterior distribution
+postDistsPrior <- posterior_samples(combinedData_model)$b_IobjLocTargetRatingMUobjLocTargetRating
+priorOdd1.1    <- hypothesis(combinedData_model, "IobjLocTargetRatingMUobjLocTargetRating = 0")$hypothesis$Evid.Ratio
+
+# Wagenmakers et al. (2010) unrestricted method: beta = 0 vs. beta != 0
+### Code pasted and adapted from Wagenmakers et al. (2010) found here: http://www.ejwagenmakers.com/papers.html
+fit.posterior  <- logspline(postDistsPrior)
+posterior      <- dlogspline(0, fit.posterior) 
+prior          <- dnorm(0 ,0, 1)
+priorOdd1.2    <- posterior/prior
+
+# Wagenmakers et al. (2010) order-restricted method 1 based on renormalisation: beta = 0 vs. beta > 0 
+posterior     <- dlogspline(0, fit.posterior) 
+# renormalize:
+area          <- sum(postDistsPrior < 0)/length(postDistsPrior)
+posterior.OR  <- posterior/area
+prior.OR      <- 2*dnorm(0 ,0, 1)
+priorOdd2     <- posterior.OR/prior.OR 
+
+# Create df
+table1 <- data.frame(Method = c('BRMS', 'UR', 'OR'),
+                     BF01   = c(priorOdd1.1, priorOdd1.2, priorOdd2))
+table1$BF10 <- 1/table1$BF01 
+table1$BF01 <- round(table1$BF01, 3)
+table1$BF10 <- round(table1$BF10, 1)
+
+# Display table
+kable(table1)
+```
+
+
+## Power analysis
+```{r}
+# Correcting BRMS results
+bfs1.1[bfs1.1 < 0] <- 1/length(posterior_samples(sim_recall_model)$b_objLocTargetRating)
+
+# Based on https://www.r-bloggers.com/what-does-a-bayes-factor-feel-like/
+bfs_labels_def <- c('Extreme evidence for H1',
+                    'Very strong evidence for H1',
+                    'Strong evidence for H1',
+                    'Moderate evidence for H1',
+                    'Anecdotal evidence for H1',
+                    'No evidence',
+                    'Anecdotal evidence for H0',
+                    'Moderate evidence for H0',
+                    'Strong evidence for H0',
+                    'Very strong evidence for H0',
+                    'Extreme evidence for H0')
+
+
+# Labeling Bayes factor based on strength of evidence
+BF10_1.1 <- as.data.frame(table(bayesFactor_labeling(1/(bfs1.1))))
+BF10_1.2 <- as.data.frame(table(bayesFactor_labeling(1/(bfs1.2))))
+BF10_2   <- as.data.frame(table(bayesFactor_labeling(1/(bfs2))))
+
+ggplot(BF10_1.1, aes(x = Var1, y = Freq)) + 
+  geom_bar(stat = 'identity') +
+  labs(x = 'BF10', 
+       y = 'Count',
+       title = 'BRMS method: beta = 0 vs. beta != 0')
+
+ggplot(BF10_1.2, aes(x = Var1, y = Freq)) + 
+  geom_bar(stat = 'identity') +
+  labs(x = 'BF10', 
+       y = 'Count',
+       title = 'Wagenmakers method: beta = 0 vs. beta != 0')
+
+ggplot(BF10_2, aes(x = Var1, y = Freq)) + 
+  geom_bar(stat = 'identity') +
+  labs(x = 'BF10', 
+       y = 'Count',
+       title = 'Wagenmakers method: beta = 0 vs. beta > 0')
+``` 
+
+Without taking previous BF10 into account:
+```{r}
+table1 <- data.frame(Method = c('BRMS', 'UR', 'OR'),
+                     Over6  = c(mean(1/(bfs1.1) > 6),
+                                mean(1/(bfs1.2) > 6),
+                                mean(1/(bfs2) > 6)),
+                     Over10 = c(mean(1/(bfs1.1) > 10),
+                                mean(1/(bfs1.2) > 10),
+                                mean(1/(bfs2) > 10)))
+kable(table1)
+```
+
+With taking previous BF10 into account:
+```{r}
+table1 <- data.frame(Method = c('BRMS', 'UR', 'OR'),
+                     Over6  = c(mean(1/(bfs1.1*priorOdd1.1) > 6),
+                                mean(1/(bfs1.2*priorOdd1.2) > 6),
+                                mean(1/(bfs2*priorOdd2) > 6)),
+                     Over10 = c(mean(1/(bfs1.1*priorOdd1.1) > 10),
+                                mean(1/(bfs1.2*priorOdd1.2) > 10),
+                                mean(1/(bfs2*priorOdd2) > 10)))
+kable(table1)
+```
+
+#  AFC
+```{r}
+load("U:/Projects/schemaVR/schemaVR4/powerAnalysis_AFC_20190915_192051.RData")
+```
+
+## PPC
+Observed data (y) vs. simulated data (yrep):
+```{r}
+pp_check(combinedData_model)
+```
+
+How well did we capture the mean?
+```{r}
+pp_check(combinedData_model, type='stat', stat='mean')
+```
+
+## Results of previous experiments
+```{r}
+plot(marginal_effects(combinedData_model), points = TRUE)
+```
+
+
+```{r}
+# Extracting posterior distribution
+postDistsPrior <- posterior_samples(combinedData_model)$b_IobjLocTargetRatingMUobjLocTargetRating
+priorOdd1.1    <- hypothesis(combinedData_model, "IobjLocTargetRatingMUobjLocTargetRating = 0")$hypothesis$Evid.Ratio
+
+# Wagenmakers et al. (2010) unrestricted method: beta = 0 vs. beta != 0
+### Code pasted and adapted from Wagenmakers et al. (2010) found here: http://www.ejwagenmakers.com/papers.html
+fit.posterior  <- logspline(postDistsPrior)
+posterior      <- dlogspline(0, fit.posterior) 
+prior          <- dnorm(0 ,0, 1)
+priorOdd1.2    <- posterior/prior
+
+# Wagenmakers et al. (2010) order-restricted method 1 based on renormalisation: beta = 0 vs. beta > 0 
+posterior     <- dlogspline(0, fit.posterior) 
+# renormalize:
+area          <- sum(postDistsPrior > 0)/length(postDistsPrior)
+posterior.OR  <- posterior/area
+prior.OR      <- 2*dnorm(0 ,0, 1)
+priorOdd2     <- posterior.OR/prior.OR 
+
+# Create df
+table1 <- data.frame(Method = c('BRMS', 'UR', 'OR'),
+                     BF01   = c(priorOdd1.1, priorOdd1.2, priorOdd2))
+table1$BF10 <- 1/table1$BF01 
+table1$BF01 <- round(table1$BF01, 3)
+table1$BF10 <- round(table1$BF10, 1)
+
+# Display table
+kable(table1)
+```
+
+## Power analysis
+```{r}
+# Correcting BRMS results
+bfs1.1[bfs1.1 < 0] <- 1/length(posterior_samples(sim_recall_model)$b_objLocTargetRating)
+
+# Based on https://www.r-bloggers.com/what-does-a-bayes-factor-feel-like/
+bfs_labels_def <- c('Extreme evidence for H1',
+                    'Very strong evidence for H1',
+                    'Strong evidence for H1',
+                    'Moderate evidence for H1',
+                    'Anecdotal evidence for H1',
+                    'No evidence',
+                    'Anecdotal evidence for H0',
+                    'Moderate evidence for H0',
+                    'Strong evidence for H0',
+                    'Very strong evidence for H0',
+                    'Extreme evidence for H0')
+
+
+# Labeling Bayes factor based on strength of evidence
+BF10_1.1 <- as.data.frame(table(bayesFactor_labeling(1/(bfs1.1))))
+BF10_1.2 <- as.data.frame(table(bayesFactor_labeling(1/(bfs1.2))))
+BF10_2   <- as.data.frame(table(bayesFactor_labeling(1/(bfs2))))
+
+ggplot(BF10_1.1, aes(x = Var1, y = Freq)) + 
+  geom_bar(stat = 'identity') +
+  labs(x = 'BF10', 
+       y = 'Count',
+       title = 'BRMS method: beta = 0 vs. beta != 0')
+
+ggplot(BF10_1.2, aes(x = Var1, y = Freq)) + 
+  geom_bar(stat = 'identity') +
+  labs(x = 'BF10', 
+       y = 'Count',
+       title = 'Wagenmakers method: beta = 0 vs. beta != 0')
+
+ggplot(BF10_2, aes(x = Var1, y = Freq)) + 
+  geom_bar(stat = 'identity') +
+  labs(x = 'BF10', 
+       y = 'Count',
+       title = 'Wagenmakers method: beta = 0 vs. beta > 0')
+``` 
+
+Without taking previous BF10 into account:
+```{r}
+table1 <- data.frame(Method = c('BRMS', 'UR', 'OR'),
+                     Over6  = c(mean(1/(bfs1.1) > 6),
+                                mean(1/(bfs1.2) > 6),
+                                mean(1/(bfs2) > 6)),
+                     Over10 = c(mean(1/(bfs1.1) > 10),
+                                mean(1/(bfs1.2) > 10),
+                                mean(1/(bfs2) > 10)))
+kable(table1)
+```
+
+With taking previous BF10 into account:
+```{r}
+table1 <- data.frame(Method = c('BRMS', 'UR', 'OR'),
+                     Over6  = c(mean(1/(bfs1.1*priorOdd1.1) > 6),
+                                mean(1/(bfs1.2*priorOdd1.2) > 6),
+                                mean(1/(bfs2*priorOdd2) > 6)),
+                     Over10 = c(mean(1/(bfs1.1*priorOdd1.1) > 10),
+                                mean(1/(bfs1.2*priorOdd1.2) > 10),
+                                mean(1/(bfs2*priorOdd2) > 10)))
+kable(table1)
+```
