@@ -1,0 +1,15 @@
+---
+title: "GitHub Repository for schemaVR project"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Background
+This is the GitHub repository for my schemaVR project. 
+
+# Guide through repo
+
+# More information
