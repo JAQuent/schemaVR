@@ -1,0 +1,336 @@
+---
+title: "A U-shape that appears as a linear correlation when averaged"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+library(rslurm)
+library(brms)
+library(ggplot2)
+library(plyr)
+library(assortedRFunctions)
+```
+
+
+# The problem
+While analysing the data from our U-shape experiments (see pre-registration for context: https://osf.io/kcr2q), we ran into a peculiar problem. As expected, we did find that memory performance can be described as a U-shape function of how expected a certain object is in certain location. However, we also predicted that the memory advantage for highly incongruent item/locations pairings as well as for highly congruent pairings are driven by different processes. More specifically, we predicted that recollection is driving the incongruency advantage, while familiarity is contributing to the congruency advantage. In other words, we predicted linear negative as well as linear positive relationships respectively. 
+
+We actually did find a linear negative relationship when averaging across subjects yielding one data point per item/location pairing. 
+
+```{r echo = FALSE}
+# Loading data
+load("schemaVR2/data/dataSchemaVR2_cleaned.RData")
+load('schemaVR3/data/schemaVR3_closestLocation.RData')
+
+# Make subNum character
+dataSchemaVR2$subNum <- as.character(dataSchemaVR2$subNum)
+dataSchemaVR3$subNum <- as.character(dataSchemaVR3$subNum)
+
+# Create remember variable
+remembered <- rep(0, dim(dataSchemaVR2)[1])
+remembered[dataSchemaVR2$resCon == 1] <- 1
+dataSchemaVR2$remembered <- remembered
+
+# Create remember variable
+remembered <- rep(0, dim(dataSchemaVR3)[1])
+remembered[dataSchemaVR3$resCon == 1] <- 1
+dataSchemaVR3$remembered <- remembered
+
+# Combine datasets
+combinedData <- data.frame(subNum = c(dataSchemaVR2$subNum, dataSchemaVR3$subNum),
+                           objNum = c(dataSchemaVR2$objNum, dataSchemaVR3$objNum),
+                           objNam = c(as.character(dataSchemaVR2$objName), as.character(dataSchemaVR3$objNam)),
+                           targetLocation =c(dataSchemaVR2$targetLocation, dataSchemaVR3$targetLocation),
+                           resCon = c(dataSchemaVR2$resCon, dataSchemaVR3$resCon),
+                           objLocTargetNorm = c(dataSchemaVR2$objLocTargetNorm, dataSchemaVR3$objLocTargetNorm),
+                           objLocTargetRating = c(dataSchemaVR2$objLocTargetRating, dataSchemaVR3$objLocTargetRating),
+                           remembered = c(dataSchemaVR2$remembered, dataSchemaVR3$remembered),
+                           accRecall = c(dataSchemaVR2$accRecall, dataSchemaVR3$accRecall))
+
+# Scaling based on Gelman et al. (2008) and https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
+# Mean = 0 and SD = 0.5
+combinedData$Exp_ind  <- combinedData$objLocTargetRating 
+combinedData$sExp_ind <- (combinedData$Exp_ind - mean(combinedData$Exp_ind))/(sd(combinedData$Exp_ind)/0.5)
+
+combinedData$Exp_norm  <- combinedData$objLocTargetNorm 
+combinedData$sExp_norm <- (combinedData$Exp_norm - mean(combinedData$Exp_norm))/(sd(combinedData$Exp_norm)/0.5)
+
+# Aggregating to correlate
+combinedData_agg <- ddply(combinedData, 
+                          c('objNum', 'targetLocation'), 
+                          summarise, 
+                          Individual    = mean(sExp_ind),
+                          Individual_sd = sd(sExp_ind),
+                          Normative  = mean(sExp_norm),
+                          remNum    = sum(remembered),
+                          remPer    = mean(remembered))
+```
+
+
+```{r}
+ggplot(combinedData_agg, aes(x = Individual, y = remPer)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm') +
+  labs(y = "Remembered %", x = "Post-experimental ratings (averaged)",  title = 'Negative relationship for averaged data')
+cor1 <- cor.test(combinedData_agg$Individual, combinedData_agg$remPer)
+cor2 <- cor.test(combinedData_agg$Individual, combinedData_agg$Normative)
+```
+
+In this case, we have a significant negative correlation, r`r rValue(cor1$estimate)`, p`r pValue(cor1$p.value)`. We get similar a relationship when we use the normative data that we collected from 6 participants who viewed all 400 possible pairings but did not perform a memory task, which is not very surprising as the correlation between the averaged post-experimental ratings and those normative ratings are very high, r`r rValue(cor2$estimate)`, p`r pValue(cor2$p.value)`.
+
+However, if we examine the raw (not averaged) data find a U-shape instead of a linear relationship, which for instance can be seen in this visualisation of the marginal effects of a corresponding mixed linear model.
+
+```{r}
+model2 <- readRDS('C:/Users/aq01/Desktop/schemaVR/paper/scripts/rememberAnalysis/_rslurm_model2/results_0.RDS', refhook = NULL)
+model2 <- combine_models(model2[[1]]$model,
+                         model2[[2]]$model,
+                         model2[[3]]$model,
+                         model2[[4]]$model,
+                         model2[[5]]$model,
+                         model2[[6]]$model,
+                         model2[[7]]$model,
+                         model2[[8]]$model)
+
+marginal_effects(model2)
+#fixef(model2)
+```
+
+```{r unsusedModdels, eval = FALSE}
+# Unused models
+# Normative
+model1 <- readRDS('C:/Users/aq01/Desktop/schemaVR/paper/scripts/rememberAnalysis/_rslurm_model1/results_0.RDS', refhook = NULL)
+model1 <- combine_models(model1[[1]]$model,
+                         model1[[2]]$model,
+                         model1[[3]]$model,
+                         model1[[4]]$model,
+                         model1[[5]]$model,
+                         model1[[6]]$model,
+                         model1[[7]]$model,
+                         model1[[8]]$model)
+
+marginal_effects(model1)
+fixef(model1)
+
+# Correct only
+model3 <- readRDS('C:/Users/aq01/Desktop/schemaVR/paper/scripts/rememberAnalysis/_rslurm_model3/results_0.RDS', refhook = NULL)
+model3 <- combine_models(model3[[1]]$model,
+                         model3[[2]]$model,
+                         model3[[3]]$model,
+                         model3[[4]]$model,
+                         model3[[5]]$model,
+                         model3[[6]]$model,
+                         model3[[7]]$model,
+                         model3[[8]]$model)
+
+marginal_effects(model3)
+fixef(model3)
+
+# R + all others only correct (model 4)
+model4 <- readRDS('C:/Users/aq01/Desktop/schemaVR/paper/scripts/rememberAnalysis/_rslurm_model4/results_0.RDS', refhook = NULL)
+model4 <- combine_models(model4[[1]]$model,
+                         model4[[2]]$model,
+                         model4[[3]]$model,
+                         model4[[4]]$model,
+                         model4[[5]]$model,
+                         model4[[6]]$model,
+                         model4[[7]]$model,
+                         model4[[8]]$model)
+
+marginal_effects(model4)
+fixef(model4)
+```
+
+This confused us a lot. To investigate what is going one we have plotted individual loess smoothing lines because we thought maybe we are observing something like the Simpson's paradox. Due to the fact that per participants there are only 20 data points those lines are very noisy and difficult to interpret. 
+
+```{r fig1, fig.height = 10, fig.width = 10, eval = FALSE}
+ggplot(combinedData, aes(x = objLocTargetRating, y = remembered)) + 
+  facet_wrap(~ subNum) +
+  geom_jitter(height = 0.05) +
+  geom_smooth(se = FALSE, method = 'loess') +
+  #geom_smooth(combinedData, mapping = aes(x = objLocTargetNorm, y = remembered), method = 'lm', colour = 'red') +
+  #geom_smooth(combinedData, mapping = aes(x = objLocTargetRating, y = remembered), colour = 'black') +
+  theme(legend.position = "none") +
+  coord_cartesian(ylim = c(-0.1, 1.1)) +
+  labs(x = "Expectancy", y = 'Remembered')
+
+```
+
+On the quest to understand this discrepancy, I have noticed that there seems to be asymmetric spread. For instance, when we look up the normative ratings for any pairing that received the lowest expectancy rating possible (-100) and colour those to show the spread, 
+
+```{r}
+# Colour code objects
+colourCode <- rep(0, dim(combinedData)[1])
+colourCode[combinedData$objLocTargetRating == -100] <- 1
+combinedData$colourCode <- as.factor(colourCode)
+
+
+ggplot(combinedData, aes(x = objLocTargetNorm, y = remembered, colour = colourCode))+ 
+  geom_jitter(height = 0.1) +
+  theme(legend.position = "none") +
+  labs(x = "Normative ratings", y = 'Remembered', title = 'Spread of pairs that were rated -100 on that trial')
+```
+
+we see that there is less (rightward) spread than when we do the same thing for any pairing that received the highest expectancy rating (100). 
+
+```{r}
+# Colour code objects
+colourCode <- rep(0, dim(combinedData)[1])
+colourCode[combinedData$objLocTargetRating == 100] <- 1
+combinedData$colourCode <- as.factor(colourCode)
+
+ggplot(combinedData, aes(x = objLocTargetNorm, y = remembered, colour = colourCode))+ 
+  geom_jitter(height = 0.1) +
+  theme(legend.position = "none") +
+  labs(x = "Normative ratings", y = 'Remembered', title = 'Spread of pairs that were rated 100 on that trial')
+```
+
+```{r}
+rightShift <- abs(-100 - combinedData$objLocTargetNorm[combinedData$objLocTargetRating == -100])
+leftShift  <- abs(100 - combinedData$objLocTargetNorm[combinedData$objLocTargetRating == 100])
+
+test1 <- t.test(leftShift, rightShift, var.equal = FALSE)
+```
+
+While the mean spread from -100 toward the right is `r round(mean(rightShift), 2)`, the spread from 100 towards the left is `r round(mean(leftShift), 2)`, which are significantly different, p `r pValue(test1$p.value)`. This raises the possibility that averaging introduces and artefact because of this asymmetry, which why we see this discrepancy. 
+
+# Simulation to reproduce this problem
+```{r setup2, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+To investigate whether an explanation like this can account for our discrepancy, we simulated data. This simulation is based on the idea to have an average expectancy per object. The expectancy for a particular participants is generated by taking this average expectancy as the mean of a normal distribution, while using a standard deviation (SD) that becomes smaller/larger as a function of expectancy. 
+
+```{r}
+# Set up seed
+set.seed(1241)
+
+# Parameters
+numObj  <- 20
+numSub  <- 75
+```
+
+Similar to our existing data, we have twenty pairings (i.e. objects) per participants (n = 75). We start with generating 20 random values between -100 and 100 for our objects.
+
+```{r}
+# Give 20 obj true values from uniform distribution between -100 and 100.
+trueObj_val <- runif(numObj, -100, 100)
+```
+
+
+In order to have an asymmetric spread, we have to scale the standard deviation (SD) as function of expectancy. 
+
+```{r}
+sdScale          <- -1
+
+# Have an SD that scales with the true obj values
+sd_scaled_by_val <- sdScale*trueObj_val - sdScale*100
+```
+
+In the next step we generate expectancy ratings for each participant.
+
+```{r}
+# For each subject draw a random value with the mean of the object with SD that scales with this value
+subjVal <- matrix(NA, numSub, numObj)
+
+for(i in 1:numSub){
+  for(j in 1:numObj){
+    subjVal[i, j] <- rnorm(1, trueObj_val[j], sd_scaled_by_val[j])
+  }
+}
+```
+
+This process will create values that exceed the range of possible vaues, therefore everything is capped at -100 and 100.
+
+```{r}
+# Capping at -100 and 100
+subjVal[subjVal > 100]  <- 100
+subjVal[subjVal < -100] <- -100
+
+# Everything is bound to one DF
+df <- data.frame(sub  = rep(1:numSub, numObj),
+                 obj  = rep(1:numObj, each = numSub),
+                 trueObj_val = rep(trueObj_val, each = numSub),
+                 x    = c(subjVal))
+```
+
+To make it easier to compare the results with our analyse we scale the data to have mean of 0 and SD of 1. 
+```{r}
+df$s_trueObj_val <- scale(df$trueObj_val)
+df$s_x <- scale(df$x)
+```
+
+In the last step, we use those expectancy values to create remember judgements as a quadratic logistic model. 
+
+```{r}
+# Generating memory performance
+beta0 <- 0
+beta1 <- 0
+beta2 <- 1.2
+z     <- beta0 + beta1*df$s_x + beta2*df$s_x*df$s_x # Regression in log odds
+pr    <- 1/(1+exp(-z)) # Convert to probability.
+df$y  <- rbinom(numObj*numSub, 1, pr) # Get 0 and 1 with binomial link function
+```
+
+This leads to this result:
+```{r}
+ggplot(df, aes(x = s_x, y = y)) + 
+  geom_jitter(width = 0, height =  0.1) +
+  geom_smooth(colour = 'blue') +
+  geom_smooth(aes(x = s_trueObj_val), colour = 'red') +
+  labs(y = "Remembered (simulated)", x = "Simulated ratings", title = 'Result of simulation')
+```
+
+This shows that true quadratic relationship (blue loess line) can appear as straight line (red loess line) when averaged. Playing around with parameters of the regression and the SD scale allows one to easily create examples where the line is slightly negative. 
+```{r}
+# Aggregating to correlate
+df_agg <- ddply(df, 
+                c('obj', 's_trueObj_val '), 
+                summarise, 
+                Individual    = mean(s_x),
+                Individual_sd = sd(s_x),
+                remNum    = sum(y),
+                remPer    = mean(y))
+
+# Get correlation
+cor3 <- cor.test(df_agg$Individual, df_agg$remPer)
+```
+
+In this case the correlation is r `r rValue(cor3$estimate)`, p `r pValue(cor3$p.value)`.
+
+```{r}
+# calculate shift
+rightShift <- abs(-100 - df$trueObj_val[df$x == -100])
+leftShift  <- abs(100 - df$trueObj_val[df$x == 100])
+
+# T test for the difference
+test2 <- t.test(leftShift, rightShift, var.equal = FALSE)
+```
+
+If we now calculate the same rightward and leftward shift, we also get a significant difference, p `r pValue(test2$p.value)`. 
+
+# Conclusion
+It is possible to explain the discrepancy in our data with this asymmetry. This can be shown with this simulation. The only caveat that remains is that the empirical relationship between the the averaged post-experimental ratings and their SD
+
+```{r echo = FALSE}
+ggplot(combinedData_agg, aes(x = Individual, y = Individual_sd)) + 
+  geom_point() + 
+  geom_smooth() +
+  labs(y = "sd(Post-experimental ratings)", x = "Post-experimental ratings (averaged)", title = 'Function of SD of the ratings in real data')
+```
+
+is different from the simulated ones as can be seen below. 
+
+```{r, echo = FALSE}
+# Aggregate simulated data
+df_sd_sim <- ddply(df, c('obj ', 's_trueObj_val'), summarise, mean = mean(s_x), sd = sd(s_x ))
+
+ggplot(df_sd_sim, aes(x = mean, y = sd)) + 
+  geom_point() + 
+  geom_smooth() +
+  labs(y = "sd(simulated ratings)", x = "Simulated ratings (averaged)", title = 'Function of SD of the ratings in simulated data')
+```
+
+
+However, we believe this is just a matter of findings the right parameters and is not as important. 
