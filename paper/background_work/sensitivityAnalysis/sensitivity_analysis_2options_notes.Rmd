@@ -1,0 +1,705 @@
+---
+title: "What is the best analysis to find a U-shape?"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+options(scipen = 20)
+```
+
+
+```{r libraries, echo = FALSE}
+library(ggplot2)
+library(plyr)
+library(knitr)
+library(reshape2)
+library(cowplot)
+theme_set(theme_gray())
+```
+
+# The outset of the problem
+In one of my project, I'd like to show that there is a U-shape relationship between two variables. The traditional way to do this would be to fit a quadratic model and test whether the quadratic term is different from zero. However, [Simonsohn (2018)](https://journals.sagepub.com/doi/10.1177/2515245918805755#) among other correctly points out that evidence for a quadratic fit is not enough and there might be situations where the quadratic term is not zero but there is no true u-shape.
+
+To avoid this, Simonsohn proposed to use interrupt regression that tests whether each slope is different from zero. While the exact proposal (Robin Hood algorithm) might work well for frequentist statistics, it is not clear how we can adopt this for our Bayesian models. The main question being that it is unclear how to choose the correct breaking point. This is what I explore here extensively as a preparation for a pre-registration [(for context click on link)](https://osf.io/4sw2t/). 
+
+# Explanation of the simulation
+We identified two options to analyse our data with interrupted regression or more specifically how to find the best breaking point. 
+
+__Option 1__ is to split the data in half using a spline (or similar) to find the minimum/maximum in one half of the data and then analyse the other half of the data to test whether both slopes at a that point are significantly different from 0. 
+
+__Option 2__ is to use all data and test a whole range of points within an interval and then apply an appropriate correction for multiple testing. The aim of this document is to explore all the options and their implications. Also whether correction is necessary at all. 
+
+For option 1, I subset the simulated data to only include the middle 80% and then find the minimum via smoothing model. The smoothing model is the same used by Simonsohn's two line test, which is a general additive model using a cubic regression spline. When I played around with it, it usually did a good job finding the point that would also be chosen via visual examination for the plotted loess line. I used only 80 % of the middle because especially when the $\beta_2$ is zero, the minimum was often the extreme points, which make a meaningful estimation impossible. An alternative for this could be to fit the smoothing model to the full range of the values but to only consider minima within the middle 80 % but this wasn't tested here. 
+
+For option 2, I also restricted the range to same middle 80%, for which 10 breaking points evenly spaced out were examined. For each different $\beta_2$ I run 100,000 simulations. 
+
+Also note that some models couldn't be estimated that is because some model didn't return a minimum or only return NA. This happens particularly often in the frequentist models. 
+
+I start with frequentist mixed linear models to get an idea how both options compare in terms of how they behave and use those results as a perspective for the Bayesian implementation.  
+
+Like in the two-line test we fitted two individual models to the data. One model to get the p-value/BF for slope 1 that includes the breaking point. Since in this model slope 2 can't contain the breaking point, we fitted another model where the breaking point is included in slope 2 but not slope 1, so that both slopes include the minimum/maximum and make best use of the data. 
+
+Note that links to the repository will be added at a later time point. If you read this in the far future and I haven't done this yet, feel free to kick me. 
+
+# Frequentist models
+## Using previous data to generated null data by shuffling
+In order to find a way for appropriate multiple testing correction that is less severe than Bonferroni, I shuffled the 0 and 1 of original data [(for context click on link)](https://osf.io/4sw2t/) within subjects. This means that the average performance within subjects as in our actual data that we want to analyse after pre-registration is the same but the information for objects is lost. Due to the fact that in our example each subject only saw each type of object once, we cannot shuffle within both subjects and objects. After shuffling mixed linear models with a random intercept are fitted to the data following this equation
+
+y ~ xlow + xhigh + high + (1 | sub). 
+
+Now, we examine the results of this simulation. 
+
+```{r loadData1, echo = FALSE}
+load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/nullData.RData")
+```
+
+```{r fpr1}
+# Calculate u-shape by using correct p values, no NA values and product of both slopes negative
+# Get get one-tailed p-values
+sim_df$p1_onet <- sim_df$p1/2
+sim_df$p2_onet <- sim_df$p2/2
+alphaLevel2_1  <- 0.05
+sim_df$uShaped <-  (sim_df$p1_onet < alphaLevel2_1 & sim_df$p2_onet < alphaLevel2_1) & 
+                   !(is.na(sim_df$slope1) | is.na(sim_df$slope2)) & 
+                   (sim_df$slope1 < 0 & sim_df$slope2 > 0)
+
+sim_df$p1_sig  <-  sim_df$p1_onet < alphaLevel2_1 & sim_df$slope1 < 0
+sim_df$p2_sig  <-  sim_df$p2_onet < alphaLevel2_1 & sim_df$slope2 > 0 
+
+
+# Collapse across runs
+sim_df_agg <- ddply(sim_df, 
+                    c('index'), 
+                    summarise, 
+                    uShaped = max(uShaped, na.rm = TRUE), 
+                    p1_sig = max(p1_sig, na.rm = TRUE),
+                    p2_sig = max(p2_sig, na.rm = TRUE))
+
+fpr_s1 <- mean(sim_df_agg$p1_sig) * 100
+fpr_s2 <- mean(sim_df_agg$p2_sig) * 100
+fpr_u  <- mean(sim_df_agg$uShaped) * 100
+```
+
+The FDR for U-shapes for null data generated by shuffling 0 and 1 within subjects is `r fpr_u` %  for mixed linear model with random intercept for subjects and objects. For slope 1 its `r fpr_s1` % and for slope 2 `r fpr_s2` %. This shows an extreme asymmetry that can be traced down to the distribution of the p-values of the shuffled original data. 
+
+While the p-value for slope 1 is nicely uniform,
+
+```{r plot1,echo = FALSE}
+ggplot(sim_df, aes(x = p1)) + 
+  geom_histogram() +
+  coord_cartesian(x = c(0, 1), y = c(0, 60000), expand = FALSE) +
+  labs(x = 'p-value for slope 1', y = 'Count')
+```
+
+the p-values for slope 2 show extreme pikes at 0 and 1. 
+
+```{r plot2, echo = FALSE}
+ggplot(sim_df, aes(x = p2)) + 
+  geom_histogram() +
+  coord_cartesian(x = c(0, 1), y = c(0, 60000), expand = FALSE) +
+  labs(x = 'p-value for slope 2', y = 'Count')
+```
+
+This is not due to an error in the code but due to the fact that the x-values are always the same with this shuffling method. When I randomly generated x-values like in the quadratic simulation below, we get the similar FPR for both slopes. To be sure about this, I ran a normal glm (without random effects) and got similar results, which means that the problem is not the model but the shuffled data where the x-values remain unchanged. 
+
+```{r warningRate, echo = FALSE}
+warningRate <-  round(mean(c(sim_df$msgs1, sim_df$msgs2) != ""), 4)*100
+```
+
+On a side note, I found for `r warningRate` % of the cases I had some kind of convergence warning while fitting the mixed linear model but since the glm showed the same results, this is not an important issue but shows how Bayesian models might be more robust against these kind of things. 
+
+## One Slope  < 0.05
+With this simulation, I can now look for an alpha level for individual slopes so that we only have one or more significant slopes per iteration across the breaking points in 5 % of the cases. 
+
+```{r optim1, eval = FALSE}
+# Prepare
+nullData         <- sim_df
+nullData$p1_onet <- nullData$p1/2
+nullData$p2_onet <- nullData$p2/2
+
+# Slope 1
+f <- function(alphaLevel){
+  # Calculate significance and right direction
+  nullData$sig <- nullData$p1_onet < alphaLevel & nullData$slope1 < 0
+  
+  # Aggregate by index across multiple breaking points sig is 1 if one comparison is significant
+  nullData_agg <- ddply(nullData, c('index'), summarise, sig = max(sig, na.rm = TRUE))
+  
+  # Minimise squared difference from 0.05
+  (mean(nullData_agg$sig) - 0.05)^2
+}
+
+newAlpha1 <- optim(par = c(0.05), lower = 0, upper = 0.1, fn = f, method = 'Brent')
+
+# For what ever reason I get ERROR: ABNORMAL_TERMINATION_IN_LNSRCH for L-BFGS-B but the value does seem to be good. If the lower and upper values are 0 and 1, then the Brent (also optimise()) method gives wrong results. However with 0 and 0.1 it works. 
+```
+
+```{r alphe1, echo = FALSE}
+# Saved results from optimisation above
+alpha_slope1 <- round(0.006820026, 4)
+```
+
+For the shuffled data we get an alpha level of `r alpha_slope1` for individual slopes. This mean that we can accept the significance of individuals slopes if the p-value is below that level and still only be wrong in 5% of the cases. This is already slightly less conservative than a Bonferroni correction. 
+
+# Quadratic simulation
+```{r loadData2, echo = FALSE}
+load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/sensitivity_analysis_2options_beta1_equals_0_2.RData")
+```
+
+To show that a) the data generated de-novo is not skewed like the shuffled above and b) to draw a power curve I ran another simulation that generated data via quadratic logistic regression with 100,000 iterations per $\beta_2$ (`r unique(sim_df_option2$beta2)`). All simulations are run with sample size of 80. In the first step, I optimise the alpha level for the generated data in the same way I did above. The data was generated with this function:
+
+```{r dataGen1, eval = FALSE}
+data_generator <- function(numObj, numSub, beta0, beta1, beta2){
+  # Give numObj obj true values from uniform distribution between -100 and 100.
+  trueObj_val      <- runif(numObj, -100, 100)
+
+  
+  # For each subject draw a random value with the mean of the object with sd that scales with this value
+  subjVal <- matrix(NA, numSub, numObj)
+  
+  for(i in 1:numSub){
+    for(j in 1:numObj){
+      subjVal[i, j] <- rnorm(1, trueObj_val[j], 100)
+    }
+  }
+  
+  # Capping at -100 and 100
+  subjVal[subjVal > 100]  <- 100
+  subjVal[subjVal < -100] <- -100
+  
+  # Create DF and also scale x 
+  df <- data.frame(sub  = rep(1:numSub, numObj),
+                   obj  = rep(1:numObj, each = numSub),
+                   x    = c(subjVal))
+  
+  # Scale
+  df$s_x <- scale(df$x)
+  
+  # Predicting memory
+  z     <- beta0 + beta1*df$s_x + beta2*df$s_x*df$s_x # Regression in log odds
+  pr    <- 1/(1+exp(-z)) # Convert to probability.
+  df$y  <- rbinom(numObj*numSub, 1, pr)
+  return(df)
+}
+```
+
+```{r optim2, eval = FALSE, echo = FALSE}
+# Prepare
+nullData         <- sim_df_option2[sim_df_option2$beta2 == 0, ]
+nullData$p1_onet <- nullData$p1/2
+nullData$p2_onet <- nullData$p2/2
+
+# Slope 1
+f <- function(alphaLevel){
+  # Calculate significance and right direction
+  nullData$sig <- nullData$p1_onet < alphaLevel & nullData$slope1 < 0
+  
+  # Aggregate by index across multiple breaking points sig is 1 if one comparison is significant
+  nullData_agg <- ddply(nullData, c('index'), summarise, sig = max(sig, na.rm = TRUE))
+  
+  # Minimise squared difference from 0.05
+  (mean(nullData_agg$sig) - 0.05)^2
+}
+
+newAlpha1 <- optim(par = c(0.05), lower = 0, upper = 0.1, fn = f, method = 'Brent')
+
+# Slope 2
+f <- function(alphaLevel){
+  # Calculate significance and right direction
+  nullData$sig <-  nullData$p2_onet < alphaLevel & nullData$slope2 > 0
+  
+  # Aggregate by index across multiple breaking points sig is 1 if one comparison is significant
+  nullData_agg <- ddply(nullData, c('index'), summarise, sig = max(sig, na.rm = TRUE))
+  
+  # Minimise squared difference from 0.05
+  (mean(nullData_agg$sig) - 0.05)^2
+}
+
+newAlpha2 <- optim(par = c(0.05), lower = 0, upper = 0.1, fn = f, method = 'Brent')
+
+# Results of optimisation:
+# 0.008143949
+# 0.008176921
+```
+
+```{r alpha2, echp = FALSE}
+# Values taken from above
+alpah1 <- 0.008143949
+alpha2 <- 0.008176921
+alpha_optim_genData <- mean(c(0.008143949, 0.008176921))
+```
+
+The optimised alpha level for individual slopes is very similar for both slopes. Averaged it is p < `r alpha_optim_genData`.
+
+There are two things we can look at. First is how two both methods fair in detecting significant individual slopes in terms of power and fpr. The second thing we can look is how do the methods fair when the aim is to detect a U-shape (i.e. two significant slopes) especially once we corrected for multiple comparison. 
+
+## Power curves for individual slopes
+```{r fpr3, echo = FALSE}
+# Get one tailed p-values
+sim_df_option2$p1_onet <- sim_df_option2$p1/2
+sim_df_option2$p2_onet <- sim_df_option2$p2/2
+
+# Get significant slopes in right direction
+sim_df_option2$sig1 <-  sim_df_option2$p1_onet < 0.05 & sim_df_option2$slope1 < 0
+sim_df_option2$sig2 <-  sim_df_option2$p1_onet < 0.05 & sim_df_option2$slope2 > 0
+
+# Collapse across runs
+sim_df_option2_agg <- ddply(sim_df_option2, c('index', 'beta2'), summarise, sig1 = max(sig1, na.rm = TRUE), sig2 = max(sig2, na.rm = TRUE))
+
+# Option 1
+# Get one-tailed p-value
+sim_df_option1$p1_onet <- sim_df_option1$p1/2
+sim_df_option1$p2_onet <- sim_df_option1$p2/2
+
+# Get significant slopes in right direction
+sim_df_option1$sig1 <-  sim_df_option1$p1_onet < 0.05 & sim_df_option1$slope1 < 0
+sim_df_option1$sig2 <-  sim_df_option1$p2_onet < 0.05 & sim_df_option1$slope2 > 0
+
+
+# Get false positive and true positive rates for both simulations
+rates1 <- ddply(sim_df_option1, c('beta2'), summarise, sig1 = mean(sig1), sig2 = mean(sig2))
+rates2 <- ddply(sim_df_option2_agg, c('beta2'), summarise, sig1 = mean(sig1), sig2 = mean(sig2))
+
+# Combine to one df
+rates_both        <- cbind(rep(c('Option 1: Splithalf', 'Option 2: Exhaustive'), each = nrow(rates1)), rbind(rates1, rates2))
+names(rates_both) <- c('Option', 'beta2', 'Slope 1', 'Slope 2')
+
+# Specify id.vars: the variables to keep but not split apart on
+melted_rates_both_uncorrected <- melt(rates_both, id.vars = c("Option", "beta2"))
+
+# FPR
+fpr1 <- melted_rates_both_uncorrected[12, 4]
+fpr2 <- melted_rates_both_uncorrected[16, 4]
+```
+
+The FPR for generated data analysed with option 2 are `r fpr1` and `r fpr2`. 
+
+```{r plot3, echo = FALSE}
+ggplot(melted_rates_both_uncorrected, aes(x  = beta2, y = value, colour = Option)) + 
+  geom_point() + 
+  geom_line(aes(linetype = variable )) +
+  labs(x = 'Beta value for quadratic term') + 
+  theme(legend.justification = c(0, 1), 
+        legend.position = c(0, 1))
+
+#kable(rates_both)
+```
+
+In the following are the corrected slopes:
+
+```{r agg1}
+# Get one tailed p-values
+sim_df_option2$p1_onet <- sim_df_option2$p1/2
+sim_df_option2$p2_onet <- sim_df_option2$p2/2
+
+# Get significant slopes in right direction
+sim_df_option2$sig1 <-  sim_df_option2$p1_onet < alpha_optim_genData & sim_df_option2$slope1 < 0
+sim_df_option2$sig2 <-  sim_df_option2$p1_onet < alpha_optim_genData & sim_df_option2$slope2 > 0
+
+# Collapse across runs
+sim_df_option2_agg <- ddply(sim_df_option2, c('index', 'beta2'), summarise, sig1 = max(sig1, na.rm = TRUE), sig2 = max(sig2, na.rm = TRUE))
+
+# Option 1
+# Get one-tailed p-value
+sim_df_option1$p1_onet <- sim_df_option1$p1/2
+sim_df_option1$p2_onet <- sim_df_option1$p2/2
+
+# Get significant slopes in right direction
+sim_df_option1$sig1 <-  sim_df_option1$p1_onet < 0.05 & sim_df_option1$slope1 < 0
+sim_df_option1$sig2 <-  sim_df_option1$p2_onet < 0.05 & sim_df_option1$slope2 > 0
+
+
+# Get false positive and true positive rates for both simulations
+rates1 <- ddply(sim_df_option1, c('beta2'), summarise, sig1 = mean(sig1), sig2 = mean(sig2))
+#kable(rates1)
+rates2 <- ddply(sim_df_option2_agg, c('beta2'), summarise, sig1 = mean(sig1), sig2 = mean(sig2))
+
+# Combine to one df
+rates_both        <- cbind(rep(c('Option 1: Splithalf', 'Option 2: Exhaustive'), each = nrow(rates1)) ,rbind(rates1, rates2))
+names(rates_both) <- c('Option', 'beta2', 'Slope 1', 'Slope 2')
+
+# Specify id.vars: the variables to keep but not split apart on
+melted_rates_both_corrected <- melt(rates_both, id.vars = c("Option", "beta2"))
+```
+
+
+```{r plot4, echo = FALSE}
+ggplot(melted_rates_both_corrected, aes(x  = beta2, y = value, colour = Option, )) + 
+  geom_point() + 
+  geom_line(aes(linetype = variable)) +
+  labs(x = 'Beta value for quadratic term') + 
+  theme(legend.justification = c(0, 1), 
+        legend.position = c(0, 1))
+
+#kable(rates_both)
+```
+
+At this point we can also look at the distribution of p-values for those simulated x-values.
+
+Also, just as a quick side note. When the data is generated instead of shuffled the p-values for both slopes follow a nice uniform distribution. 
+
+```{r plot5, echo = FALSE, eval = FALSE}
+ggplot(sim_df_option2[sim_df_option2$beta2 == 0,], aes(x = p1)) + 
+  geom_histogram() +
+  coord_cartesian(x = c(0, 1), y = c(0, 35000), expand = FALSE) +
+  labs(x = 'p-value for slope 1', y = 'Count')
+```
+
+```{r plot6, echo = FALSE, eval = FALSE}
+ggplot(sim_df_option2[sim_df_option2$beta2 == 0,], aes(x = p2)) + 
+  geom_histogram() +
+  coord_cartesian(x = c(0, 1), y = c(0, 35000), expand = FALSE) +
+  labs(x = 'p-value for slope 2', y = 'Count')
+```
+
+
+## Power for detecting u-shape after correction
+```{r agg2, echo = FALSE}
+# Get one tailed p-values
+sim_df_option2$p1_onet <- sim_df_option2$p1/2
+sim_df_option2$p2_onet <- sim_df_option2$p2/2
+
+# Calculate u-shape by using correct p values, no NA values and slope 1 negative and slope 2 positive
+sim_df_option2$uShaped <-  (sim_df_option2$p1_onet < alpha_optim_genData & sim_df_option2$p2_onet < alpha_optim_genData) & 
+                           !(is.na(sim_df_option2$slope1) | is.na(sim_df_option2$slope2)) & 
+                           (sim_df_option2$slope1 < 0 & sim_df_option2$slope2 > 0)
+
+# Collapse across runs
+sim_df_option2_agg <- ddply(sim_df_option2, c('index', 'beta2'), summarise, uShaped = max(uShaped, na.rm = TRUE))
+
+# Recalculate U-shape option 1
+# Get one-tailed p-value
+sim_df_option1$p1_onet <- sim_df_option1$p1/2
+sim_df_option1$p2_onet <- sim_df_option1$p2/2
+# Recalculate U-shape
+sim_df_option1$uShaped <- (sim_df_option1$p1_onet < 0.05 & sim_df_option1$p2_onet < 0.05) & 
+                          !(is.na(sim_df_option1$slope1) | is.na(sim_df_option1$slope2)) & 
+                          (sim_df_option1$slope1 < 0 & sim_df_option1$slope2 > 0)
+
+
+# Get false positive and true positive rates for both simulations
+rates1 <- ddply(sim_df_option1, c('beta2'), summarise, percent = mean(uShaped))
+rates2 <- ddply(sim_df_option2_agg, c('beta2'), summarise, percent = mean(uShaped))
+
+# Combine to one df
+rates_both        <- cbind(rep(c('Option 1: Splithalf', 'Option 2: Exhaustive'), each = nrow(rates1)) ,rbind(rates1, rates2))
+names(rates_both) <- c('Option', 'beta2', 'Percent')
+```
+
+Now, we can examine how this correction procedure affects the abilitiy to detect a U-shape using both methods implemeneted as frequentist models. 
+
+```{r plot7, echo = FALSE}
+ggplot(rates_both, aes(x  = beta2, y = Percent, colour = Option)) + 
+  geom_point() + 
+  geom_line() +
+  labs(x = 'Beta value for quadratic term') + 
+  theme(legend.justification = c(0, 1), 
+        legend.position = c(0, 1))
+```
+
+```{r tab1, echo = FALSE}
+#kable(rates_both)
+```
+
+As can be seen above, option 2 fares much better than option 1 even after quite rigorous correction of multiple comparison.  
+
+```{r difference, echo = FALSE}
+br_diff <- abs(sim_df_option1$breakingPoint_h1 - sim_df_option1$breakingPoint_h2)
+```
+
+One possible reason that option 1 fares poorly is that the estimation of the breaking point is very noisy. In fact the mean absolute difference is `r mean(br_diff)`, which is quite large considering the range of values on the predictor variable in the simulation (min = -2.439 and max = 1.58). Typically, the values range between (+/- 1.2) though. 
+
+## Conclusion
+This simulation has shown that the FPR rate is indeed increased for individual slopes when testing 10 breaking points per analysis. However, this can be alleviated with appropriate correction of the alpha level for the individual slopes. Not that the correction is markedly less strict than a Bonferroni correction ($\alpha$ divided by the number of tests). 
+
+We can conclude that option 2 is preferable to option 1. Now in the next step, we apply the same approach to our Bayesian model and see how this behaves under the same circumstances. 
+
+# Bayes factors 
+```{r loadData3}
+load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/nulldata_BF.RData")
+
+# Get data
+nullData <- nulldata_BF
+```
+
+I used the same data generating function for this simulation and we also used 100,000 iterations with a $\beta_2$ of 0. For the Bayesian model I used these priors (for justification to use these priors see [here](https://jaquent.github.io/post/the-priors-that-i-use-for-logsitic-regression-now/))
+
+```{r priors, eval = FALSE, echo = TRUE}
+priors  <- c(prior(student_t(7, 0, 10) , class = "Intercept"),
+             prior(student_t(7, 0, 1) , class = "b")) 
+```
+
+and the following model.
+
+```{r model, eval = FALSE, echo = TRUE}
+# Preparation for interrupted regression (for more info see Simonsohn, 2018) of slope 1.
+breakingPoints <- 0 # In this case I'd split it at zero. 
+x              <- df$s_x 
+df$xlow        <- ifelse(x <= breakingPoints, x - breakingPoints, 0)
+df$xhigh       <- ifelse(x > breakingPoints, x - breakingPoints, 0)     
+df$high        <- ifelse(x > breakingPoints, 1, 0)
+
+# The model 
+brm(y ~ xlow + xhigh + high,
+    data = df,
+    prior = priors,
+    family = bernoulli()) 
+```
+
+Note that I didn't add a random intercept because even when only using a total number of samples of 9000, adding a random intercepts would have increased the run time of this simulation significantly. The data was generated and scaled with this function:
+
+```{r, datagen2, eval = FALSE, echo = FALSE}
+# Function used to generate data
+data_generator <- function(numObj, numSub, beta0, beta1, beta2){
+  # Give numObj obj true values from uniform distribution between -100 and 100.
+  trueObj_val      <- runif(numObj, -100, 100)
+
+  
+  # For each subject draw a random value with the mean of the object with sd that scales with this value
+  subjVal <- matrix(NA, numSub, numObj)
+  
+  for(i in 1:numSub){
+    for(j in 1:numObj){
+      subjVal[i, j] <- rnorm(1, trueObj_val[j], 100)
+    }
+  }
+  
+  # Capping at -100 and 100
+  subjVal[subjVal > 100]  <- 100
+  subjVal[subjVal < -100] <- -100
+  
+  # Create DF and also scale x 
+  df <- data.frame(sub  = rep(1:numSub, numObj),
+                   obj  = rep(1:numObj, each = numSub),
+                   x    = c(subjVal))
+  
+  # Scaling based on Gelman et al. (2008) and https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
+  # Mean = 0 and SD = 0.5
+  df$s_x <- (df$x - mean(df$x))/(sd(df$x)/0.5)
+  
+  # Predicting memory
+  z     <- beta0 + beta1*df$s_x + beta2*df$s_x*df$s_x # Regression in log odds
+  pr    <- 1/(1+exp(-z)) # Convert to probability.
+  df$y  <- rbinom(numObj*numSub, 1, pr)
+  return(df)
+}
+```
+
+This null data allows us to examine which $BF_{10}$ we could accept as individual slopes despite multiple testing and still retain a FPR of 5 % in total. 
+
+```{r optim3, eval = FALSE}
+# Slope 1
+f <- function(crit2){
+  # Calculate significance and right direction
+  nullData$overCrit2 <- nullData$bf_OR_1 > crit2 & nullData$slope1 < 0
+  
+  # Aggregate by index across multiple breaking points sig is 1 if one comparison is significant
+  nullData_agg <- ddply(nullData, c('index'), summarise, overCrit2 = max(overCrit2, na.rm = TRUE))
+  
+  # Minimise squared difference from 0.05
+  (mean(nullData_agg$overCrit2) - 0.05)^2
+}
+
+newCrit2_1 <- optim(par = c(10), fn = f, method = 'Nelder-Mead') # Brent actually doesn't give good values. 
+# 
+# $par
+# [1] 5.679688
+
+# Slope 2
+f <- function(crit2){
+  # Calculate significance and right direction
+  nullData$overCrit2 <- nullData$bf_OR_2 > crit2 & nullData$slope2 > 0
+  
+  # Aggregate by index across multiple breaking points sig is 1 if one comparison is significant
+  nullData_agg <- ddply(nullData, c('index'), summarise, overCrit2 = max(overCrit2, na.rm = TRUE))
+  
+  # Minimise squared difference from 0.05
+  (mean(nullData_agg$overCrit2) - 0.05)^2
+}
+
+newCrit2_2 <- optim(par = c(10), fn = f, method = 'Nelder-Mead') # Brent actually doesn't give good values. 
+
+# $par
+# [1] 5.638672
+```
+
+```{r crit2_levels}
+crit2_levels <- round(mean(c(5.679688, 5.638672)), 2)
+```
+
+The results show in contrast to frequentist models where we have to lower the alpha level compared to the convention (p < 0.05) that we could accept $BF_{10}$ as low as `r crit2_levels` have the same FPR rate as we have for the frequentist models. Typically, journals accept a $BF_{10} > 6$ and sometimes a $BF_{10} > 10$ as sufficient evidence. The main reason for this stark discrepancy between frequentist and Bayesian statistics is that the latter are far more conservative than the former. 
+
+```{r bf_rates1}
+# Evidence for lines
+nulldata_BF$bf1_crit2  <-  nulldata_BF$bf_OR_1 > 6 & nulldata_BF$slope1 < 0
+nulldata_BF$bf2_crit2  <-  nulldata_BF$bf_OR_2 > 6 & nulldata_BF$slope2 > 0
+
+# Evidence against lines
+nulldata_BF$bf1_crit1  <-  nulldata_BF$bf_OR_1 < 1/10
+nulldata_BF$bf2_crit1  <-  nulldata_BF$bf_OR_2 < 1/10
+
+
+# Collapse across runs
+nulldata_BF_agg <- ddply(nulldata_BF, 
+                    c('index', 'beta2'), 
+                    summarise, 
+                    bf1_crit2 = max(bf1_crit2, na.rm = TRUE),
+                    bf2_crit2 = max(bf2_crit2, na.rm = TRUE),
+                    U_shape   = max(bf1_crit2 & bf2_crit2, na.rm = TRUE))
+
+# Rates
+bf_rates <- ddply(nulldata_BF_agg, 
+                    c('beta2'), 
+                    summarise, 
+                    per1 = mean(bf1_crit2, na.rm = TRUE),
+                    per2 = mean(bf2_crit2, na.rm = TRUE),
+                    u_shape = mean(U_shape, na.rm = TRUE))
+
+fpr3     <- round(mean(c(bf_rates[1, 2], bf_rates[1, 3]))*100, 2) 
+```
+
+In our case, the FPR for individual slopes is `r fpr3` % with $BF_{10} > 6$ without any form of correcting for the fact that we ran multiple tests on the same data. This is based on 100,000 simulations. 
+
+Now we can examine the 'power' curve for our Bayesian model as function of using different $BF_{10}$ criteria.  
+
+```{r loadData4}
+load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/sensitivity_analysis_option2_different_beta_BF.RData")
+
+# Bind null data to it
+option2_BF <- rbind(nullData, option2_BF)
+```
+
+```{r}
+rm(nulldata_BF)
+```
+
+```{r BF1, echo = FALSE}
+# Evidence for lines
+option2_BF$bf1_crit2  <-  option2_BF$bf_OR_1 > 10 & option2_BF$slope1 < 0
+option2_BF$bf2_crit2  <-  option2_BF$bf_OR_2 > 10 & option2_BF$slope2 > 0
+
+
+# Collapse across runs
+option2_BF_agg <- ddply(option2_BF, 
+                    c('index', 'beta2'), 
+                    summarise, 
+                    bf1_crit2 = max(bf1_crit2, na.rm = TRUE),
+                    bf2_crit2 = max(bf2_crit2, na.rm = TRUE),
+                    U_shape   = max(bf1_crit2 & bf2_crit2, na.rm = TRUE))
+
+# Rates
+bf_rates <- ddply(option2_BF_agg, 
+                    c('beta2'), 
+                    summarise, 
+                    per1 = mean(bf1_crit2, na.rm = TRUE),
+                    per2 = mean(bf2_crit2, na.rm = TRUE),
+                    u_shape = mean(U_shape, na.rm = TRUE))
+
+# Specify id.vars: the variables to keep but not split apart on
+melted_bf_rates_both <- melt(bf_rates, id.vars = c("beta2"))
+names(melted_bf_rates_both) <- c('beta2', 'Test', 'Percent')
+levels(melted_bf_rates_both$Test) <- c('Slope 1', 'Slope 2', 'U-shape')
+```
+
+```{r plot8, echo = FALSE}
+bf10 <- ggplot(melted_bf_rates_both, aes(x  = beta2, y = Percent, colour = Test)) + 
+  geom_point() + 
+  geom_line() +
+  geom_hline(yintercept = 0.05, linetype = 'dashed') + 
+  annotate('text', x = 0.5, y = 0.03, label = '5% FPR') +
+  labs(x = 'Beta value for quadratic term', title = 'BF > 10') + 
+  theme(legend.justification = c(0, 1), 
+        legend.position = c(0, 1)) + 
+  coord_cartesian(ylim = c(0, 0.6))
+```
+
+
+```{r BF2, echo = FALSE}
+# Evidence for lines
+option2_BF$bf1_crit2  <-  option2_BF$bf_OR_1 > 6 & option2_BF$slope1 < 0
+option2_BF$bf2_crit2  <-  option2_BF$bf_OR_2 > 6 & option2_BF$slope2 > 0
+
+
+# Collapse across runs
+option2_BF_agg <- ddply(option2_BF, 
+                    c('index', 'beta2'), 
+                    summarise, 
+                    bf1_crit2 = max(bf1_crit2, na.rm = TRUE),
+                    bf2_crit2 = max(bf2_crit2, na.rm = TRUE),
+                    U_shape   = max(bf1_crit2 & bf2_crit2, na.rm = TRUE))
+
+# Rates
+bf_rates <- ddply(option2_BF_agg, 
+                    c('beta2'), 
+                    summarise, 
+                    per1 = mean(bf1_crit2, na.rm = TRUE),
+                    per2 = mean(bf2_crit2, na.rm = TRUE),
+                    u_shape = mean(U_shape, na.rm = TRUE))
+
+# Specify id.vars: the variables to keep but not split apart on
+melted_bf_rates_both <- melt(bf_rates, id.vars = c("beta2"))
+names(melted_bf_rates_both) <- c('beta2', 'Test', 'Percent')
+levels(melted_bf_rates_both$Test) <- c('Slope 1', 'Slope 2', 'U-shape')
+```
+
+```{r plot9, echo = FALSE}
+bf6 <- ggplot(melted_bf_rates_both, aes(x  = beta2, y = Percent, colour = Test)) + 
+  geom_point() + 
+  geom_line() +
+  geom_hline(yintercept = 0.05, linetype = 'dashed') + 
+  annotate('text', x = 0.5, y = 0.03, label = '5% FPR') +
+  labs(x = 'Beta value for quadratic term', title = 'BF > 6') + 
+  theme(legend.position = 'none') + 
+  coord_cartesian(ylim = c(0, 0.6))
+```
+
+```{r BF3, echo = FALSE}
+# Evidence for lines
+option2_BF$bf1_crit2  <-  option2_BF$bf_OR_1 > crit2_levels & option2_BF$slope1 < 0
+option2_BF$bf2_crit2  <-  option2_BF$bf_OR_2 > crit2_levels & option2_BF$slope2 > 0
+
+
+# Collapse across runs
+option2_BF_agg <- ddply(option2_BF, 
+                    c('index', 'beta2'), 
+                    summarise, 
+                    bf1_crit2 = max(bf1_crit2, na.rm = TRUE),
+                    bf2_crit2 = max(bf2_crit2, na.rm = TRUE),
+                    U_shape   = max(bf1_crit2 & bf2_crit2, na.rm = TRUE))
+
+# Rates
+bf_rates <- ddply(option2_BF_agg, 
+                    c('beta2'), 
+                    summarise, 
+                    per1 = mean(bf1_crit2, na.rm = TRUE),
+                    per2 = mean(bf2_crit2, na.rm = TRUE),
+                    u_shape = mean(U_shape, na.rm = TRUE))
+
+# Specify id.vars: the variables to keep but not split apart on
+melted_bf_rates_both <- melt(bf_rates, id.vars = c("beta2"))
+names(melted_bf_rates_both) <- c('beta2', 'Test', 'Percent')
+levels(melted_bf_rates_both$Test) <- c('Slope 1', 'Slope 2', 'U-shape')
+```
+
+```{r plot10, echo = FALSE}
+bf_lowered <- ggplot(melted_bf_rates_both, aes(x  = beta2, y = Percent, colour = Test)) + 
+  geom_point() + 
+  geom_line() +
+  geom_hline(yintercept = 0.05, linetype = 'dashed') + 
+  annotate('text', x = 0.5, y = 0.03, label = '5% FPR') +
+  labs(x = 'Beta value for quadratic term', title = paste0('BF > ', crit2_levels)) + 
+  theme(legend.position = 'none') + 
+  coord_cartesian(ylim = c(0, 0.6))
+```
+
+
+```{r combine_plots, fig.width=10}
+plot_grid(bf10, bf6, bf_lowered, ncol = 3)
+```
+
+# Conclusion
+The frequentist simulation showed without doubt that option 2 is better way of analysing the data. However, it also showed that testing multiple breaking points inflates the Type 1 error. The Bayesian simulation on the other hand provide us with evidence that is not an issue for this type of analysis as the FPR is much lower than that what we accept for frequentist models. That means that we could even lower the $BF_{10}$  to for accepting non-zero slopes below the commonly accepted evidence criterion of $BF_{10} > 6$ and still have a FPR of 5 % (i.e.$BF_{10} >$ `r crit2_levels`). However, I do not propose to do this but stick with accepting individual slopes if they have a $BF_{10} > 6$, which provides me with enough confidence. Especially since we need both lines to surpass this level of evidence at the same time to conclude that we have U-shape. 
+
+In sum, I conclude that it is fine to take a $BF_{10} > 6$ as evidence for a non-zero slope even if I test 10 different breaking points for our data.

@@ -1,0 +1,616 @@
+---
+title: "Simulation of logistic regression"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+library(ggplot2)
+library(brms)
+library(plyr)
+library(knitr)
+library(reshape2)
+library(assortedRFunctions)
+library(latex2exp)
+library(polspline)
+library(cowplot)
+theme_set(theme_gray())
+```
+
+# Problem
+In my power simulation of the U-shape experiment, I noticed that the suggested priors ([click here](https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations)) actually do not work very well for Bayes Factor (BF) analysis as they are too flat and hence BF are too conservative. That is because uniform or very flat priors lead to less evidence in favour of the alternative hypothesis. Even though undoubtedly Bayesian models and Bayesian evidence does not have to tell us the exactly the same things that frequentist statistics do, however I do think it important to have some level of congruency as well as being clear what kind of sample sizes and effects we actually need to reach certain criteria that are  standard in my field as valid evidence (p < 0.05, p < 005, $BF_{10}$ > 6 or $BF_{10}$ > 10). In this document, I therefore report my investigation how some characteristics of priors relate to evidence that they are associated with. 
+
+Disclaimer, this post is not mentioned as an exhaustive paper but merely my own attempt to come up with sensible priors for the kind of models that I run. Especially since there doesn't seem to be much out there on this question. With that being said maybe it will be useful for other people and I am more than happy to get feedback/corrections/questions or even be told that my reasoning is completely flawed. 
+
+# A word on logistic regression 
+Before we can talk about priors we need to talk about logistic regression and what the regression coefficients and their size mean. A great explanation of what probabilities, odds and log odds mean in the context of logistic regression can be found [here](https://stats.idre.ucla.edu/other/mult-pkg/faq/general/faq-how-do-i-interpret-odds-ratios-in-logistic-regression/).
+
+$$logit(p) = log(\frac{p}{1-p}) = \beta_0 + \beta_1 x_1 + \cdots + \beta_k x_k.$$
+The equation above describes a logistic regression model with several predictors. The $\beta$-values have been logit transformed and represent log-odds. Odds are ratios of probability. So if you have a 75 % success rate in something that translates to odds of .75/(1 - .75) = 3 or log-odds of log(3) = 1.098612. 
+
+As in normal regression, the regression coefficient is relative to the scale of the predictor variable (e.g. height in cm). For instance, a coefficient of 1.098612 would mean a 200 % increase in odds to have success per cm increase in hypothetical example. 
+
+Gelman (2008) suggest to scale the predictor variables to have a mean of 0 and a SD of 0.5. In another hypothetical example, we scale our data accordingly and get a regression coefficient of 0.2231436 or in odds 1.25. This would mean for every time our predictor variables increases _2 SDs_ the odds increase 25 %. 
+
+These circumstances illustrate that it is sensible to set some boundaries on our priors, which essentially means that we don't expect coefficients beyond a certain range in the type of work we do. This is a thought I will revisit in the conclusions to justify the prior I will choose. 
+
+# Influnece of degrees of freedom for Student's distrubution. 
+In his recommendation for priors Gelman now follows Ghosh et al. (2015) and recommends a student distribution with degrees of freedom (df) between 3 and 7 with a scale of 2.5. For illustration of how Student's distribution changes with df, I created this graphic. 
+
+```{r dists1, echo = FALSE}
+prior_range <- 3:7
+from        <- -10
+t_value     <- seq(from, -from, 0.01)
+
+# Creating DF
+scale_par <- 2.5
+prior_dist_df <- data.frame(df      = as.factor(rep(prior_range, each = length(t_value))),
+                            t       = rep(t_value, length(prior_range)),
+                            Density = c(dstudent_t(t_value, 3, 0, scale_par),
+                                        dstudent_t(t_value, 4, 0, scale_par),
+                                        dstudent_t(t_value, 5, 0, scale_par),
+                                        dstudent_t(t_value, 6, 0, scale_par),
+                                        dstudent_t(t_value, 7, 0, scale_par)))
+
+ggplot(prior_dist_df, aes(x = t, y = Density, colour = df)) + 
+  geom_line() +
+  labs(x = 't-Value', title = "Comparison of Student's distribution for different df")
+```
+
+The figure above illustrates that there is an inverse relationship of the density at the peak and the density at the tails. For comparing df = 3 with df = 7, at the mode of the distribution the df = 7 is higher, while at the tails the distribution with df = 3 is higher. Increasing the df basically essentially gives more weight to extreme values. In the following, I examine how choosing different df affects evidence in a BF analysis. 
+
+# Background on pre-simulation
+The data in the simulations were generated data with this function:
+
+```{r, echo = TRUE, eval = FALSE}
+# Function used to generate data
+data_generator <- function(numSub, beta0, beta1){
+  # Create DF and also scale x 
+  df <- data.frame(sub  = rep(1:numSub),
+                   x    = rnorm(numSub))
+  
+  # Scaling based on https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
+  # Mean = 0 and SD = 0.5
+  df$s_x <- (df$x - mean(df$x))/(sd(df$x)/0.5)
+  
+  # Predicting memory
+  z     <- beta0 + beta1*df$s_x # Regression in log odds
+  pr    <- 1/(1+exp(-z)) # Convert to probability.
+  df$y  <- rbinom(numSub, 1, pr)
+  return(df)
+}
+```
+
+Note that I follow Gelman's (2008) recommendation about scaling the variable to have standard deviation (SD) of 0.5. The considerations concerning the priors therefore only pertain to this scaling. For the first simulation, I used the recommended 2.5 for the scale of the Student's distribution (1000 iterations per condition). 
+
+```{r, echo = TRUE, eval = FALSE}
+priors_student_1  <- c(prior(student_t(3, 0, 10) , class = "Intercept"),
+                       prior(student_t(3, 0, 2.5) , class = "b")) 
+```
+
+In a second simulation, I contrasted the results with a scale of 1 for the Student's distribution (5000 iterations per condition).
+
+```{r, echo = TRUE, eval = FALSE}
+priors_student_1  <- c(prior(student_t(3, 0, 10) , class = "Intercept"),
+                       prior(student_t(3, 0, 1) , class = "b")) 
+```
+
+In both simulations I used the following df of 3, 4, 5, 6 and 7. The simulations included simulated sample size of 100 for all simulations. The BRMS model that was used for fitting was this one: 
+
+```{r, echo = TRUE, eval = FALSE}
+brm(y ~ s_x,
+    data = df,
+    prior = priors_student_1,
+    family = bernoulli(),
+    chains = 1,
+    save_all_pars = TRUE,
+    sample_prior = TRUE,
+    save_dso = TRUE, 
+    seed = 6353) 
+```
+
+# Analyse simulation
+## Simulation 1 (Scale = 2.5)
+```{r loadData,echo = FALSE}
+load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/log1_BF.RData")
+
+# Parameters of simulation
+nIter      <- 1000
+numBeta    <- 6
+numPrior   <- 5
+totalIter  <- nIter*numBeta*numPrior
+seeds      <- sample(.Machine$integer.max, totalIter)
+numSub     <- rep(94, numBeta*numPrior) # Number of subjects
+beta0      <- rep(0, numBeta*numPrior)
+beta1      <- seq(0, 0.7, length.out =  numBeta)
+prior      <- rep(3:7, each = numBeta)
+
+
+params <- data.frame(index = 1:totalIter,
+                     seed = seeds,
+                     numSub = rep(numSub, nIter),
+                     beta0 = rep(beta0, nIter),
+                     beta1 = rep(beta1, nIter),
+                     prior = rep(prior, nIter))
+
+log1_BF$prior <- as.factor(params$prior)
+```
+
+```{r bf_rates, echo = FALSE}
+# Evidence for slope
+log1_BF$bf_over6  <- log1_BF$bf > 6 
+log1_BF$bf_over10 <- log1_BF$bf > 10
+
+# Collapse across runs
+bf_rates <- ddply(log1_BF, 
+                    c('beta1', 'prior'), 
+                    summarise, 
+                    bf_over6  = mean(bf_over6, na.rm = TRUE),
+                    bf_over10 = mean(bf_over10, na.rm = TRUE))
+
+fpr_mean_scale_2.5 <- mean(bf_rates[1:5, 3])
+fpr_sd_scale_2.5   <- sd(bf_rates[1:5, 3])
+```
+
+In this first simulation, I used $\beta_1$ between 0 and 0.7. The average FPR for a $BF_{10}$ > 6 for the priors with this scale is `r mean_SD_str(fpr_mean_scale_2.5, fpr_sd_scale_2.5, 6)` showing in general that this method is more conservative than a frequentist model would be. One obvious reason for this that the BF in contrast to the p-value is not uniformly distributed and it gets smaller and smaller with more data (for a null effect). In my frequentist simulation (see below), the nominal FPR was 0.045 for p < 0.05. 
+
+```{r plot, echo = FALSE}
+bf_rates$df     <- bf_rates$prior
+melted_bf_rates <- melt(bf_rates, id.vars = c("beta1", 'prior', 'df'))
+names(melted_bf_rates) <- c('beta1', 'prior', 'df', 'Criterion', 'value')
+
+ggplot(melted_bf_rates, aes(x = beta1, y = value, colour = df)) + geom_line(aes(linetype = Criterion)) + 
+  scale_linetype_discrete(labels =  unname(TeX(c("$BF_{10} > 6$", "$BF_{10} > 10$")))) +
+  theme(legend.text.align = 0) +
+  labs(x = 'Beta-value', y = expression('Percentage of '*BF[10]*' > criterion'), title = 'Power curve for Scale = 2.5')
+```
+
+This power curve shows how badly the prior performance is. Even with a beta of 0.7 or odds of exp(0.7) = 2.013753, we only barely get past 15%. This is quite different from what we would get if we used frequentist models. That the prior is too wide contributes to the general conservatism problem of BF analysis, as I show in the next simulation.   
+
+## Simulation 2 (Scale  = 1)
+In the next step, I ran a simulation with scale parameter of 1. To illustrate the difference between a scale of 2.5 and a scale of 1. Here both plotted on the same axis. For comparison, I also overlaid a normal prior, N(0, 1) illustrated by the dashed line.
+
+```{r dists2, echo=FALSE}
+from        <- -5
+t_value     <- seq(from, -from, 0.01)
+
+# Creating DF
+prior_dist_scale <- data.frame(scale   = as.factor(rep(c('2.5', '1'), each = length(t_value))),
+                               t       = rep(t_value, 2),
+                               Density = c(dstudent_t(t_value, 3, 0, 2.5),
+                                           dstudent_t(t_value, 2, 0, 1)))
+
+normal_dist      <- data.frame(t = t_value,
+                               type = rep('N(0, 1)', length(t_value)),
+                               Density = dnorm(t_value))
+
+ggplot(prior_dist_scale, aes(x = t, y = Density, colour = scale)) + 
+  geom_line() +
+  geom_line(data = normal_dist, aes(x = t, y = Density, linetype = type), linetype = 'dashed', colour = 'black') +
+  labs(x = 't-Value', title = "Comparison of Student's distribution with scale of 2.5 and 1 + N(0, 1)")
+```
+
+The student's distribution with scale of 2.5 is far too wide explaining the low 'power' for $BF_{10}$ > 6. To see, how a prior with scale of 1 behave I ran Simulation 2. In this simulation, the $\beta_1$-values range from 0 to 2.
+
+
+```{r loadData2, echo = FALSE}
+load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/log2_BF.RData")
+```
+
+
+```{r bf_rates2}
+# Evidence for slope
+log2_BF$bf_over6  <- log2_BF$bf > 6 
+log2_BF$bf_over10 <- log2_BF$bf > 10
+
+# Collapse across runs
+bf_rates <- ddply(log2_BF, 
+                    c('beta1', 'prior'), 
+                    summarise, 
+                    bf_over6  = mean(bf_over6, na.rm = TRUE),
+                    bf_over10 = mean(bf_over10, na.rm = TRUE))
+
+
+names(bf_rates) <- c('beta1', 'df', 'bf_over6', 'bf_over10')
+bf_rates$df <- as.factor(bf_rates$df)
+
+fpr_mean_scale_1 <- mean(bf_rates[1:5, 3])
+fpr_sd_scale_1   <- sd(bf_rates[1:5, 3])
+```
+
+The average FPR for a $BF_{10}$ > 6 for the priors with this scale is `r mean_SD_str(fpr_mean_scale_1, fpr_sd_scale_1, 6)`, which is still quite low compared to frequentist models. 
+
+```{r plot2, echo = FALSE}
+melted_bf_rates <- melt(bf_rates, id.vars = c("beta1", 'df'))
+names(melted_bf_rates) <- c('beta1', 'df', 'Criterion', 'value')
+
+ggplot(melted_bf_rates, aes(x = beta1, y = value, colour = df)) + geom_line(aes(linetype = Criterion)) + 
+  scale_linetype_discrete(labels =  unname(TeX(c("$BF_{10} > 6$", "$BF_{10} > 10$")))) +
+  theme(legend.text.align = 0) +
+  labs(x = 'Beta-value', y = expression('Percentage of '*BF[10]*' > criterion'), title = 'Power curve for Scale = 2.5')
+```
+
+Looking at the power curve it seems that there is no big difference for different df. 
+
+## Comparison of slope estimation
+```{r plot3, echo = FALSE, fig.width = 10}
+# Create new var and make factors
+log1_BF_boxplot <- log1_BF
+log1_BF_boxplot$beta1 <- as.factor(log1_BF_boxplot$beta1)
+log1_BF_boxplot$df    <- log1_BF_boxplot$prior
+
+# Plot
+pl1 <- ggplot(log1_BF_boxplot, aes(x = beta1, y = slope, colour = df)) + 
+  geom_boxplot() + 
+  labs(title = "Students(df, 0, 2.5)", x = 'Beta-Value', y = 'Slope estimate')
+
+# Create new var and make factors
+log2_BF_boxplot       <- log2_BF
+log2_BF_boxplot$beta1 <- as.factor(round(log2_BF_boxplot$beta1, 2))
+log2_BF_boxplot$df <- as.factor(log2_BF_boxplot$prior)
+
+# Plot
+pl2 <- ggplot(log2_BF_boxplot, aes(x = beta1, y = slope, colour = df)) + 
+  geom_boxplot()  + 
+  labs(title = "Students(df, 0, 1)", x = 'Beta-Value', y = 'Slope estimate')
+
+plot_grid(pl1, pl2)
+```
+
+In addition, we can look at the shrinkage properties. By comparing the true and the average estimated slope in scatter plot. 
+
+```{r plot4, echo = FALSE, fig.width = 10}
+# Make prior factor in log2
+log1_BF$df <- log1_BF$prior
+log2_BF$df <- as.factor(log2_BF$prior)
+
+# Aggregate
+log1_BF_agg <- ddply(log1_BF, c('beta1', 'df'), summarise, slope = mean(slope))
+log2_BF_agg <- ddply(log2_BF, c('beta1', 'df'), summarise, slope = mean(slope))
+
+pl1 <- ggplot(log1_BF_agg, aes(x = beta1, y = slope, colour = df)) + 
+  geom_point() + 
+  geom_abline(intercept = 0, linetype = 'dashed') +
+  geom_smooth() + 
+  labs(title = "Students(df, 0, 2.5)", x = 'Beta-Value', y = 'Slope estimate') +
+  coord_cartesian(xlim = c(0, 2), ylim = c(0, 2))
+
+pl2 <- ggplot(log2_BF_agg, aes(x = beta1, y = slope, colour = df)) + 
+  geom_point() + 
+  geom_abline(intercept = 0, linetype = 'dashed') +
+  geom_smooth() + 
+  labs(title = "Students(df, 0, 1)", x = 'Beta-Value', y = 'Slope estimate') + 
+  coord_cartesian(xlim = c(0, 2), ylim = c(0, 2))
+
+plot_grid(pl1, pl2)
+```
+
+Despite the different ranges (0 to 0.7 and 0 to 2) in the simulations, it is obvious that narrower priors leads to more shrinkage toward zero. This is probably a good feature as this protects us from overestimating the effect. 
+
+# Interim conclusion
+My interim conclusion is that the suggested scale of 2.5 is too wide for BF analysis. Hence, I will run another simulation comparing normal versus student priors with scales of 1, 1.5, 2 and 2.5 to investigate this issue further. 
+
+# Illustrative example
+```{r example, echo = FALSE, eval = FALSE}
+# Seed
+set.seed(12312)
+
+# /*
+# ----------------------------- Data function --------------------------
+# */
+# Function used to generate data
+data_generator <- function(numSub, beta0, beta1){
+  # Create DF and also scale x 
+  df <- data.frame(sub  = rep(1:numSub),
+                   x    = rnorm(numSub))
+  
+  # Scaling based on https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
+  # Mean = 0 and SD = 0.5
+  df$s_x <- (df$x - mean(df$x))/(sd(df$x)/0.5)
+  
+  # Predicting memory
+  z     <- beta0 + beta1*df$s_x # Regression in log odds
+  pr    <- 1/(1+exp(-z)) # Convert to probability.
+  df$y  <- rbinom(numSub, 1, pr)
+  return(df)
+}
+
+
+# /*
+# ----------------------------- Priors --------------------------
+# */
+#
+# Student prior
+# 1
+priors_student_1  <- c(prior(student_t(7, 0, 10) , class = "Intercept"),
+               prior(student_t(7, 0, 1) , class = "b")) 
+priorDensity_student_1 <- dstudent_t(0, 7, 0, 1)
+
+
+# 2.5
+priors_student_2.5  <- c(prior(student_t(7, 0, 10) , class = "Intercept"),
+                 prior(student_t(7, 0, 2.5) , class = "b")) 
+priorDensity_student_2.5 <- dstudent_t(0, 7, 0,2.5)
+
+
+
+# /*
+# ----------------------------- Base models --------------------------
+# */
+# Create dataset
+df <- data_generator(100, 0, 1)
+
+# Run the models for compilation
+model_student_1 <- brm(y ~ s_x,
+                       data = df,
+                       prior = priors_student_1,
+                       family = bernoulli(),
+                       chains = 7,
+                       cores = 7,
+                       iter = 90000,
+                       warmup = 4000,
+                       save_all_pars = TRUE,
+                       sample_prior = TRUE,
+                       save_dso = TRUE, 
+                       seed = 6353) 
+
+model_student_2.5 <- brm(y ~ s_x,
+                         data = df,
+                         prior = priors_student_2.5,
+                         family = bernoulli(),
+                         chains = 7,
+                         cores = 7,
+                         iter = 90000,
+                         warmup = 4000,
+                         save_all_pars = TRUE,
+                         sample_prior = TRUE,
+                         save_dso = TRUE, 
+                         seed = 6353) 
+
+save.image('logisticExample.RData')
+```
+
+
+```{r example2,eval = FALSE, echo = FALSE}
+# Load data
+load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/logisticExample.RData")
+
+# Scale 1
+postDist1      <- posterior_samples(model_student_1)$b_s_x
+fit.posterior  <- logspline(postDist1)
+posterior      <- dlogspline(0, fit.posterior) 
+prior          <- dstudent_t(0, 7, 0, 1) # Precalculated density
+bf1            <- prior/posterior
+
+# Kable
+kable(fixef(model_student_1))
+
+# Plot
+from        <- -3
+t_value     <- seq(from, -from, 0.01)
+prior1      <- data.frame(t = t_value,
+                         Density = dstudent_t(t_value, 7, 0, 1))
+
+pl1 <- ggplot(data.frame(postDist1), aes(x = postDist1)) + 
+  geom_density(colour = 'red') + 
+  geom_line(data = prior1, aes(x = t_value, y = Density)) +
+  geom_vline(xintercept = 0, linetype = 'dashed') +
+  annotate("text", x = -0.4, y = prior, label = as.character(round(prior, 3))) +
+  annotate("text", x = -0.4, y = posterior, label = as.character(round(posterior, 3))) +
+  labs(title = expression('Prior with scale of 1: '*BF[10]*' = 2.03'), y = 'Density', x = 'Beta-value') +
+  coord_cartesian(xlim = c(-3, 3))
+      
+# Scale 2
+postDist2.5    <- posterior_samples(model_student_2.5)$b_s_x
+fit.posterior  <- logspline(postDist2.5)
+posterior      <- dlogspline(0, fit.posterior) 
+prior          <- dstudent_t(0, 7, 0, 2.5) # Precalculated density
+bf2.5          <- prior/posterior
+
+# Kable
+kable(fixef(model_student_2.5))
+
+# Plot
+prior2.5      <- data.frame(t = t_value,
+                         Density = dstudent_t(t_value, 7, 0, 2.5))
+
+pl2 <- ggplot(data.frame(postDist2.5), aes(x = postDist2.5)) + 
+  geom_density(colour = 'red') + 
+  geom_line(data = prior2.5, aes(x = t_value, y = Density)) +
+  geom_vline(xintercept = 0, linetype = 'dashed') +
+  annotate("text", x = -0.4, y = prior, label = as.character(round(prior, 3))) +
+  annotate("text", x = -0.4, y = posterior, label = as.character(round(posterior, 3))) +
+  labs(title = expression('Prior with scale of 2.5: '*BF[10]*' = 1.24'), y = 'Density', x = 'Beta-value') +
+  coord_cartesian(xlim = c(-3, 3))
+```
+
+```{r, echo = FALSE, fig.width = 10}
+# load data
+load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/logisticExample.RData")
+
+# Display
+plot_grid(pl1, pl2)
+```
+
+Before looking at the results, here is a quick illustration why this is the case.  Above, two figures showing the analysis of the same data can be seen. The left one uses a scale of 1, the other one uses a scale of 2.5. The $BF_{10}$ are 2.03 and 1.24. The figures illustrate the [Savage-Dickey method](https://www.ejwagenmakers.com/2010/WagenmakersEtAlCogPsy2010.pdf) of calculating BF that is taking the ratio of the prior probability at zero and posterior probability at zero. While the posterior probabilities are  similar with 0.19 and 0.125, the prior probabilities at zeros are very different 0.385 versus 0.154. This explains the difference in the BF that we get using both scales. 
+
+# Frequentist comparison
+```{r}
+load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/freq1.RData")
+```
+
+```{r freq_rates}
+# Evidence for slope
+freq1$sig  <- freq1$slope_p < 0.05
+
+# Collapse across runs
+freq_rates <- ddply(freq1, 
+                    c('beta1'), 
+                    summarise, 
+                    Percent = mean(sig, na.rm = TRUE))
+
+freq_rates$scalePar <- rep('frequentist', length(freq_rates))
+```
+
+
+In order to get a better idea how conservative the power curve from the Bayesian models are I also quickly run the same simulation with a frequentist model (10,000 iteration per $\beta_1$ value). 
+
+The model that I used was:
+
+```{r, echo = TRUE, eval = FALSE}
+glm(y ~ s_x, data = df, family = "binomial")
+```
+
+# Full simulation
+```{r loadData3}
+load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/log3_BF.RData")
+load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/freq1.RData")
+load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/log3_extra_BF.RData")
+
+# Concatenate log3 and log3_extra
+log3_BF <- rbind(log3_extra_BF, log3_BF)
+```
+
+```{r bf_rates3}
+# Evidence for slope
+log3_BF$bf_over6  <- log3_BF$bf10 > 6 
+log3_BF$bf_over10 <- log3_BF$bf10 > 10
+
+# scalePar
+log3_BF$Scale <- log3_BF$scalePar
+
+# Collapse across runs
+bf_rates <- ddply(log3_BF, 
+                    c('beta1', 'type', 'Scale'), 
+                    summarise, 
+                    bf_over6 = mean(bf_over6, na.rm = TRUE),
+                    bf_over10 = mean(bf_over10, na.rm = TRUE))
+
+# Evidence for slope
+freq1$sig  <- freq1$slope_p < 0.05
+
+# Collapse across runs
+freq_rates <- ddply(freq1, 
+                    c('beta1'), 
+                    summarise, 
+                    Percent = mean(sig, na.rm = TRUE))
+
+freq_rates$Scale <- rep('frequentist', length(freq_rates))
+```
+
+
+```{r plot5, echo = FALSE, fig.width = 10}
+melted_bf_rates <- melt(bf_rates, id.vars = c("beta1", 'type', 'Scale'))
+names(melted_bf_rates) <- c('beta1', 'type', 'Scale', 'Criterion', 'value')
+
+ggplot(melted_bf_rates, aes(x = beta1, y = value, colour = Scale)) +
+   facet_grid(. ~ type)+ 
+   geom_line(mapping = aes(linetype = Criterion)) + 
+   scale_linetype_discrete(labels =  unname(TeX(c("$BF_{10} > 6$", "$BF_{10} > 10$")))) +
+  theme(legend.text.align = 0) + 
+  geom_line(data = freq_rates, mapping = aes(x = beta1, y = Percent), colour = 'black') +
+  labs(x = 'Beta-value', y = expression('Percentage of '*BF[10]*' > Criterion'), title = 'Power curves for both simulations')
+
+```
+
+Above the power curves of this simulation can be found. The black line represents the power curve for equivalent frequentist model and shows that all priors are more conservative. 
+
+```{r agg, echo = FALSE, fig.width = 10}
+# Make beta 1 factor
+log3_BF$beta1 <- as.factor(round(log3_BF$beta1, 2))
+
+# Aggregate
+log3_BF_agg <- ddply(log3_BF, c('beta1', 'type', 'Scale'), 
+                     summarise, 
+                     slope_est = mean(slope_est), 
+                     slope_est.err = mean(slope_est.err),
+                     slope_rhat = mean(slope_rhat),
+                     slope_bulk_ess = mean(slope_bulk_ess), 
+                     slope_tail_ess = mean(slope_tail_ess))
+```
+
+```{r plot6, echo = FALSE, fig.width = 10}
+ggplot(log3_BF_agg, aes(x = as.numeric(as.character(beta1)), y = slope_est, colour = Scale)) + 
+  facet_grid(.~ type) +
+  geom_point() + 
+  geom_abline(intercept = 0, linetype = 'dashed') +
+  geom_smooth() + 
+  labs(title = "Slope estimation shows shrinkage", x = 'Beta-Value', y = 'Slope estimate') +
+  coord_cartesian(xlim = c(0, 2), ylim = c(0, 2))
+```
+
+In contrast to Bayesian models, for the frequentist simulation we don't find shrinkage of the estimator towards zero.
+
+```{r plot11}
+freq1_agg <- ddply(freq1, c('beta1'), summarise, slope_est = mean(slope_est))
+
+ggplot(freq1_agg, aes(x = beta1, y = slope_est)) + 
+  geom_point() + 
+  geom_abline(intercept = 0, linetype = 'dashed') +
+  geom_smooth() + 
+  labs(title = "Slope estimation with frequentist model (no shrinkage)", x = 'Beta-Value', y = 'Slope estimate') +
+  coord_cartesian(xlim = c(0, 2), ylim = c(0, 2))
+```
+
+```{r plot7, echo = FALSE, fig.width = 10}
+ggplot(log3_BF, aes(x = beta1, y = slope_est.err, colour = Scale)) + 
+  facet_grid(.~ type) +
+  geom_boxplot()  + 
+  labs(title = "Effect on standard error", x = 'Beta-Value', y = 'Standard error of beta value')
+```
+
+One thin that stand out when comparing the standard error is abnormally low for a prior with scale of 0.5 irrespective of the family. 
+
+One other number we can look at is the effective sample size. This number is not referring to the effect size of the coefficient but how many samples for analysis are effectively available. The more the better because estimation especially of the BF get more stable the more samples we've got. 
+
+```{r plot8, echo = FALSE, fig.width = 10}
+ggplot(log3_BF, aes(x = beta1, y = slope_bulk_ess, colour = Scale)) + 
+  facet_grid(.~ type) +
+  geom_boxplot()  + 
+  labs(title = "Effect on bulk ESS", x = 'Beta-Value', y = 'Bulk ESS')
+```
+
+Here we see something interesting that is while the bulk ESS decreases for a scale of 0.5 as the beta-value get larger for the student prior, the opposite is true for the normal prior. 
+
+```{r plot9, echo = FALSE, fig.width = 10}
+ggplot(log3_BF, aes(x = beta1, y = slope_tail_ess, colour = Scale)) + 
+  facet_grid(.~ type) +
+  geom_boxplot()  + 
+  labs(title = "Effect on tail ESS", x = 'Beta-Value', y = 'Tail ESS')
+```
+
+Yet again the reverse is true for tail ESS. This probably indicates that a scale of 0.5 is too narrow. 
+
+# Conclusions
+Several things can be learned from the simulations. 
+
+Now, if look which values these distributions include as likely by comparing the middle 95% of them, we see what that means in terms of odds and change per 2 SD increase in our predictor variable. 
+Here are two tables for the upper boundaries (i.e. 97.5 %) for both normal and student distributions showing the regression coefficients as log odds. 
+
+Normal distribution:
+```{r}
+max_odd_per_normal         <- data.frame(scale = c(0.5, 1, 1.5, 2, 2.5))
+max_odd_per_normal$coef    <- qnorm(0.975, 0, max_odd_per_normal$scale)                             
+max_odd_per_normal$odds    <- round(exp(max_odd_per_normal$coef), 2)
+max_odd_per_normal$change  <- round(abs(max_odd_per_normal$odds - 1)*100)
+
+kable(max_odd_per_normal)
+```
+
+Student distribution:
+```{r}
+max_odd_per_student         <- data.frame(scale = c(0.5, 1, 1.5, 2, 2.5))
+max_odd_per_student$coef    <- qstudent_t(0.975, 7, 0, max_odd_per_student$scale)                           
+max_odd_per_student$odds    <- round(exp(max_odd_per_student$coef), 2)
+max_odd_per_student$change  <- round(abs(max_odd_per_student$odds - 1)*100)
+
+kable(max_odd_per_student)
+```
+
+One thing immediately apparent is that a scale of 2.5 still 'treats' values that correspond to a change of 13328 % & 36828 % per 2 SD on the predictor as likely. Generally, the fact that the student distribution has higher tails still allows for larger values. That is despite the fact that power for a normal prior versus a student prior (df = 7) with a scale of 1 are not systematically different. This is therefore an argument for using a student prior. 
+
+Furthermore, a student prior typically fits posterior distributions better (according to my limited experience), which is an advantage when trying to use previous posteriors as priors for new analyses. Using student priors throughout therefore eases comparison. 
+
+Even if for particular posterior distribution a normal is better fit then a student, then this will be alleviated by the fact the estimated df will just be very large as a student distribution will be identical for infinitely large df. _To sum up, I will now use a student distribution with mean = 0, scale = 1 and df = 7 as the standard prior for logistic regression models._
+
