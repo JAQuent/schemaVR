@@ -113,7 +113,7 @@ brm(y ~ s_x,
 # Analyse simulation
 ## Simulation 1 (Scale = 2.5)
 ```{r loadData,echo = FALSE}
-load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/log1_BF.RData")
+load("ignore_workspaces/log1_BF.RData")
 
 # Parameters of simulation
 nIter      <- 1000
@@ -195,7 +195,7 @@ The student's distribution with scale of 2.5 is far too wide explaining the low 
 
 
 ```{r loadData2, echo = FALSE}
-load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/log2_BF.RData")
+load("ignore_workspaces/log2_BF.RData")
 ```
 
 
@@ -374,7 +374,7 @@ save.image('logisticExample.RData')
 
 ```{r example2,eval = FALSE, echo = FALSE}
 # Load data
-load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/logisticExample.RData")
+load("ignore_workspaces/logisticExample.RData")
 
 # Scale 1
 postDist1      <- posterior_samples(model_student_1)$b_s_x
@@ -427,7 +427,7 @@ pl2 <- ggplot(data.frame(postDist2.5), aes(x = postDist2.5)) +
 
 ```{r, echo = FALSE, fig.width = 10}
 # load data
-load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/logisticExample.RData")
+load("ignore_workspaces/logisticExample.RData")
 
 # Display
 plot_grid(pl1, pl2)
@@ -437,7 +437,7 @@ Before looking at the results, here is a quick illustration why this is the case
 
 # Frequentist comparison
 ```{r}
-load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/freq1.RData")
+load("ignore_workspaces/freq1.RData")
 ```
 
 ```{r freq_rates}
@@ -464,9 +464,9 @@ glm(y ~ s_x, data = df, family = "binomial")
 
 # Full simulation
 ```{r loadData3}
-load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/log3_BF.RData")
-load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/freq1.RData")
-load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/log3_extra_BF.RData")
+load("ignore_workspaces/log3_BF.RData")
+load("ignore_workspaces/freq1.RData")
+load("ignore_workspaces/log3_extra_BF.RData")
 
 # Concatenate log3 and log3_extra
 log3_BF <- rbind(log3_extra_BF, log3_BF)

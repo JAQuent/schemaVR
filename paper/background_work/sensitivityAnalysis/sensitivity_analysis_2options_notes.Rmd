@@ -52,7 +52,7 @@ y ~ xlow + xhigh + high + (1 | sub).
 Now, we examine the results of this simulation. 
 
 ```{r loadData1, echo = FALSE}
-load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/nullData.RData")
+load("ignore_workspaces/nullData.RData")
 ```
 
 ```{r fpr1}
@@ -145,7 +145,7 @@ For the shuffled data we get an alpha level of `r alpha_slope1` for individual s
 
 # Quadratic simulation
 ```{r loadData2, echo = FALSE}
-load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/sensitivity_analysis_2options_beta1_equals_0_2.RData")
+load("ignore_workspaces/sensitivity_analysis_2options_beta1_equals_0_2.RData")
 ```
 
 To show that a) the data generated de-novo is not skewed like the shuffled above and b) to draw a power curve I ran another simulation that generated data via quadratic logistic regression with 100,000 iterations per $\beta_2$ (`r unique(sim_df_option2$beta2)`). All simulations are run with sample size of 80. In the first step, I optimise the alpha level for the generated data in the same way I did above. The data was generated with this function:
@@ -418,7 +418,7 @@ We can conclude that option 2 is preferable to option 1. Now in the next step, w
 
 # Bayes factors 
 ```{r loadData3}
-load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/nulldata_BF.RData")
+load("ignore_workspaces/nulldata_BF.RData")
 
 # Get data
 nullData <- nulldata_BF
@@ -565,7 +565,7 @@ In our case, the FPR for individual slopes is `r fpr3` % with $BF_{10} > 6$ with
 Now we can examine the 'power' curve for our Bayesian model as function of using different $BF_{10}$ criteria.  
 
 ```{r loadData4}
-load("C:/Users/aq01/Desktop/schemaVR/paper/scripts/Sensitivity analysis/sensitivity_analysis_option2_different_beta_BF.RData")
+load("ignore_workspaces/sensitivity_analysis_option2_different_beta_BF.RData")
 
 # Bind null data to it
 option2_BF <- rbind(nullData, option2_BF)

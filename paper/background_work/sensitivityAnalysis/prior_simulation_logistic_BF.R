@@ -103,6 +103,7 @@ baseModel_student_1 <- brm(y ~ s_x,
                    save_dso = TRUE, 
                    seed = 6353) 
 
+
 baseModel_student_1.5 <- brm(y ~ s_x,
                            data = df,
                            prior = priors_student_1.5,
@@ -110,8 +111,8 @@ baseModel_student_1.5 <- brm(y ~ s_x,
                            chains = 1,
                            save_all_pars = TRUE,
                            sample_prior = TRUE,
-                           save_dso = TRUE, 
-                           seed = 6353) 
+                           save_dso = TRUE,
+                           seed = 6353)
 
 baseModel_student_2 <- brm(y ~ s_x,
                            data = df,
@@ -120,7 +121,7 @@ baseModel_student_2 <- brm(y ~ s_x,
                            chains = 1,
                            save_all_pars = TRUE,
                            sample_prior = TRUE,
-                           save_dso = TRUE, 
+                           save_dso = TRUE,
                            seed = 6353)
 
 baseModel_student_2.5 <- brm(y ~ s_x,
@@ -130,8 +131,8 @@ baseModel_student_2.5 <- brm(y ~ s_x,
                            chains = 1,
                            save_all_pars = TRUE,
                            sample_prior = TRUE,
-                           save_dso = TRUE, 
-                           seed = 6353) 
+                           save_dso = TRUE,
+                           seed = 6353)
 
 baseModel_normal_1 <- brm(y ~ s_x,
                           data = df,
@@ -140,8 +141,8 @@ baseModel_normal_1 <- brm(y ~ s_x,
                           chains = 1,
                           save_all_pars = TRUE,
                           sample_prior = TRUE,
-                          save_dso = TRUE, 
-                          seed = 6353) 
+                          save_dso = TRUE,
+                          seed = 6353)
 
 baseModel_normal_1.5 <- brm(y ~ s_x,
                             data = df,
@@ -150,8 +151,8 @@ baseModel_normal_1.5 <- brm(y ~ s_x,
                             chains = 1,
                             save_all_pars = TRUE,
                             sample_prior = TRUE,
-                            save_dso = TRUE, 
-                            seed = 6353) 
+                            save_dso = TRUE,
+                            seed = 6353)
 
 baseModel_normal_2 <- brm(y ~ s_x,
                           data = df,
@@ -160,7 +161,7 @@ baseModel_normal_2 <- brm(y ~ s_x,
                           chains = 1,
                           save_all_pars = TRUE,
                           sample_prior = TRUE,
-                          save_dso = TRUE, 
+                          save_dso = TRUE,
                           seed = 6353)
 
 baseModel_normal_2.5 <- brm(y ~ s_x,
@@ -179,10 +180,10 @@ baseModel_normal_2.5 <- brm(y ~ s_x,
 sim_function <- function(index, seed, numSub, beta0, beta1, type, scalePar){
   #  Generate data
   df <- data_generator(numSub, beta0, beta1)
-  
+
   # Get model
   baseModel <- get(paste0('baseModel_', type, '_', scalePar))
-  
+
   # Run model in tryCatch function
   error      <- FALSE
   model      <- tryCatch({
@@ -204,15 +205,15 @@ sim_function <- function(index, seed, numSub, beta0, beta1, type, scalePar){
     return(as.character(e))
   })
 
-  # Calculate BF if no error  
+  # Calculate BF if no error
     if(!error){
       # Extract information from model
       model_summary <- summary(model)$fixed
-      
+
       # Extract posterior distribution to calculate ESS and BF
       postDist_int   <- posterior_samples(model)$b_Intercept
       postDist_slope <- posterior_samples(model)$b_s_x
-      
+
       # Intercept
       int_est      <- model_summary[1, 1]
       int_est.err  <- model_summary[1, 2]
@@ -221,7 +222,7 @@ sim_function <- function(index, seed, numSub, beta0, beta1, type, scalePar){
       int_rhat     <- model_summary[1, 6]
       int_bulk_ess <- ess_bulk(postDist_int)
       int_tail_ess <- ess_tail(postDist_int)
-      
+
       # Slope
       slope_est      <- model_summary[2, 1]
       slope_est.err  <- model_summary[2, 2]
@@ -230,24 +231,24 @@ sim_function <- function(index, seed, numSub, beta0, beta1, type, scalePar){
       slope_rhat     <- model_summary[2, 6]
       slope_bulk_ess <- ess_bulk(postDist_slope)
       slope_tail_ess <- ess_tail(postDist_slope)
-        
+
       # Get prior density
       priorDensity <- get(paste0('priorDensity_', type, '_', scalePar))
-      
+
       # Calculate BF manually
       fit.posterior  <- logspline(postDist_slope)
-      posterior      <- dlogspline(0, fit.posterior) 
+      posterior      <- dlogspline(0, fit.posterior)
       prior          <- priorDensity # Precalculated density
       bf             <- prior/posterior
-      
-      # Calculate OR BF manually 
+
+      # Calculate OR BF manually
       areaPosterior <- sum(postDist_slope > 0)/length(postDist_slope)
-      posterior.OR  <- posterior/areaPosterior    
+      posterior.OR  <- posterior/areaPosterior
       prior.OR      <- prior/0.5
       bf_OR         <- prior.OR/posterior.OR
-      
+
       # Extract ESS
-      
+
       msg    <- NA
     } else {
       slope  <- NA
@@ -258,11 +259,11 @@ sim_function <- function(index, seed, numSub, beta0, beta1, type, scalePar){
       ESS    <- NA
       msg    <- model
     }
-    
+
     # Bind to one DF
     results <- data.frame(index          = index,
                           numSub         = numSub,
-                          beta0          = beta0, 
+                          beta0          = beta0,
                           beta1          = beta1,
                           type           = type,
                           scalePar       = scalePar,
@@ -283,8 +284,8 @@ sim_function <- function(index, seed, numSub, beta0, beta1, type, scalePar){
                           slope_bulk_ess = slope_bulk_ess,
                           slope_tail_ess = slope_tail_ess,
                           msg            = msg)
-    
-  
+
+
   rownames(results) <- NULL
   return(results)
 }
@@ -325,11 +326,11 @@ params <- data.frame(index = 1:totalIter,
 # /*
 # ----------------------------- Submitting job --------------------------
 # */
-jobName <- "logistic_regression3"
+jobName <- "logistic_regression"
 sjob1 <- slurm_apply(sim_function, params, jobname = jobName,
-                     add_objects = c('data_generator', 'baseModel_student_1', 'baseModel_student_1.5', 'baseModel_student_2', 'baseModel_student_2.5', 
+                     add_objects = c('data_generator', 'baseModel_student_1', 'baseModel_student_1.5', 'baseModel_student_2', 'baseModel_student_2.5',
                                      'baseModel_normal_1', 'baseModel_normal_1.5', 'baseModel_normal_2', 'baseModel_normal_2.5',
-                                     'iterPerChain', 'priorDensity_student_1', 'priorDensity_student_1.5', 'priorDensity_student_2', 'priorDensity_student_2.5', 
+                                     'iterPerChain', 'priorDensity_student_1', 'priorDensity_student_1.5', 'priorDensity_student_2', 'priorDensity_student_2.5',
                                      'priorDensity_normal_1', 'priorDensity_normal_1.5', 'priorDensity_normal_2','priorDensity_normal_2.5'),
                      nodes = n_nodes, cpus_per_node = cpus_per_node, slurm_options = list(time = "2-12"), submit = TRUE)
 

@@ -2,7 +2,7 @@
 # Date: 25/08/2020
 # Explanation: We identified two options to analyse the data. Option 1 is to split the data in half using a method to find a 
 # minimum and use interrupted regression to test whether this both slopes at this point are different from 0. Option 2 is to 
-# use all data and test a whole range of points within an intervall and then apply an approprriate correction for multiple testing.
+# use all data and test a whole range of points within an interval and then apply an appropriate correction for multiple testing.
 # This script will examine the false positive rates and true positive rates to see which analysis is more suited. 
 
 # /*
@@ -263,7 +263,7 @@ numBeta    <- 5
 totalIter  <- nIter*numBeta
 numObj     <- rep(20, numBeta) # Number of objects
 numSub     <- rep(80, numBeta) # Number of subjects
-sdScale    <- rep(-1, numBeta) # Scale the SD as a funicton of the x value
+sdScale    <- rep(-1, numBeta) # Scale the SD as a function of the x value
 beta0      <- rep(0, numBeta)
 beta1      <- rep(0.2, numBeta)
 beta2      <- seq(0, 0.7, length.out =  numBeta)

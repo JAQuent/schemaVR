@@ -1,6 +1,6 @@
-# Simulation for frequentist logistic regression
+# Simulation for priors in logistic regression
 # Date: 12/11/2020
-# Explanation: This runs a power analysis that parallels the 1 for investigating different priors
+# Explanation: Gelman suggests beta ~ student_t(nu,0,s) where s is chosen to provide weak information on the expected scale, and 3<nu<7.
 
 # Setting seed
 set.seed(244)
@@ -9,11 +9,10 @@ set.seed(244)
 # ----------------------------- Libraries --------------------------
 # */
 # Set library path
-.libPaths('/home/aq01/R/x86_64-redhat-linux-gnu-library/3.6')
+.libPaths('/home/aq01/R/x86_64-redhat-linux-gnu-library/3.5')
 
 library(plyr)
 library(rslurm)
-library(lmerTest)
 library(assortedRFunctions)
 
 
@@ -119,7 +118,7 @@ n_nodes       <- 20
 cpus_per_node <- 22
 
 # Parameters of simulation
-nIter         <- 100
+nIter         <- 10000
 numBeta       <- 8
 totalIter     <- nIter*numBeta
 seeds         <- sample(.Machine$integer.max, totalIter)
@@ -136,7 +135,7 @@ params <- data.frame(index = 1:totalIter,
 # /*
 # ----------------------------- Submitting job --------------------------
 # */
-jobName <- "logistic_regression_freq_"
+jobName <- "logistic_regression_freq"
 sjob1 <- slurm_apply(sim_function, params, jobname = jobName,
                      add_objects = c('data_generator'),
                      nodes = n_nodes, cpus_per_node = cpus_per_node, slurm_options = list(time = "2-12"), submit = TRUE)

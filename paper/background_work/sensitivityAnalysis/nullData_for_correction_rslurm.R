@@ -1,6 +1,6 @@
 # This scripts create null data by shuffling the existing data
 # Date: 01/09/2020
-# Explanation: Since option 2 seems to be better, we know look for getting realitic null data. For this ,
+# Explanation: Since option 2 seems to be better, we know look for getting realistic null data. For this,
 # I shuffle the existing data and run the same script on this. 
 
 # Setting seed
