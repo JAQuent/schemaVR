@@ -1,6 +1,6 @@
 # Script to run analysis of recall euclidean distance for schemaVR1
-# Version 1.1
-# Date:  15/09/2019
+# Version 1.2
+# Date:  13/02/2021
 # Author: Joern Alexander Quent
 # /* 
 # ----------------------------- Libraries, settings and functions ---------------------------
@@ -21,7 +21,7 @@ cores2use <- 4
 # ----------------------------- Preparing data ---------------------------
 # */
 # Loading data
-load("U:/Projects/schemaVR/schemaVR1/data/dataSchemaVR1_cleaned.RData")
+load("C:/Users/aq01/Desktop/schemaVR/schemaVR1/data/dataSchemaVR1_cleaned.RData")
 
 # Scaling based on https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
 # Mean = 0 and SD = 1
@@ -42,6 +42,9 @@ model_schemaVR1_euclid1 <- brm(euclideanDist ~ sExp +
                            data = dataSchemaVR1_recall,
                            prior = prior_schemaVR1,
                            family = Gamma(link = "log"),
+                           chains = 8,
+                           warmup = 2000,
+                           iter   = 16000,
                            cores = cores2use,
                            save_all_pars = TRUE,
                            sample_prior = TRUE,
@@ -55,6 +58,9 @@ model_schemaVR1_euclid2 <- brm(euclideanDist ~ sExp +
                               data = dataSchemaVR1_recall,
                               prior = prior_schemaVR1,
                               family = Gamma(link = "log"),
+                              chains = 8,
+                              warmup = 2000,
+                              iter   = 16000,
                               cores = cores2use,
                               save_all_pars = TRUE,
                               sample_prior = TRUE,
