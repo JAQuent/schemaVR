@@ -1,6 +1,6 @@
 # Script to run analysis of recall accuracy data for schemaVR1
-# Version 2.1
-# Date:  18/02/2021
+# Version 1.1
+# Date:  15/09/2019
 # Author: Joern Alexander Quent
 # /* 
 # ----------------------------- Libraries, settings and functions ---------------------------
@@ -12,7 +12,6 @@ set.seed(seed)
 # Libaries
 library(assortedRFunctions)
 library(brms)
-library(beepr)
 
 # General settings
 cores2use <- 4
@@ -21,7 +20,7 @@ cores2use <- 4
 # ----------------------------- Preparing data ---------------------------
 # */
 # Loading data
-load("C:/Users/aq01/Desktop/schemaVR/schemaVR1/data/dataSchemaVR1_cleaned.RData")
+load("U:/Projects/schemaVR/schemaVR1/data/dataSchemaVR1_cleaned.RData")
 
 # Scaling based on Gelman et al. (2008) and https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
 # Mean = 0 and SD = 0.5
@@ -32,9 +31,11 @@ dataSchemaVR1_recall$sExp <- (dataSchemaVR1_recall$Exp - mean(dataSchemaVR1_reca
 # /* 
 # ----------------------------- Model ---------------------------
 # */
+#combinedData_priors <- c(prior(normal(0, 1), class = "Intercept"),
+#                         prior(normal(0, 1), class = "b")) 
 # Based on Gelman et al. (2008) and https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
-prior_schemaVR1  <- c(prior(student_t(7, 0, 10) , class = "Intercept"),
-                      prior(student_t(7, 0, 1) , class = "b")) 
+prior_schemaVR1  <- c(prior(student_t(3, 0, 10) , class = "Intercept"),
+                      prior(student_t(3, 0, 2.5) , class = "b")) 
 
 model_schemaVR1_recall1 <- brm(accRecall ~ sExp +  
                              I(sExp*sExp) +
@@ -43,17 +44,10 @@ model_schemaVR1_recall1 <- brm(accRecall ~ sExp +
                            data = dataSchemaVR1_recall,
                            prior = prior_schemaVR1,
                            family = bernoulli(),
-                           chains = 8,
-                           warmup = 2000,
-                           iter   = 16000,
                            cores = cores2use,
                            save_all_pars = TRUE,
                            sample_prior = TRUE,
                            seed = seed) 
-
-# Beep and sleep
-beep(8)
-Sys.sleep(10)
 
 model_schemaVR1_recall2 <- brm(accRecall ~ sExp +  
                                 I(sExp*sExp) +
@@ -62,17 +56,10 @@ model_schemaVR1_recall2 <- brm(accRecall ~ sExp +
                               data = dataSchemaVR1_recall,
                               prior = prior_schemaVR1,
                               family = bernoulli(),
-                              chains = 8,
-                              warmup = 2000,
-                              iter   = 16000,
                               cores = cores2use,
                               save_all_pars = TRUE,
                               sample_prior = TRUE,
                               seed = seed) 
-
-# Beep and sleep
-beep(8)
-Sys.sleep(10)
 
 BF_randomEffect <- bayes_factor(model_schemaVR1_recall1, model_schemaVR1_recall2)
 # As BF favours the model with random intercepts only we choose this model for all subsequent steps

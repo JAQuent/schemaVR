@@ -1,6 +1,6 @@
 # This script randomises the retrieval input files for schemaVR3
 setwd("U:/Projects/schemaVR/schemaVR3/preparation/sets")
-n                 <- 26
+n                 <- 25
 setNames          <- as.character(c(111, 246, 388, 498, 848))
 
 # Loop
