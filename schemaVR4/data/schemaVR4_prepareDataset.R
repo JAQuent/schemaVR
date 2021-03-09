@@ -365,7 +365,7 @@ kitchen[which(dataRecall$objNum > 12)] <- 'non-kitchen'
 
 
 # Create data frame
-dataschemaVR4 <- data.frame(subNum                  = rep(subNum, each = 20),
+dataSchemaVR4 <- data.frame(subNum                  = rep(subNum, each = 20),
                             objNum                  = rep(1:20, N),
                             objNam                  = rep(objNam, N), 
                             setNum                  = dataRecall$set,
@@ -411,4 +411,5 @@ dataschemaVR4 <- data.frame(subNum                  = rep(subNum, each = 20),
 
 
 # Save data
-save(dataschemaVR4, file  = "preprocessed/dataSchemaVR4.RData")
+save(dataSchemaVR4, file  = "preprocessed/dataSchemaVR4.RData")
+save(demographics, file  = "preprocessed/dataSchemaVR4_demo.RData")
