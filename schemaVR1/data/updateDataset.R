@@ -409,8 +409,8 @@ write.table(combData,
 # Legend of variables names:
 # subNum                Subject/participant number (e.g. 1, 2, 3...).
 # date                  Date of session in YYYYMMDD format.
-# gender                Gender of participna (0 = female, 1 = male, 3 = non-binary).
-# age                   Age of participnat in years.
+# gender                Gender of participant (0 = female, 1 = male, 3 = non-binary).
+# age                   Age of participant in years.
 # startExp              Time the experiment started in HHMM format. 
 # endExp                Time the experiment ended in HHMM format. 
 # objNum                Object number (e.g. 1, 2, 3...).
@@ -420,7 +420,7 @@ write.table(combData,
 # pickUpTime            Time (in seconds) the object was picked up in relation to starting the scene in unity.
 # dropDownTime          Time (in seconds) the object was dropped down in relation to starting the scene in unity.
 # respTime              Time (in seconds) the participant needed to respond (i.e. picking the object up) from start of trial. 
-# answerTime            Time (in seconds) the participant needed to give answer (i.e. droping the object) from the time the object of picked up. 
+# answerTime            Time (in seconds) the participant needed to give answer (i.e. dropping the object) from the time the object of picked up. 
 # numAttempts           Number of attempts. If an object was lost, the trial could be started again. 
 # recallNoMemory        No memory trial is a trial on which the participant told the experimenter that he/she did not see the object (0 = did not report not seeing object, 1 = repoted not seeing the object).
 # xRetrieved            X position (in virtual metres), where the participant placed the object.

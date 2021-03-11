@@ -14,17 +14,17 @@ seeds <- sample(1:9999, 2)
 library(assortedRFunctions)
 library(brms)
 library(beepr)
-library("R.utils");
-
+library(R.utils)
 
 # General settings
 cores2use <- 4
 
 # /* 
-# ----------------------------- Preparing data ---------------------------
+# ----------------------------- Loading, preparing data and getting priors ---------------------------
 # */
 # Loading data
 load("C:/Users/aq01/Desktop/schemaVR/schemaVR4/data/dataSchemaVR4.RData")
+# To save memory only load prior that is needed
 prior_schemaVR4_AFC <- loadToEnv("C:/Users/aq01/Desktop/schemaVR/schemaVR4/priors_for_schemaVR4_20210219_135801.RData")[["prior_schemaVR4_AFC"]];
 
 # Subsetting data
