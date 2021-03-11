@@ -1,0 +1,20 @@
+1	How expected is this microwave in general in the kitchen?
+2	How expected is this kitchen roll in general in the kitchen?
+3	How expected is this saucepan in general in the kitchen?
+4	How expected is this toaster in general in the kitchen?
+5	How expected is this bowl of fruits in general in the kitchen?
+6	How expected is this tea pot in general in the kitchen?
+7	How expected is this knife in general in the kitchen?
+8	How expected is this mixer in general in the kitchen?
+9	How expected is this bread in general in the kitchen?
+10	How expected is this glass jug in general in the kitchen?
+11	How expected is this mug in general in the kitchen?
+12	How expected are these dishes in general in the kitchen?
+13	How expected are these towels in general in the kitchen?
+14	How expected is this toy in general in the kitchen?
+15	How expected is this pile of books in general in the kitchen?
+16	How expected is this umbrella in general in the kitchen?
+17	How expected is this hat in general in the kitchen?
+18	How expected is this helmet in general in the kitchen?
+19	How expected is this calendar in general in the kitchen?
+20	How expected is this fan in general in the kitchen?

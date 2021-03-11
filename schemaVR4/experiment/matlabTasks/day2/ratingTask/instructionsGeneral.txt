@@ -1,0 +1,1 @@
+Rating task 2 \n\n Your task now is to rate the general expectancy of the objects you have seen anywhere in a kitchen. The scale ranges from unexpected (-100) to expected (100). Move the mouse to move the slider across the scale and press the left mouse button to make your response. \n\n Press spacebar to start.
