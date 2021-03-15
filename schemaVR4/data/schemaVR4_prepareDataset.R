@@ -4,6 +4,9 @@
 # Date: 08/03/2020
 # Author: Joern Alexander Quent
 ######################################################################################
+# Clear workspace
+rm(list = ls())
+
 # Setting WD and libraries 
 setwd("C:/Users/aq01/Desktop/schemaVR/schemaVR4/ignore_rawData") # Folder for raw data
 library(data.table)
@@ -11,7 +14,7 @@ library(plyr)
 
 # Subject and set numbers
 subNum    <- c(1, 73, 2, 4, 5, 7, 6, 9, 10, 11, 12, 14, 13, 15, 17, 19, 21, 23, 20, 16, 25, 
-               27, 29, 31, 33, 35, 37, 39, 74, 43, 75, 22, 24)
+               27, 29, 31, 33, 35, 37, 39, 74, 43, 75, 22, 24, 45)
 
 N        <- length(subNum)
 setNum   <- c(111, 246, 388, 498, 848)

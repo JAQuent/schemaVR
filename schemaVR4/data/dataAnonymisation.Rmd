@@ -94,8 +94,9 @@ The age range of the participants (N = `r length(dataSchemaVR4_demo$age)`) was b
 
 # Saving data
 ```{r}
-# Delete demo data
-rm(dataSchemaVR4_demo)
+# Delete demo that could lead to identification
+dataSchemaVR4_demo$subNum <- NULL
+dataSchemaVR4_demo$date   <- NULL
 
 # Save new image
 save.image('dataSchemaVR4.RData')
