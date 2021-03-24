@@ -107,7 +107,8 @@ model_schemaVR4_AFC <- brm(accAFC ~ sExp +
                            cores = cores2use,
                            save_all_pars = TRUE,
                            sample_prior = TRUE,
-                           seed = seed) 
+                           seed = seed,
+                           control = list(adapt_delta = 0.9)) 
 # Beep 
 summary(model_schemaVR4_AFC)
 beep(8)
