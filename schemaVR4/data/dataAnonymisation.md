@@ -64,11 +64,11 @@ and replaces it with alpha numeric strings.
 levels(anonSubNum)
 ```
 
-    ##  [1] "1B2SZL" "FM3G2N" "YSRVT1" "16QS7V" "G9IHS7" "HY54A2" "RHSRDV" "EXT58G"
-    ##  [9] "KRR5S2" "LOJ4BC" "MVHP3C" "N1JVH4" "2WPJ6K" "28I8OU" "ORU4BJ" "ZOPIZW"
-    ## [17] "EMSJOM" "MA4VYJ" "QDE1JE" "IRANSN" "V1FBFX" "IUY62M" "G0VKJN" "DLZM32"
-    ## [25] "0YVQR6" "XTH754" "1L0C5A" "V15COT" "34G0FK" "E3Y5L8" "SDSAO7" "Z8JE0A"
-    ## [33] "5MJ39C" "VVIX6F"
+    ##  [1] "EMSJOM" "IUY62M" "KRR5S2" "MA4VYJ" "MVHP3C" "2CVXEF" "SDSAO7" "28I8OU"
+    ##  [9] "V1FBFX" "1B2SZL" "E3Y5L8" "LOJ4BC" "V15COT" "RHSRDV" "VVIX6F" "XTH754"
+    ## [17] "ORU4BJ" "EXT58G" "HY54A2" "16QS7V" "ZOPIZW" "Z8JE0A" "FM3G2N" "5MJ39C"
+    ## [25] "2WPJ6K" "YSRVT1" "34G0FK" "G9IHS7" "IRANSN" "1L0C5A" "QDE1JE" "N1JVH4"
+    ## [33] "0YVQR6" "DLZM32" "G0VKJN"
 
 The function also saves a key as .csv file, with which the data can be
 de-anonmysed if that is necessary. Obviously, it is very important not
@@ -122,11 +122,11 @@ kable(table(dataSchemaVR4_demo$gender))
 
 | Var1   | Freq |
 | :----- | ---: |
-| female |   26 |
+| female |   27 |
 | male   |    8 |
 
-The age range of the participants (N = 34) was between 18 and 39 (Mean =
-25.76, SD = 5.91).
+The age range of the participants (N = 35) was between 18 and 39 (Mean =
+25.8, SD = 5.82).
 
 # Saving data
 

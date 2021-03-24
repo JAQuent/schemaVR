@@ -14,9 +14,6 @@ path2parent <- "C:/Users/aq01/Desktop/schemaVR" # This need to be changed to run
 # Loading data
 load(paste0(path2parent, "/schemaVR4/data/dataSchemaVR4.RData"))
 
-# Exclude participants because of knowledge of the theory
-dataSchemaVR4 <- dataSchemaVR4[dataSchemaVR4$subNum != 'E3Y5L8' & dataSchemaVR4$subNum != 'LOJ4BC', ]
-
 # 28I8OU mug was a no memory not a guess. 
 dataSchemaVR4[dataSchemaVR4$subNum == '28I8OU' & dataSchemaVR4$objNam == 'mug', 'recallMemory'] <- 0
 
