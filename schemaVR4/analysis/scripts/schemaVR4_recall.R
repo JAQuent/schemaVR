@@ -26,7 +26,7 @@ setwd("C:/Users/aq01/Desktop/schemaVR/schemaVR4/analysis")
 # ----------------------------- Loading, preparing data and getting priors ---------------------------
 # */
 # Loading data
-load("C:/Users/aq01/Desktop/schemaVR/schemaVR4/data/dataSchemaVR4.RData")
+load("C:/Users/aq01/Desktop/schemaVR/schemaVR4/data/dataSchemaVR4_cleaned.RData")
 # To save memory only load prior that is needed
 prior_schemaVR4_recall <- loadToEnv("C:/Users/aq01/Desktop/schemaVR/schemaVR4/priors_for_schemaVR4_20210219_135801.RData")[["prior_schemaVR4_recall"]];
 
