@@ -1,8 +1,6 @@
-# This scripts run a two line searchlight analysis to test for U-shapedness for AFC data
+# This scripts run a two line searchlight analysis to test for U-shapedness for recall data
 # Date: 10/03/2020
 # Explanation: It's in the title :)
-# Ask to remove everything in the global environment
-assortedRFunctions::clear_environment()
 
 # Setting seed
 set.seed(244)
@@ -27,48 +25,48 @@ load("C:/Users/aq01/Desktop/schemaVR/paper/data/dataSchemaVR2_cleaned.RData")
 load("C:/Users/aq01/Desktop/schemaVR/paper/data/dataSchemaVR3_cleaned.RData")
 load("C:/Users/aq01/Desktop/schemaVR/schemaVR4/data/dataSchemaVR4_cleaned.RData")
 
-# Create AFC data for schemaVR4
-dataSchemaVR4_AFC    <- subset(dataSchemaVR4, dataSchemaVR4$resCon != 0)
+# Create recall data for schemaVR4
+dataSchemaVR4_recall    <- subset(dataSchemaVR4, dataSchemaVR4$resCon != 0)
 
 # Combine data to one data frame
-combinedData_AFC <- data.frame(Experiment = c(rep('1', length(dataSchemaVR1_AFC$subNum)),
-                                              rep('2', length(dataSchemaVR2_AFC$subNum)),
-                                              rep('3', length(dataSchemaVR3_AFC$subNum)),
-                                              rep('4', length(dataSchemaVR4_AFC$subNum))),
-                               set        = c(rep('1', length(dataSchemaVR1_AFC$subNum)),
-                                              rep('2', length(dataSchemaVR2_AFC$subNum)),
-                                              as.character(dataSchemaVR3_AFC$setNum),
-                                              as.character(dataSchemaVR4_AFC$setNum)),
-                               subNum = c(as.character(dataSchemaVR1_AFC$subNum),
-                                          as.character(dataSchemaVR2_AFC$subNum),
-                                          as.character(dataSchemaVR3_AFC$subNum),
-                                          as.character(dataSchemaVR4_AFC$subNum)),
-                               objNum = c(dataSchemaVR1_AFC$objNum,
-                                          dataSchemaVR2_AFC$objNum,
-                                          dataSchemaVR3_AFC$objNum,
-                                          dataSchemaVR4_AFC$objNum),
-                               objLocTargetRating = c(dataSchemaVR1_AFC$objLocTargetRating,
-                                                      dataSchemaVR2_AFC$objLocTargetRating,
-                                                      dataSchemaVR3_AFC$objLocTargetRating,
-                                                      dataSchemaVR4_AFC$objLocTargetRating),
-                               accAFC = c(dataSchemaVR1_AFC$accAFC,
-                                          dataSchemaVR2_AFC$accAFC,
-                                          dataSchemaVR3_AFC$accAFC,
-                                          dataSchemaVR4_AFC$accAFC))
+combinedData_recall <- data.frame(Experiment = c(rep('1', length(dataSchemaVR1_recall$subNum)),
+                                              rep('2', length(dataSchemaVR2_recall$subNum)),
+                                              rep('3', length(dataSchemaVR3_recall$subNum)),
+                                              rep('4', length(dataSchemaVR4_recall$subNum))),
+                               set        = c(rep('1', length(dataSchemaVR1_recall$subNum)),
+                                              rep('2', length(dataSchemaVR2_recall$subNum)),
+                                              as.character(dataSchemaVR3_recall$setNum),
+                                              as.character(dataSchemaVR4_recall$setNum)),
+                               subNum = c(as.character(dataSchemaVR1_recall$subNum),
+                                          as.character(dataSchemaVR2_recall$subNum),
+                                          as.character(dataSchemaVR3_recall$subNum),
+                                          as.character(dataSchemaVR4_recall$subNum)),
+                               objNum = c(dataSchemaVR1_recall$objNum,
+                                          dataSchemaVR2_recall$objNum,
+                                          dataSchemaVR3_recall$objNum,
+                                          dataSchemaVR4_recall$objNum),
+                               objLocTargetRating = c(dataSchemaVR1_recall$objLocTargetRating,
+                                                      dataSchemaVR2_recall$objLocTargetRating,
+                                                      dataSchemaVR3_recall$objLocTargetRating,
+                                                      dataSchemaVR4_recall$objLocTargetRating),
+                               accRecall = c(dataSchemaVR1_recall$accRecall,
+                                          dataSchemaVR2_recall$accRecall,
+                                          dataSchemaVR3_recall$accRecall,
+                                          dataSchemaVR4_recall$accRecall))
 
-combinedData_AFC$Exp    <- combinedData_AFC$objLocTargetRating 
-combinedData_AFC$subNum <- as.character(combinedData_AFC$subNum)
+combinedData_recall$Exp    <- combinedData_recall$objLocTargetRating 
+combinedData_recall$subNum <- as.character(combinedData_recall$subNum)
 
 # Scaling based on Gelman et al. (2008) and https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
 # Mean = 0 and SD = 0.5
-combinedData_AFC$s_x <- (combinedData_AFC$Exp - mean(combinedData_AFC$Exp ))/(sd(combinedData_AFC$Exp)/0.5)
-combinedData_AFC$y    <- combinedData_AFC$accAFC
+combinedData_recall$s_x <- (combinedData_recall$Exp - mean(combinedData_recall$Exp ))/(sd(combinedData_recall$Exp)/0.5)
+combinedData_recall$y   <- combinedData_recall$accRecall
 
 # Assign to DF
-df <- combinedData_AFC
+df <- combinedData_recall
 
 library(ggplot2)
-ggplot(combinedData_AFC, aes(x = objLocTargetRating, y = accAFC)) + 
+ggplot(combinedData_recall, aes(x = objLocTargetRating, y = accRecall)) + 
   geom_jitter(width = 0, height = 0.1) + 
   geom_smooth()
 
@@ -294,135 +292,6 @@ ggplot(results_long, aes(x = value, y = breakingPoint, group = lineId, colour = 
 
 
 # /* 
-# ----------------------------- To full model ---------------------------
-# */
-# Cores to use
-cores2use <- 4
-
-# Find middle between the two points that seems to show an effect
-middle_br <- mean(results$breakingPoint[3:4])
-
-x      <- df$s_x 
-# Slope 1 (breaking point is included in the first line)
-df$xlow     <- ifelse(x <= middle_br, x - middle_br, 0)
-df$xhigh    <- ifelse(x > middle_br, x - middle_br, 0)     
-df$high     <- ifelse(x > middle_br, 1, 0)
-
-# Model 1
-error1      <- FALSE
-model1      <- tryCatch({
-  model1 <- update(baseModel,
-                   newdata = df,
-                   recompile = FALSE,
-                   chains = 8,
-                   warmup = 2000,
-                   iter   = 16000,
-                   cores = cores2use,
-                   save_all_pars = TRUE,
-                   sample_prior = TRUE,
-                   save_dso = TRUE,
-                   silent = TRUE,
-                   refresh = 0,
-                   seed = 214)
-}, error = function(e){
-  error1 <- TRUE
-  return(as.character(e))
-})
-
-# Slope 2 (breaking point is included in the second line)
-df$xlow     <- ifelse(x < middle_br, x - middle_br, 0)
-df$xhigh    <- ifelse(x >= middle_br, x - middle_br, 0)     
-df$high     <- ifelse(x >= middle_br, 1, 0)
-
-# Model 2 
-error2      <- FALSE
-model2      <- tryCatch({
-  model2 <- update(baseModel,
-                   newdata = df,
-                   recompile = FALSE,
-                   chains = 8,
-                   warmup = 2000,
-                   iter   = 16000,
-                   cores = cores2use,
-                   save_all_pars = TRUE,
-                   sample_prior = TRUE,
-                   save_dso = TRUE,
-                   silent = TRUE,
-                   refresh = 0,
-                   seed = 214)
-}, error = function(e){
-  error2 <- TRUE
-  return(as.character(e))
-})
-
-# Extract information
-# Slope 1
-if(!error1){
-  # Extract fixef
-  slope1   <- fixef(model1)[2, 1]
-  q2.5_1   <- fixef(model1)[2, 3]
-  q97.5_1  <- fixef(model1)[2, 4]
-  
-  # Calculate BF manually
-  postDist       <- posterior_samples(model1)$b_xlow
-  bf_1           <- savage_dickey_ratio(postDist, priorDensity, 0.5, 'two.sided')
-  
-  # Calculate OR BF manually 
-  bf_OR_1       <- savage_dickey_ratio(postDist, priorDensity, 0.5, 'less')
-  
-  msg1 <- NA
-} else {
-  slope1   <- NA
-  q2.5_1   <- NA
-  q97.5_1  <- NA
-  bf_1     <- NA
-  bf_OR_1  <- NA
-  msg1     <- model1
-}
-
-# Slope 2
-# Extract fixef
-if(!error2){
-  # Extract fixef
-  slope2   <- fixef(model2)[3, 1]
-  q2.5_2   <- fixef(model2)[3, 3]
-  q97.5_2  <- fixef(model2)[3, 4]
-  
-  # Calculate BF manually
-  postDist       <- posterior_samples(model2)$b_xhigh
-  bf_2           <- savage_dickey_ratio(postDist, priorDensity, 0.5, 'two.sided')
-  
-  # Calculate OR BF manually 
-  bf_OR_2        <- savage_dickey_ratio(postDist, priorDensity, 0.5, 'greater')
-  
-  msg2 <- NA
-} else {
-  slope2   <- NA
-  q2.5_2   <- NA
-  q97.5_2  <- NA
-  bf_2     <- NA
-  bf_OR_2  <- NA
-  msg2     <- model2
-}
-
-# Bind to one DF
-tempResults <- data.frame(br_range       = br_range,
-                          numPoints      = numPoints,
-                          breakingPoint  = middle_br,
-                          slope1         = slope1,
-                          q2.5_1         = q2.5_1,
-                          q97.5_1        = q97.5_1,
-                          bf_1           = bf_1,
-                          bf_OR_1        = bf_OR_1,
-                          slope2         = slope2,
-                          q2.5_2         = q2.5_2,
-                          q97.5_2        = q97.5_2,
-                          bf_2           = bf_2,
-                          bf_OR_2        = bf_OR_2,
-                          msg1           = msg1,
-                          msg2           = msg2)
-
-# /* 
 # ----------------------------- Saving results ---------------------------
 # */
-save.image(datedFileNam('schemaVR4_AFC_searchlight', '.RData'))
+save.image(datedFileNam('schemaVR4_recall_searchlight', '.RData'))

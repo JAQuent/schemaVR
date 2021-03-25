@@ -1,14 +1,19 @@
-# This scripts run a two line searchlight analysis to test for U-shapedness for AFC data
-# Date: 10/03/2020
+# This scripts run a two line searchlight analysis to test for U-shapedness for remember data
+# Date: 19/03/2020
 # Explanation: It's in the title :)
-# Ask to remove everything in the global environment
-assortedRFunctions::clear_environment()
 
 # Setting seed
 set.seed(244)
 
+
+######################################################
+# Path to parent folder schemaVR
+path2parent <- "C:/Users/aq01/Desktop/schemaVR" # This need to be changed to run this document
+######################################################
+
+
 # Setting WD
-setwd("C:/Users/aq01/Desktop/schemaVR/schemaVR4/analysis")
+setwd(paste0(path2parent, "/schemaVR4/analysis"))
 
 # /*
 # ----------------------------- Libraries --------------------------
@@ -17,58 +22,59 @@ library(brms)
 library(rslurm)
 library(polspline)
 library(assortedRFunctions)
+library(ggplot2)
 
 # /*
 # ----------------------------- Data --------------------------
 # */
 # Loading all .RData files
-load("C:/Users/aq01/Desktop/schemaVR/paper/data/dataSchemaVR1_cleaned.RData")
-load("C:/Users/aq01/Desktop/schemaVR/paper/data/dataSchemaVR2_cleaned.RData")
-load("C:/Users/aq01/Desktop/schemaVR/paper/data/dataSchemaVR3_cleaned.RData")
-load("C:/Users/aq01/Desktop/schemaVR/schemaVR4/data/dataSchemaVR4_cleaned.RData")
+load(paste0(path2parent, "/paper/data/dataSchemaVR1_cleaned.RData"))
+load(paste0(path2parent, "/paper/data/dataSchemaVR2_cleaned.RData"))
+load(paste0(path2parent, "/paper/data/dataSchemaVR3_cleaned.RData"))
+load(paste0(path2parent, "/schemaVR4/data/dataSchemaVR4_cleaned.RData"))
 
-# Create AFC data for schemaVR4
-dataSchemaVR4_AFC    <- subset(dataSchemaVR4, dataSchemaVR4$resCon != 0)
 
 # Combine data to one data frame
-combinedData_AFC <- data.frame(Experiment = c(rep('1', length(dataSchemaVR1_AFC$subNum)),
-                                              rep('2', length(dataSchemaVR2_AFC$subNum)),
-                                              rep('3', length(dataSchemaVR3_AFC$subNum)),
-                                              rep('4', length(dataSchemaVR4_AFC$subNum))),
-                               set        = c(rep('1', length(dataSchemaVR1_AFC$subNum)),
-                                              rep('2', length(dataSchemaVR2_AFC$subNum)),
-                                              as.character(dataSchemaVR3_AFC$setNum),
-                                              as.character(dataSchemaVR4_AFC$setNum)),
-                               subNum = c(as.character(dataSchemaVR1_AFC$subNum),
-                                          as.character(dataSchemaVR2_AFC$subNum),
-                                          as.character(dataSchemaVR3_AFC$subNum),
-                                          as.character(dataSchemaVR4_AFC$subNum)),
-                               objNum = c(dataSchemaVR1_AFC$objNum,
-                                          dataSchemaVR2_AFC$objNum,
-                                          dataSchemaVR3_AFC$objNum,
-                                          dataSchemaVR4_AFC$objNum),
-                               objLocTargetRating = c(dataSchemaVR1_AFC$objLocTargetRating,
-                                                      dataSchemaVR2_AFC$objLocTargetRating,
-                                                      dataSchemaVR3_AFC$objLocTargetRating,
-                                                      dataSchemaVR4_AFC$objLocTargetRating),
-                               accAFC = c(dataSchemaVR1_AFC$accAFC,
-                                          dataSchemaVR2_AFC$accAFC,
-                                          dataSchemaVR3_AFC$accAFC,
-                                          dataSchemaVR4_AFC$accAFC))
+combinedData_remember <- data.frame(Experiment = c(rep('2', length(dataSchemaVR2$subNum)),
+                                                   rep('3', length(dataSchemaVR3$subNum)),
+                                                   rep('4', length(dataSchemaVR4$subNum))),
+                               set        = c(rep('2', length(dataSchemaVR2$subNum)),
+                                              as.character(dataSchemaVR3$setNum),
+                                              as.character(dataSchemaVR4$setNum)),
+                               subNum = c(as.character(dataSchemaVR2$subNum),
+                                          as.character(dataSchemaVR3$subNum),
+                                          as.character(dataSchemaVR4$subNum)),
+                               objNum = c(dataSchemaVR2$objNum,
+                                          dataSchemaVR3$objNum,
+                                          dataSchemaVR4$objNum),
+                               objLocTargetRating = c(dataSchemaVR2$objLocTargetRating,
+                                                      dataSchemaVR3$objLocTargetRating,
+                                                      dataSchemaVR4$objLocTargetRating),
+                               resCon = c(as.integer(as.character(dataSchemaVR2$resCon)),
+                                          as.integer(as.character(dataSchemaVR3$resCon)),
+                                          as.integer(as.character(dataSchemaVR4$resCon))))
 
-combinedData_AFC$Exp    <- combinedData_AFC$objLocTargetRating 
-combinedData_AFC$subNum <- as.character(combinedData_AFC$subNum)
+
+# Creating new labels
+remembered <- rep(0, dim(combinedData_remember)[1])
+remembered[combinedData_remember$resCon == 1] <- 1
+combinedData_remember$remembered <- remembered
+
+# Exclude no-memory (i.e. hasn't seen object) 
+combinedData_remember <- combinedData_remember[combinedData_remember$resCon != 0, ]
+
 
 # Scaling based on Gelman et al. (2008) and https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
 # Mean = 0 and SD = 0.5
-combinedData_AFC$s_x <- (combinedData_AFC$Exp - mean(combinedData_AFC$Exp ))/(sd(combinedData_AFC$Exp)/0.5)
-combinedData_AFC$y    <- combinedData_AFC$accAFC
+combinedData_remember$Exp  <- combinedData_remember$objLocTargetRating 
+combinedData_remember$s_x <- (combinedData_remember$Exp - mean(combinedData_remember$Exp ))/(sd(combinedData_remember$Exp)/0.5)
+combinedData_remember$y    <- combinedData_remember$remembered
 
 # Assign to DF
-df <- combinedData_AFC
+df <- combinedData_remember
 
-library(ggplot2)
-ggplot(combinedData_AFC, aes(x = objLocTargetRating, y = accAFC)) + 
+# Plot
+ggplot(combinedData_remember, aes(x = s_x, y = remembered)) + 
   geom_jitter(width = 0, height = 0.1) + 
   geom_smooth()
 
@@ -425,4 +431,4 @@ tempResults <- data.frame(br_range       = br_range,
 # /* 
 # ----------------------------- Saving results ---------------------------
 # */
-save.image(datedFileNam('schemaVR4_AFC_searchlight', '.RData'))
+save.image(datedFileNam('schemaVR4_remember_searchlight', '.RData'))
