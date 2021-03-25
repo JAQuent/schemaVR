@@ -115,4 +115,4 @@ beep(8)
 # /* 
 # ----------------------------- Saving image ---------------------------
 # */
-save.image(datedFileNam('schemaVR4_recall_no_deman', '.RData'))
+save.image(datedFileNam('schemaVR4_recall_no_demean', '.RData'))
