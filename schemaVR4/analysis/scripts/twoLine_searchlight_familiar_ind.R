@@ -1,83 +1,98 @@
-# This scripts run a two line searchlight analysis to test for U-shapedness for euclid data
-# Date: 15/03/2021
+# This scripts run a two line searchlight analysis to test for U-shapedness for familiar independence data
+# Date: 13/07/2021
 # Explanation: It's in the title :)
+# /* 
+# ----------------------------- Libraries, settings and functions ---------------------------
+# */
+# Ask to remove everything in the global environment
+#assortedRFunctions::clear_environment()
 
 # Setting seed
-set.seed(244)
+set.seed(2443)
+
+
+######################################################
+# Path to parent folder schemaVR
+path2parent <- "D:/Alex/Laptop/Desktop/schemaVR" # This need to be changed to run this document
+######################################################
+
 
 # Setting WD
-setwd("C:/Users/aq01/Desktop/schemaVR/schemaVR4/analysis")
+setwd(paste0(path2parent, "/schemaVR4/analysis"))
 
-# /*
-# ----------------------------- Libraries --------------------------
-# */
+# Libs
 library(brms)
 library(rslurm)
 library(polspline)
 library(assortedRFunctions)
+library(ggplot2)
 
 # /*
 # ----------------------------- Data --------------------------
 # */
 # Loading all .RData files
-load("C:/Users/aq01/Desktop/schemaVR/paper/data/dataSchemaVR1_cleaned.RData")
-load("C:/Users/aq01/Desktop/schemaVR/paper/data/dataSchemaVR2_cleaned.RData")
-load("C:/Users/aq01/Desktop/schemaVR/paper/data/dataSchemaVR3_cleaned.RData")
-load("C:/Users/aq01/Desktop/schemaVR/schemaVR4/data/dataSchemaVR4_cleaned.RData")
+load(paste0(path2parent, "/schemaVR1/data/dataSchemaVR1_cleaned.RData"))
+load(paste0(path2parent, "/schemaVR2/data/dataSchemaVR2_cleaned.RData"))
+load(paste0(path2parent, "/schemaVR3/data/dataSchemaVR3_cleaned.RData"))
+load(paste0(path2parent, "/schemaVR4/data/dataSchemaVR4_cleaned.RData"))
 
-# Create data for schemaVR4
-dataSchemaVR4_recall    <- subset(dataSchemaVR4, dataSchemaVR4$resCon != 0)
 
 # Combine data to one data frame
-combinedData_recall <- data.frame(Experiment = c(rep('1', length(dataSchemaVR1_recall$subNum)),
-                                              rep('2', length(dataSchemaVR2_recall$subNum)),
-                                              rep('3', length(dataSchemaVR3_recall$subNum)),
-                                              rep('4', length(dataSchemaVR4_recall$subNum))),
-                               set        = c(rep('1', length(dataSchemaVR1_recall$subNum)),
-                                              rep('2', length(dataSchemaVR2_recall$subNum)),
-                                              as.character(dataSchemaVR3_recall$setNum),
-                                              as.character(dataSchemaVR4_recall$setNum)),
-                               subNum = c(as.character(dataSchemaVR1_recall$subNum),
-                                          as.character(dataSchemaVR2_recall$subNum),
-                                          as.character(dataSchemaVR3_recall$subNum),
-                                          as.character(dataSchemaVR4_recall$subNum)),
-                               objNum = c(dataSchemaVR1_recall$objNum,
-                                          dataSchemaVR2_recall$objNum,
-                                          dataSchemaVR3_recall$objNum,
-                                          dataSchemaVR4_recall$objNum),
-                               objLocTargetRating = c(dataSchemaVR1_recall$objLocTargetRating,
-                                                      dataSchemaVR2_recall$objLocTargetRating,
-                                                      dataSchemaVR3_recall$objLocTargetRating,
-                                                      dataSchemaVR4_recall$objLocTargetRating),
-                               euclideanDist = c(dataSchemaVR1_recall$euclideanDist,
-                                          dataSchemaVR2_recall$euclideanDist,
-                                          dataSchemaVR3_recall$euclideanDist,
-                                          dataSchemaVR4_recall$euclideanDist))
+combinedData_familiar_ind <- data.frame(Experiment = c(rep('2', length(dataSchemaVR2$subNum)),
+                                                       rep('3', length(dataSchemaVR3$subNum)),
+                                                       rep('4', length(dataSchemaVR4$subNum))),
+                               set        = c(rep('2', length(dataSchemaVR2$subNum)),
+                                              as.character(dataSchemaVR3$setNum),
+                                              as.character(dataSchemaVR4$setNum)),
+                               subNum = c(as.character(dataSchemaVR2$subNum),
+                                          as.character(dataSchemaVR3$subNum),
+                                          as.character(dataSchemaVR4$subNum)),
+                               objNum = c(dataSchemaVR2$objNum,
+                                          dataSchemaVR3$objNum,
+                                          dataSchemaVR4$objNum),
+                               objLocTargetRating = c(dataSchemaVR2$objLocTargetRating,
+                                                      dataSchemaVR3$objLocTargetRating,
+                                                      dataSchemaVR4$objLocTargetRating),
+                               resCon = c(as.integer(as.character(dataSchemaVR2$resCon)),
+                                          as.integer(as.character(dataSchemaVR3$resCon)),
+                                          as.integer(as.character(dataSchemaVR4$resCon))))
+# Create set names
+combinedData_familiar_ind$new_set <- as.factor(paste(combinedData_familiar_ind$Experiment, combinedData_familiar_ind$set, sep = '_'))
 
-combinedData_recall$Exp    <- combinedData_recall$objLocTargetRating 
-combinedData_recall$subNum <- as.character(combinedData_recall$subNum)
+# Creating new labels
+# Coding familiar judgements as independent
+familiar_ind <- rep(0, dim(combinedData_familiar_ind)[1])
+familiar_ind[combinedData_familiar_ind$resCon == 1] <- NA_integer_
+familiar_ind[dataSchemaVR4$resCon == 2] <- 1
+combinedData_familiar_ind$familiar_ind <- familiar_ind
 
-# Mean = 0 and SD = 1
-combinedData_recall$s_x <- scale(combinedData_recall$Exp)
-combinedData_recall$y   <- combinedData_recall$euclideanDist
+# Exclude no-memory (i.e. hasn't seen object) 
+combinedData_familiar_ind <- combinedData_familiar_ind[combinedData_familiar_ind$resCon != 0, ]
+
+# Scaling based on Gelman et al. (2008) and https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
+# Mean = 0 and SD = 0.5
+combinedData_familiar_ind$Exp  <- combinedData_familiar_ind$objLocTargetRating 
+combinedData_familiar_ind$s_x <- (combinedData_familiar_ind$Exp - mean(combinedData_familiar_ind$Exp ))/(sd(combinedData_familiar_ind$Exp)/0.5)
+combinedData_familiar_ind$y    <- combinedData_familiar_ind$familiar_ind
 
 # Assign to DF
-df <- combinedData_recall
+df <- combinedData_familiar_ind
 
-library(ggplot2)
-ggplot(combinedData_recall, aes(x = objLocTargetRating, y = euclideanDist)) + 
-  geom_point() + 
+# Plot
+plt1 <- ggplot(combinedData_familiar_ind, aes(x = s_x, y = familiar_ind)) + 
+  geom_jitter(width = 0, height = 0.1) + 
   geom_smooth()
 
+ggsave(datedFileNam('plot_familiar_1', '.png'), plot = plt1)
 
 # /*
 # ----------------------------- Functions --------------------------
 # */
 # Priors for all models
-priors  <- c(prior(normal(0, 1) , class = "Intercept"),
-             prior(normal(0, 1) , class = "b")) 
+priors  <- c(prior(student_t(7, 0, 10) , class = "Intercept"),
+             prior(student_t(7, 0, 1) , class = "b")) 
 
-priorDensity <- dnorm(0, 0, 1)
+priorDensity <- dstudent_t(0, 7, 0, 1)
 
 
 # Setting up DF for interrupted regression
@@ -89,20 +104,23 @@ df$high        <- ifelse(x > breakingPoints[1], 1, 0)
 
 # Run 1 for model compilation
 baseModel <- brm(y ~ xlow + xhigh + high  + 
-                   Experiment + set +
+                   new_set +
                    (1 | subNum) +
                    (1 | objNum),
                  data = df,
                  prior = priors,
-                 family = Gamma(link = "log"),
+                 family = bernoulli(),
                  chains = 1,
                  save_all_pars = TRUE,
-                 sample_prior = TRUE,
-                 save_dso = TRUE, 
+                 sample_prior = TRUE, 
                  seed = 6353) 
 
 
 twoLine_searchlight <- function(seed, df, br_range, numPoints){
+  # Get startTime
+  startTime <- Sys.time()
+  cat(as.character(startTime))
+  
   # Set seed 
   set.seed(seed)
   seeds <- sample(.Machine$integer.max, numPoints)
@@ -131,7 +149,6 @@ twoLine_searchlight <- function(seed, df, br_range, numPoints){
                        warmup = 3000,
                        save_all_pars = TRUE,
                        sample_prior = TRUE,
-                       save_dso = TRUE,
                        silent = TRUE,
                        refresh = 0,
                        seed = seeds[i])
@@ -157,7 +174,6 @@ twoLine_searchlight <- function(seed, df, br_range, numPoints){
                        warmup = 3000,
                        save_all_pars = TRUE,
                        sample_prior = TRUE,
-                       save_dso = TRUE,
                        silent = TRUE,
                        refresh = 0,
                        seed = seeds[i])
@@ -179,7 +195,7 @@ twoLine_searchlight <- function(seed, df, br_range, numPoints){
       bf_1           <- savage_dickey_ratio(postDist, priorDensity, 0.5, 'two.sided')
       
       # Calculate OR BF manually 
-      bf_OR_1       <- savage_dickey_ratio(postDist, priorDensity, 0.5, 'greater')
+      bf_OR_1       <- savage_dickey_ratio(postDist, priorDensity, 0.5, 'less')
       
       msg1 <- NA
     } else {
@@ -204,7 +220,7 @@ twoLine_searchlight <- function(seed, df, br_range, numPoints){
       bf_2           <- savage_dickey_ratio(postDist, priorDensity, 0.5, 'two.sided')
       
       # Calculate OR BF manually 
-      bf_OR_2        <- savage_dickey_ratio(postDist, priorDensity, 0.5, 'less')
+      bf_OR_2        <- savage_dickey_ratio(postDist, priorDensity, 0.5, 'greater')
       
       msg2 <- NA
     } else {
@@ -232,6 +248,10 @@ twoLine_searchlight <- function(seed, df, br_range, numPoints){
                                bf_OR_2        = bf_OR_2,
                                msg1           = msg1,
                                msg2           = msg2)
+    
+    # Show progress
+    progressDisplay(i = i, iterations = numPoints, startTime)
+    cat('\n')
     
     
     # Add to df 
@@ -265,7 +285,7 @@ library(MRColour)
 library(reshape2)
 
 # Melt to long 
-results_long <- melt(results, id.vars = c("breakingPoint", "br_range", "numPoints"))
+results_long <- melt(results, id.vars=c("breakingPoint", "br_range", "numPoints"))
 
 # Remove all unnecessary stuff
 excluder     <- c('slope1', 'bf_1', 'bf_OR_1', 'slope2', 'bf_2', 'bf_OR_2', 'msg1', 'msg2')
@@ -282,15 +302,17 @@ results_long$Slope[results_long$variable == 'q97.5_2'] <- 'Slope 2'
 results_long$lineId <- c(rep(1:nrow(results), 2), rep((nrow(results)+1):(nrow(results)*2), 2))
 
 # Plot results
-ggplot(results_long, aes(x = value, y = breakingPoint, group = lineId, colour = Slope)) + 
+plt2 <- ggplot(results_long, aes(x = value, y = breakingPoint, group = lineId, colour = Slope)) + 
   geom_point() + 
   geom_line(aes(group = lineId)) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   labs(title = '95% CI for two slopes', y = 'Breaking point') +
   scale_color_mrc()
 
+ggsave(datedFileNam('plot_familiar_2', '.png'), plot = plt2)
+
 
 # /* 
 # ----------------------------- Saving results ---------------------------
 # */
-save.image(datedFileNam('schemaVR4_euclid_searchlight', '.RData'))
+save.image(datedFileNam('schemaVR4_familiar_ind_searchlight', '.RData'))

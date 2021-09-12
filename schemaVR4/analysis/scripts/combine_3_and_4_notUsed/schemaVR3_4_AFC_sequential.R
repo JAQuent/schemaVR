@@ -34,72 +34,81 @@ cores2use <- 4
 # /* 
 # ----------------------------- Preparing data ---------------------------
 # */
-# Loading data
 load(paste0(path2parent, "/schemaVR4/data/dataSchemaVR4_cleaned.RData"))
-load(paste0(path2parent, "/schemaVR3/analysis/schemaVR3_no_demean_AFC_20210324_150537.RData"))
+load(paste0(path2parent, "/schemaVR3/data/dataSchemaVR3_cleaned.RData"))
+load(paste0(path2parent, "/schemaVR2/analysis/schemaVR2_AFC_no_demean_20210324_135346.RData"))
 
 # Subsetting data
 dataSchemaVR4_AFC    <- subset(dataSchemaVR4, dataSchemaVR4$resCon != '0')
 
+dataSchemaVR3_4_AFC <- data.frame(Experiment = c(rep('3', length(dataSchemaVR3_AFC$subNum)),
+                                                 rep('4', length(dataSchemaVR4_AFC$subNum))),
+                                  set        = c(as.character(dataSchemaVR3_AFC$setNum),
+                                                 as.character(dataSchemaVR4_AFC$setNum)),
+                                  subNum = c(as.character(dataSchemaVR3_AFC$subNum),
+                                             as.character(dataSchemaVR4_AFC$subNum)),
+                                  objNum = c(dataSchemaVR3_AFC$objNum,
+                                             dataSchemaVR4_AFC$objNum),
+                                  objLocTargetRating = c(dataSchemaVR3_AFC$objLocTargetRating,
+                                                         dataSchemaVR4_AFC$objLocTargetRating),
+                                  accAFC = c(dataSchemaVR3_AFC$accAFC,
+                                             dataSchemaVR4_AFC$accAFC))
+
 # Scaling 
-dataSchemaVR4_AFC$Exp  <- dataSchemaVR4_AFC$objLocTargetRating 
-dataSchemaVR4_AFC$sExp <- dataSchemaVR4_AFC$Exp/sd_value # sd_value is from schemaVR1 and used for all subsequent models
+dataSchemaVR3_4_AFC$Exp  <- dataSchemaVR3_4_AFC$objLocTargetRating 
+dataSchemaVR3_4_AFC$sExp <- dataSchemaVR3_4_AFC$Exp/sd_value # sd_value is from schemaVR1 and used for all subsequent models
+
 
 
 # /* 
 # ----------------------------- Get family parameters for prior ---------------------------
 # */
-postDists                 <- posterior_samples(model_schemaVR3_AFC)
-intercept_schemaVR3_AFC   <- brm(b_Intercept ~ 1,
+postDists                 <- posterior_samples(model_schemaVR2_AFC)
+intercept_schemaVR2_AFC   <- brm(b_Intercept ~ 1,
                                  data = postDists,
                                  cores = cores2use,
                                  family = student(link = "identity", link_sigma = "log", link_nu = "logm1"))
 
 # Check, beep and sleep for 10 sec
-pp_check(intercept_schemaVR3_AFC)
+pp_check(intercept_schemaVR2_AFC)
 beep(8)
 Sys.sleep(10)
 
-b_sExp_schemaVR3_AFC <- brm(b_sExp ~ 1,
+b_sExp_schemaVR2_AFC <- brm(b_sExp ~ 1,
                             data = postDists,
                             cores = cores2use,
                             family = student(link = "identity", link_sigma = "log", link_nu = "logm1"))
 
 # Check, beep and sleep for 10 sec
-pp_check(b_sExp_schemaVR3_AFC)
+pp_check(b_sExp_schemaVR2_AFC)
 beep(8)
 Sys.sleep(10)
 
-b_IsExpMUsExp_schemaVR3_AFC <- brm(b_IsExpMUsExp ~ 1,
+b_IsExpMUsExp_schemaVR2_AFC <- brm(b_IsExpMUsExp ~ 1,
                                    data = postDists,
                                    cores = cores2use,
                                    family = student(link = "identity", link_sigma = "log", link_nu = "logm1"))
 
-# Check, beep and sleep for 10 sec
-pp_check(b_IsExpMUsExp_schemaVR3_AFC)
-beep(8)
-Sys.sleep(10)
 
-# Create prior
-prior_schemaVR4_AFC  <- c(set_prior(priorString_student(intercept_schemaVR3_AFC), 
-                                class = "Intercept"),
-                      set_prior(priorString_student(b_sExp_schemaVR3_AFC), 
-                                class = "b", 
-                                coef = "sExp"),
-                      set_prior(priorString_student(b_IsExpMUsExp_schemaVR3_AFC), 
-                                class = "b", 
-                                coef = "IsExpMUsExp"))
+prior_schemaVR3_4_AFC  <- c(set_prior(priorString_student(intercept_schemaVR2_AFC), 
+                                      class = "Intercept"),
+                            set_prior(priorString_student(b_sExp_schemaVR2_AFC), 
+                                      class = "b", 
+                                      coef = "sExp"),
+                            set_prior(priorString_student(b_IsExpMUsExp_schemaVR2_AFC), 
+                                      class = "b", 
+                                      coef = "IsExpMUsExp"))
 
 
 # /* 
 # ----------------------------- Model ---------------------------
 # */
-model_schemaVR4_AFC <- brm(accAFC ~ sExp +  
+model_schemaVR3_4_AFC <- brm(accAFC ~ sExp +  
                                 I(sExp*sExp) +
                                 (1 | subNum) +
                                 (1 | objNum),
-                           data = dataSchemaVR4_AFC,
-                           prior = prior_schemaVR4_AFC,
+                           data = dataSchemaVR3_4_AFC,
+                           prior = prior_schemaVR3_4_AFC,
                            family = bernoulli(),
                            chains = 8,
                            warmup = 2000,
@@ -110,10 +119,10 @@ model_schemaVR4_AFC <- brm(accAFC ~ sExp +
                            seed = seed,
                            control = list(adapt_delta = 0.9)) 
 # Beep 
-summary(model_schemaVR4_AFC)
+summary(model_schemaVR3_4_AFC)
 beep(8)
 
 # /* 
 # ----------------------------- Saving image ---------------------------
 # */
-save.image(datedFileNam('schemaVR4_AFC_no_deman', '.RData'))
+save.image(datedFileNam('schemaVR3_4_AFC_sequential', '.RData'))

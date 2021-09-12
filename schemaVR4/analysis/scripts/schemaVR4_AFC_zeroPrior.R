@@ -1,10 +1,21 @@
-# Script to run analysis of AFC accuracy data for schemaVR4
+# Script to run analysis of AFC accuracy data for schemaVR3 & 4 (zero prior version)
 # Version 1.0
-# Date:  09/03/2019
+# Date:  08/07/2021
 # Author: Joern Alexander Quent
 # /* 
 # ----------------------------- Libraries, settings and functions ---------------------------
 # */
+# Ask to remove everything in the global environment
+assortedRFunctions::clear_environment()
+
+######################################################
+# Path to parent folder schemaVR
+path2parent <- "D:/Alex/Laptop/Desktop/schemaVR" # This need to be changed to run this document
+######################################################
+
+# Setting WD
+setwd(paste0(path2parent, "/schemaVR4/analysis"))
+
 # Setting seed
 seed <- 13831623
 set.seed(seed)
@@ -17,24 +28,25 @@ library(beepr)
 library(R.utils)
 
 # General settings
-cores2use <- 4
+cores2use <- 8
+
 
 # /* 
-# ----------------------------- Loading, preparing data and getting priors ---------------------------
+# ----------------------------- Preparing data ---------------------------
 # */
 # Loading data
-load("C:/Users/aq01/Desktop/schemaVR/schemaVR4/data/dataSchemaVR4_cleaned.RData")
-# To save memory only load prior that is needed
-prior_schemaVR4_AFC <- loadToEnv("C:/Users/aq01/Desktop/schemaVR/schemaVR4/priors_for_schemaVR4_20210219_135801.RData")[["prior_schemaVR4_AFC"]];
+load(paste0(path2parent, "/schemaVR4/data/dataSchemaVR4_cleaned.RData"))
+
 
 # Subsetting data
 dataSchemaVR4_AFC    <- subset(dataSchemaVR4, dataSchemaVR4$resCon != '0')
 
-# Scaling based on Gelman et al. (2008) and https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
-# Mean = 0 and SD = 0.5
+# Scaling 
 dataSchemaVR4_AFC$Exp  <- dataSchemaVR4_AFC$objLocTargetRating 
-dataSchemaVR4_AFC$sExp <- (dataSchemaVR4_AFC$Exp - mean(dataSchemaVR4_AFC$Exp))/(sd(dataSchemaVR4_AFC$Exp)/0.5)
+dataSchemaVR4_AFC$sExp <- (dataSchemaVR4_AFC$Exp - mean(dataSchemaVR4_AFC$Exp ))/(sd(dataSchemaVR4_AFC$Exp)/0.5)
 
+prior_schemaVR3  <- c(prior(student_t(7, 0, 10) , class = "Intercept"),
+                      prior(student_t(7, 0, 1) , class = "b")) 
 
 # /* 
 # ----------------------------- Model ---------------------------
@@ -44,7 +56,7 @@ model_schemaVR4_AFC <- brm(accAFC ~ sExp +
                                 (1 | subNum) +
                                 (1 | objNum),
                            data = dataSchemaVR4_AFC,
-                           prior = prior_schemaVR4_AFC,
+                           prior = prior_schemaVR3,
                            family = bernoulli(),
                            chains = 8,
                            warmup = 2000,
@@ -52,7 +64,8 @@ model_schemaVR4_AFC <- brm(accAFC ~ sExp +
                            cores = cores2use,
                            save_all_pars = TRUE,
                            sample_prior = TRUE,
-                           seed = seed) 
+                           seed = seed,
+                           control = list(adapt_delta = 0.9)) 
 # Beep 
 summary(model_schemaVR4_AFC)
 beep(8)
@@ -60,4 +73,4 @@ beep(8)
 # /* 
 # ----------------------------- Saving image ---------------------------
 # */
-save.image(datedFileNam('schemaVR4_AFC', '.RData'))
+save.image(datedFileNam('schemaVR4_AFC_zeroPrior', '.RData'))

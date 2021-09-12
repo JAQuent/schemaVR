@@ -1,12 +1,22 @@
 # This scripts run a two line searchlight analysis to test for U-shapedness for recall data
 # Date: 10/03/2020
 # Explanation: It's in the title :)
+# Ask to remove everything in the global environment
+#assortedRFunctions::clear_environment()
+
+
+######################################################
+# Path to parent folder schemaVR
+path2parent <- "D:/Alex/Laptop/Desktop/schemaVR" # This need to be changed to run this document
+######################################################
+
 
 # Setting seed
-set.seed(244)
+set.seed(1244)
 
 # Setting WD
-setwd("C:/Users/aq01/Desktop/schemaVR/schemaVR4/analysis")
+setwd(paste0(path2parent, "/schemaVR4/analysis"))
+
 
 # /*
 # ----------------------------- Libraries --------------------------
@@ -20,13 +30,16 @@ library(assortedRFunctions)
 # ----------------------------- Data --------------------------
 # */
 # Loading all .RData files
-load("C:/Users/aq01/Desktop/schemaVR/paper/data/dataSchemaVR1_cleaned.RData")
-load("C:/Users/aq01/Desktop/schemaVR/paper/data/dataSchemaVR2_cleaned.RData")
-load("C:/Users/aq01/Desktop/schemaVR/paper/data/dataSchemaVR3_cleaned.RData")
-load("C:/Users/aq01/Desktop/schemaVR/schemaVR4/data/dataSchemaVR4_cleaned.RData")
+load(paste0(path2parent, "/schemaVR1/data/dataSchemaVR1_cleaned.RData"))
+load(paste0(path2parent, "/schemaVR2/data/dataSchemaVR2_cleaned.RData"))
+load(paste0(path2parent, "/schemaVR3/data/dataSchemaVR3_cleaned.RData"))
+load(paste0(path2parent, "/schemaVR4/data/dataSchemaVR4_cleaned.RData"))
 
-# Create recall data for schemaVR4
-dataSchemaVR4_recall    <- subset(dataSchemaVR4, dataSchemaVR4$resCon != 0)
+
+# Re creating recall DF because there was an error in the code
+dataSchemaVR2_recall <- subset(dataSchemaVR2, dataSchemaVR2$recallMemory != 0 | is.na(dataSchemaVR2$recallMemory))
+dataSchemaVR3_recall <- subset(dataSchemaVR3, dataSchemaVR3$recallMemory != 0 | is.na(dataSchemaVR3$recallMemory))
+dataSchemaVR4_recall <- subset(dataSchemaVR4, dataSchemaVR4$recallMemory != 0 | is.na(dataSchemaVR4$recallMemory))
 
 # Combine data to one data frame
 combinedData_recall <- data.frame(Experiment = c(rep('1', length(dataSchemaVR1_recall$subNum)),
@@ -54,6 +67,10 @@ combinedData_recall <- data.frame(Experiment = c(rep('1', length(dataSchemaVR1_r
                                           dataSchemaVR3_recall$accRecall,
                                           dataSchemaVR4_recall$accRecall))
 
+# Create set names
+combinedData_recall$new_set <- as.factor(paste(combinedData_recall$Experiment, combinedData_recall$set, sep = '_'))
+
+
 combinedData_recall$Exp    <- combinedData_recall$objLocTargetRating 
 combinedData_recall$subNum <- as.character(combinedData_recall$subNum)
 
@@ -66,10 +83,11 @@ combinedData_recall$y   <- combinedData_recall$accRecall
 df <- combinedData_recall
 
 library(ggplot2)
-ggplot(combinedData_recall, aes(x = objLocTargetRating, y = accRecall)) + 
+plt1 <- ggplot(combinedData_recall, aes(x = objLocTargetRating, y = accRecall)) + 
   geom_jitter(width = 0, height = 0.1) + 
-  geom_smooth()
+  geom_smooth(method = 'loess')
 
+ggsave(datedFileNam('plot_recall_1', '.png'), plot = plt1)
 
 # /*
 # ----------------------------- Functions --------------------------
@@ -90,7 +108,7 @@ df$high        <- ifelse(x > breakingPoints[1], 1, 0)
 
 # Run 1 for model compilation
 baseModel <- brm(y ~ xlow + xhigh + high  + 
-                   Experiment + set +
+                   new_set +
                    (1 | subNum) +
                    (1 | objNum),
                  data = df,
@@ -98,12 +116,14 @@ baseModel <- brm(y ~ xlow + xhigh + high  +
                  family = bernoulli(),
                  chains = 1,
                  save_all_pars = TRUE,
-                 sample_prior = TRUE,
-                 save_dso = TRUE, 
+                 sample_prior = TRUE, 
                  seed = 6353) 
 
 
 twoLine_searchlight <- function(seed, df, br_range, numPoints){
+  # Get startTime
+  startTime <- Sys.time()
+  
   # Set seed 
   set.seed(seed)
   seeds <- sample(.Machine$integer.max, numPoints)
@@ -132,7 +152,6 @@ twoLine_searchlight <- function(seed, df, br_range, numPoints){
                        warmup = 3000,
                        save_all_pars = TRUE,
                        sample_prior = TRUE,
-                       save_dso = TRUE,
                        silent = TRUE,
                        refresh = 0,
                        seed = seeds[i])
@@ -158,7 +177,6 @@ twoLine_searchlight <- function(seed, df, br_range, numPoints){
                        warmup = 3000,
                        save_all_pars = TRUE,
                        sample_prior = TRUE,
-                       save_dso = TRUE,
                        silent = TRUE,
                        refresh = 0,
                        seed = seeds[i])
@@ -234,6 +252,9 @@ twoLine_searchlight <- function(seed, df, br_range, numPoints){
                                msg1           = msg1,
                                msg2           = msg2)
     
+    # Show progress
+    progressDisplay(i = i, iterations = numPoints, startTime)
+    cat('\n')
     
     # Add to df 
     if(i == 1){
@@ -261,7 +282,6 @@ results <- twoLine_searchlight(1241, df, br_range, 10)
 results
 
 # Libraries
-library(ggplot2)
 library(MRColour)
 library(reshape2)
 
@@ -283,13 +303,14 @@ results_long$Slope[results_long$variable == 'q97.5_2'] <- 'Slope 2'
 results_long$lineId <- c(rep(1:nrow(results), 2), rep((nrow(results)+1):(nrow(results)*2), 2))
 
 # Plot results
-ggplot(results_long, aes(x = value, y = breakingPoint, group = lineId, colour = Slope)) + 
+plt2 <- ggplot(results_long, aes(x = value, y = breakingPoint, group = lineId, colour = Slope)) + 
   geom_point() + 
   geom_line(aes(group = lineId)) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   labs(title = '95% CI for two slopes', y = 'Breaking point') +
   scale_color_mrc()
 
+ggsave(datedFileNam('plot_recall_2', '.png'), plot = plt2)
 
 # /* 
 # ----------------------------- Saving results ---------------------------
