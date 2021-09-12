@@ -1,6 +1,12 @@
 GitHub Repository for schemaVR project
 ================
 
+
+
+Instructions: 
+
+download analysis files and run script
+
 # Background
 
 This is the GitHub repository for my schemaVR project. Note this repo is

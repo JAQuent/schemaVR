@@ -1,16 +1,17 @@
 ######################################################################################
-# Update dataset for schemaVR2 (Experiment 2 of project 1)
+# Update dataset for schemaVR2 (adding one more participant)
 # This script is used to update the dataset for schemaVR2. 
-# Version 1.2
-# Date: 10/05/2018
+# Version 1.0
+# Date: 23/05/2021
 # Author: Joern Alexander Quent
 ######################################################################################
 # Setting path to my directory
-setwd("U:/Projects/reports/exp2/analysis")
+setwd("D:/Alex/Laptop/Desktop/schemaVR/schemaVR2/ignore_rawData")
+#setwd("U:/Projects/reports/exp2/analysis")
 #setwd("~/GitHub/reports/exp2/analysis")
 
 # In order to add new data, add participants' number to the list new.
-new               <- c(48)
+new               <- c(51)
 # Checking whether these entries already exist.
 population        <- read.table('population.txt', header = TRUE)
 acceptedEntries   <- new[!(new %in% population$subNum)]
@@ -61,13 +62,13 @@ objNames <- c('microwave',
               'fan')
 
 # Normative data and 3D locations
-normativeData <- read.table('data/normativeData.txt', header = TRUE, sep = "\t")
-spawnPoints2  <- read.table('data/spawnPoints3.txt', header = TRUE)
+normativeData <- read.table('normativeData.txt', header = TRUE, sep = "\t")
+spawnPoints2  <- read.table('spawnPoints3.txt', header = TRUE)
 
 ######################################################################################
-# Processsing new data
+# Processing new data
 ########### Loading demographics.
-demographics        <- rbindlist(lapply(paste('data/demographic_', as.character(acceptedEntries),'.txt', sep = ''), fread))
+demographics        <- rbindlist(lapply(paste('demographic_', as.character(acceptedEntries),'.txt', sep = ''), fread))
 names(demographics) <- c('subNum',
                          'gender',
                          'age',
@@ -76,7 +77,7 @@ names(demographics) <- c('subNum',
                          'endExp')
 
 ########### Loading data from location recall task.
-dataLocationRecall        <- rbindlist(lapply(paste('data/outputFile_', as.character(acceptedEntries),'.txt', sep = ''), fread))
+dataLocationRecall        <- rbindlist(lapply(paste('outputFile_', as.character(acceptedEntries),'.txt', sep = ''), fread))
 names(dataLocationRecall) <- c('subNum',
                                'trial',
                                'startTime',
@@ -96,7 +97,7 @@ dataLocationRecall$objName[which(dataLocationRecall$objName == 'towel')] <- 'tow
 
 
 # Loading encoding locations (i.e. correct locations).
-encodingLocations        <- fread("data/inputFileEncoding2.txt")
+encodingLocations        <- fread("inputFileEncoding2.txt")
 names(encodingLocations) <- c('objName', 
                               'xRotation', 
                               'yRotation', 
@@ -104,8 +105,6 @@ names(encodingLocations) <- c('objName',
                               'xPosition', 
                               'yPosition', 
                               'zPosition')
-
-
 
 
 # Adding correct locations to the dataset.
@@ -141,7 +140,7 @@ generalExpectancyFactor                                        <- rep('expected'
 generalExpectancyFactor[which(dataLocationRecall$objNum > 12)] <- 'unexpected'
 
 ########### Loading data from 3AFC task
-dataAFC <- rbindlist(lapply(paste('data/retrievalTask_', as.character(acceptedEntries),'.dat', sep = ''), fread))
+dataAFC <- rbindlist(lapply(paste('retrievalTask_', as.character(acceptedEntries),'.dat', sep = ''), fread))
 names(dataAFC) <- c('subNum', 
                     'date', 
                     'time', 
@@ -172,7 +171,7 @@ dataAFC$right      <- factor(dataAFC$right, labels = c('target', 'foil1', 'foil2
 dataAFC$resCon     <- as.factor(dataAFC$resCon)
 
 ########### Loading data from object/location ratings (post-encoding).
-dataRatingObjectLocation         <- rbindlist(lapply(paste('data/ratingObjectLocation_', as.character(acceptedEntries),'.dat', sep = ''), fread))
+dataRatingObjectLocation         <- rbindlist(lapply(paste('ratingObjectLocation_', as.character(acceptedEntries),'.dat', sep = ''), fread))
 names(dataRatingObjectLocation)  <- c('subNum', 
                                       'date', 
                                       'time', 
@@ -202,7 +201,7 @@ dataAfcAgg <- ddply(dataAFC,
                     targetLocation = targetLocation, 
                     foil2Location  = foil2Location)
 
-# Finding and assingin the respective ratings for targets and foils because this information 
+# Finding and assigning the respective ratings for targets and foils because this information 
 # is not saved for the ratingTask data set. This is done by looking for the instances where the first, second or third
 # location is equal to the target/foil 1/foil 2 location and assign the respective rating to that position.
 # For target
@@ -224,7 +223,7 @@ objectLocationFoil2[which(dataRatingObjectLocationAgg$location2 == dataAfcAgg$fo
 objectLocationFoil2[which(dataRatingObjectLocationAgg$location3 == dataAfcAgg$foil2Location)] <- dataRatingObjectLocationAgg$rating3[which(dataRatingObjectLocationAgg$location3 == dataAfcAgg$foil2Location)]
 
 ########### Loading data from general ratings (post-encoding).
-dataRatingGeneral         <- rbindlist(lapply(paste('data/ratingGeneral_', as.character(acceptedEntries),'.dat', sep = ''), fread))
+dataRatingGeneral         <- rbindlist(lapply(paste('ratingGeneral_', as.character(acceptedEntries),'.dat', sep = ''), fread))
 names(dataRatingGeneral)  <- c('subNum', 
                                'date', 
                                'time', 
@@ -409,31 +408,33 @@ for(i in 1:dim(newCombData)[1]){
 
 ######################################################################################
 # Loading existing dataset and creating a back up file
-load("data/mergedData/exp2Data.RData")
-save(combData, file = paste("data/mergedData/exp2Data_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".RData"))
+load("preprocessed/exp2Data.RData")
+save(combData, file = paste("preprocessed/exp2Data_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".RData"))
 write.table(combData, 
-            file = paste("data/mergedData/exp2Data_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".txt"), 
+            file = paste("preprocessed/exp2Data_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".txt"), 
             col.names = TRUE, 
             row.names = FALSE, 
             quote = FALSE,
             sep = "\t")
+
 ######################################################################################
 # Combining new with old data and saving all files
 combData <- rbind(combData, newCombData)
-save(combData "data/mergedData/exp2Data.RData")
+save(combData, file=  "preprocessed/exp2Data.RData")
 write.table(combData, 
-            file = 'data/mergedData/exp2Data.txt', 
+            file = 'preprocessed/exp2Data.txt', 
             col.names = TRUE, 
             row.names = FALSE, 
             quote = FALSE,
             sep = "\t")
+
 ######################################################################################
 # Appendix:
 # Legend of variables names:
 # subNum                  Subject/participant number (e.g. 1, 2, 3...).
 # date                    Date of session in YYYYMMDD format.
 # gender                  Gender of participant (0 = female, 1 = male, 3 = non-binary).
-# age                     Age of participnat in years.
+# age                     Age of participant in years.
 # startExp                Time the experiment started in HHMM format. 
 # endExp                  Time the experiment ended in HHMM format. 
 # objNum                  Object number (e.g. 1, 2, 3...).

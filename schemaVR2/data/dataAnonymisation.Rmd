@@ -31,7 +31,7 @@ set.seed(1348)
 
 In the next step, I am loading the already preprocessed data that was created with the updateDataset.R script.
 ```{r}
-load("U:/Projects/schemaVR/schemaVR2/ignore_rawData/preprocessed/exp2Data.RData")
+load("D:/Alex/Laptop/Desktop/schemaVR/schemaVR2/ignore_rawData/preprocessed/exp2Data.RData")
 
 # Renaming data frame and deleting old data frame
 dataSchemaVR2 <- combData
@@ -43,7 +43,7 @@ The data frame contains all data from all trials from all sub-tasks. In addition
 ## Replacing subject number
 In the first step, I therefore anonymise the subject number. For this, I've written a function that can be found anonymise() for my own use. 
 ```{r}
-fileName             <- "U:/Projects/schemaVR/schemaVR2/ignore_rawData/preprocessed/schemaVR2_anonKey"
+fileName             <- "D:/Alex/Laptop/Desktop/schemaVR/schemaVR2/ignore_rawData/preprocessed/schemaVR2_anonKey"
 anonSubNum           <- anonymise(dataSchemaVR2$subNum, fileName = fileName)
 dataSchemaVR2$subNum <- anonSubNum
 ```
@@ -75,12 +75,12 @@ All testing was done between `r firstSession` and `r lastSession`, hence the tes
 
 In the next step, I derive the summary measures for gender and age. 
 ```{r}
-# 1 Subject is excluded from analysis because sligthly different instructions for no-memory trial
-dataSchemaVR2_sub <- subset(dataSchemaVR2, subNum != 'AX0G39' & 
-                                           subNum != 'RYMC43' &
-                                           subNum != 'FC8VI8' &
-                                           subNum != '2KKJ7Q' &
-                                           subNum != 'QAIRIV')
+# 1 Subject is excluded from analysis because slightly different instructions for no-memory trial
+dataSchemaVR2_sub <- subset(dataSchemaVR2, subNum != 'EC060U' & 
+                                           subNum != 'DSV33X' &
+                                           subNum != 'L3MJXL' &
+                                           subNum != 'UGJMCX' &
+                                           subNum != '6W1976')
 
 # Aggregating to get values for each subject
 dataSchemaVR2_demo <- ddply(dataSchemaVR2_sub, c('subNum'), summarise, age = age[1], gender = gender[1])
