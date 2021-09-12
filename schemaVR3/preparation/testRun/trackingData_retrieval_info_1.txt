@@ -1,6 +1,0 @@
-File name:	schemaVR3_output/trackingData_retrieval_1.txt
-Start system time:	2018, 11, 04, 04, 21, 04
-Number of tracked objects:	2
-List of tracked objects:
-0	Camera (head) (UnityEngine.GameObject)
-1	ControllerRight (UnityEngine.GameObject)
