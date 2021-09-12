@@ -4,7 +4,7 @@
 # Author: Joern Alexander Quent
 
 # Path to parent folder schemaVR
-path2parent <- "C:/Users/aq01/Desktop/schemaVR" # This need to be changed to run this document
+path2parent <- "D:/Alex/Laptop/Desktop/schemaVR" # This need to be changed to run this document
 
 # Loading data
 load(paste0(path2parent, "/schemaVR4/data/dataSchemaVR4_cleaned.RData"))

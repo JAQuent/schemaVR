@@ -1,6 +1,6 @@
 # Script for cleaning and preparing the data from schemaVR4
-# Version 1.0
-# Date:  15/03/2021
+# Version 1.1
+# Date:  28/06/2021
 # Author: Joern Alexander Quent
 # /* 
 # ----------------------------- Cleaning and preparing ---------------------------
@@ -9,7 +9,7 @@
 rm(list = ls())
 
 # Path to parent folder schemaVR
-path2parent <- "C:/Users/aq01/Desktop/schemaVR" # This need to be changed to run this document
+path2parent <- "D:/Alex/Laptop/Desktop/schemaVR" # This need to be changed to run this document
 
 # Loading data
 load(paste0(path2parent, "/schemaVR4/data/dataSchemaVR4.RData"))
@@ -26,7 +26,13 @@ dataSchemaVR4[dataSchemaVR4$subNum == '28I8OU' & dataSchemaVR4$objNam == 'mug', 
 # VVIX6F actually said no memory to glass jar
 dataSchemaVR4[dataSchemaVR4$subNum == 'VVIX6F' & dataSchemaVR4$objNam == 'glass jug', 'recallMemory'] <- 0
 
-# I also had to delete the first row in RHSRDV (no futher action necessary)
+# I also had to delete the first row in RHSRDV (no further action necessary)
+
+# 6JZSA4 trial before umbrella (jar) was R in case I forgot to press
+dataSchemaVR4[dataSchemaVR4$subNum == '6JZSA4' & dataSchemaVR4$objNam == 'glass jug', 'recallMemory'] <- 1
+
+# 8W4FDN I clicked too early but is fine
+
 
 # Make set a factor
 dataSchemaVR4$setNum <- as.factor(dataSchemaVR4$setNum)

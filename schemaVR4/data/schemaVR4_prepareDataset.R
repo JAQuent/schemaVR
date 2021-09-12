@@ -8,13 +8,21 @@
 rm(list = ls())
 
 # Setting WD and libraries 
-setwd("C:/Users/aq01/Desktop/schemaVR/schemaVR4/ignore_rawData") # Folder for raw data
+#setwd("C:/Users/aq01/Desktop/schemaVR/schemaVR4/ignore_rawData") # Folder for raw data
+setwd("D:/Alex/Laptop/Desktop/schemaVR/schemaVR4/ignore_rawData")
 library(data.table)
 library(plyr)
 
 # Subject and set numbers
 subNum    <- c(1, 73, 2, 4, 5, 7, 6, 9, 10, 11, 12, 14, 13, 15, 17, 19, 21, 23, 20, 16, 25, 
-               27, 29, 31, 33, 35, 37, 39, 74, 43, 75, 22, 24, 45, 47)
+               27, 29, 31, 33, 35, 37, 39, 74, 43, 75, 22, 24, 45, 47, 26, 28,32, 34,
+               36, 38, 40, 51, 53, 55, 42, 57, 59, 61, 48, 56, 41, 44, 49, 50, 54, 60, 62, 
+               63, 64, 66, 67, 68, 69, 70, 71, 72, 76, 78, 80, 81, 99)
+# changed starting 49 (what about the matlab task?)
+# 18 is missing. Maybe it's on the VR backpack?, 41, 44 was already in the folder, 46 exclude because condensation on the display
+# 52 exclude because menu was open
+# 79 I accidentally pressed E so I had to stop after object 16
+
 
 N        <- length(subNum)
 setNum   <- c(111, 246, 388, 498, 848)
@@ -413,6 +421,9 @@ dataSchemaVR4 <- data.frame(subNum                  = rep(subNum, each = 20),
                             kitchen                 = as.factor(kitchen),
                             closestLoc              = dataRecall$closestLoc)
 
+# Subset
+dataSchemaVR4_AFC    <- subset(dataSchemaVR4, dataSchemaVR4$resCon != '0')
+dataSchemaVR4_recall <- subset(dataSchemaVR4, dataSchemaVR4$recallMemory != 0 | is.na(dataSchemaVR4$recallMemory))
 
 # Save data
 save(dataSchemaVR4, file  = "preprocessed/dataSchemaVR4.RData")
