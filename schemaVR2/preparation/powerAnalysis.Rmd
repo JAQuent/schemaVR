@@ -1,0 +1,156 @@
+---
+title: "Power analysis for schemaVR2"
+author: "Jörn Alexander Quent"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 6
+    theme: united
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(eval.after = 'fig.cap')
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE,
+                      fig.width = 10, 
+                      fig.height= 7, 
+                      dpi=300, 
+                      out.width="1200px", 
+                      out.height="700px")
+options(scipen = 30)
+```
+
+# Introduction
+This script calculates the needed sample size for schemaVR2 to detect a quadratic effect with an estimate of 0.51 and SE of 0.22. This is based on model 7 for schemaVR1. This model was choosen because it shows the lowest effect from all models that show this effect for schemaVR1. The power analysis was run with R package SIMR from @Green2016.
+
+# Preliminary stuff
+## Libraries
+```{r}
+library(lmerTest)
+library(knitr)
+library(simr)
+```
+
+## Data
+```{r}
+# Loading data
+#load("exp1Data.RData")
+
+
+# Adding the normative object/location rating for each target and foil 1 & 2
+combData$objLocTargetNorm <- NA
+combData$objLocFoil1Norm  <- NA
+combData$objLocFoil2Norm  <- NA
+for(i in 1:dim(combData)[1]){
+  combData$objLocTargetNorm[i] <- combData[i, paste("loc", combData$targetLocation[i], sep = "")]
+  combData$objLocFoil1Norm[i]  <- combData[i, paste("loc", combData$foil1Location[i], sep = "")]
+  combData$objLocFoil2Norm[i]  <- combData[i, paste("loc", combData$foil2Location[i], sep = "")]
+}
+```
+
+## Functions
+```{r}
+sigStars <- function(x){
+  # Adding stars to indicate significance
+  stars <- rep("", length(x))
+  stars[x <= 0.1   & x > 0.05]   <- '.' # trend
+  stars[x <= 0.05  & x > 0.01]   <- '*'
+  stars[x <= 0.01  & x > 0.001]  <- '**'
+  stars[x <= 0.001]              <- '***'
+  return(stars)
+}
+
+createResultTable <- function(x){
+  # Creating a nice looking table
+  if(inherits(x, "glmerMod")){
+    # For glmer table
+    xTable        <- summary(x)$coefficients
+    xTable        <- data.frame(xTable)
+    xTable[, 1]   <- round(xTable[, 1], 2)
+    xTable[, 2]   <- round(xTable[, 2], 2)
+    xTable[, 3]   <- round(xTable[, 3], 2)
+    xTable[, 4]   <- round(xTable[, 4], 4)
+    xTable        <- cbind(xTable, sigStars(xTable[, 4]))
+    names(xTable) <- c('Estimate', 'SE', 'Z', 'P', 'Sig')
+  } else if(inherits(x, 'merModLmerTest')){
+    xTable        <- summary(x)$coefficients
+    xTable        <- data.frame(xTable)
+    xTable[, 1]   <- round(xTable[, 1], 2)
+    xTable[, 2]   <- round(xTable[, 2], 2)
+    xTable[, 3]   <- round(xTable[, 3], 2)
+    xTable[, 4]   <- round(xTable[, 4], 2)
+    xTable[, 5]   <- round(xTable[, 5], 4)
+    xTable        <- cbind(xTable, sigStars(xTable[, 5]))
+    names(xTable) <- c('Estimate', 'SE', 'DF', 'T', 'P', 'Sig')
+  } else if(inherits(x, 'anova')){
+    if(attributes(x)$heading == "Analysis of Variance Table of type III  with  Satterthwaite \napproximation for degrees of freedom"){
+      # Only ANOVA on lmerTest models with Satterthwaite approximation
+      xTable        <- data.frame(x)
+      xTable[, 1]   <- round(xTable[, 1], 2)
+      xTable[, 2]   <- round(xTable[, 2], 2)
+      xTable[, 3]   <- round(xTable[, 3], 2)
+      xTable[, 4]   <- round(xTable[, 4], 2)
+      xTable[, 5]   <- round(xTable[, 5], 2)
+      xTable[, 6]   <- round(xTable[, 6], 4)
+      xTable        <- cbind(xTable, sigStars(xTable[, 6]))
+      names(xTable) <- c('SS', 'MSS', 'nDF', 'dDF', 'F', 'P', 'Sig') 
+    } else {
+      xTable <- data.frame('######', 'No known model', '######')
+      names(xTable) <- c('%%%', '***', '&&&')
+    }
+  } else {
+    xTable <- data.frame('######', 'No known model', '######')
+    names(xTable) <- c('%%%', '***', '&&&')
+  }
+  return(xTable)
+}
+```
+
+# Model 7 from schemaVR1
+```{r}
+combDataScaled                    <- combData
+combDataScaled$generalRatingNorm  <- scale(combData$generalRatingNorm)
+combDataScaled$objLocTargetNorm   <- scale(combDataScaled$objLocTargetNorm)
+
+model7 <- glmer(accAFC ~  objLocTargetNorm + 
+                  I(objLocTargetNorm*objLocTargetNorm) + 
+                  generalRatingNorm +
+                  (1 | subNum), data = combDataScaled, 
+                family = binomial, 
+                control = glmerControl(optimizer = "bobyqa"),
+                nAGQ = 1)
+
+kable(createResultTable(model7))
+```
+
+Retrospective 'observed power' for quadratic term in model 7:
+```{r}
+powerSim(model7, 
+         test = fixed("I(objLocTargetNorm * objLocTargetNorm)", method = 'z'), 
+         progress = FALSE)
+```
+
+# Power curve
+```{r}
+# Number of runs in monte-carlo simulation
+simrOptions(nsim = 1000)
+
+# Extent model to 25 participants to plot power curve
+model7 <- extend(model7,
+                 along = 'subNum',
+                 n = 25)
+
+pc1 <- powerCurve(model7, 
+                  test = fixed("I(objLocTargetNorm * objLocTargetNorm)", method = 'z'),
+                  along = "subNum", 
+                  progress = FALSE)
+print(pc1)
+plot(pc1)
+```
+
+We choose the number of participants where the power is 80%. 
+
+# References
