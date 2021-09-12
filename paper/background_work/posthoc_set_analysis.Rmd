@@ -1,0 +1,1045 @@
+---
+title: "Post-hoc analysis of the sets"
+author: "Joern Alexander Quent"
+date: "28/06/2021"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+# Libs
+library(ggplot2)
+library(plyr)
+library(knitr)
+library(assortedRFunctions)
+library(lmerTest)
+
+# knitr stuff
+opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+
+######################################################
+# Path to parent folder schemaVR
+path2parent <- "D:/Alex/Laptop/Desktop/schemaVR/" # This need to be changed to run this document
+######################################################
+
+```
+
+```{r prepare_data, echo = FALSE}
+# Loading all .RData files
+load(paste0(path2parent, "/schemaVR1/data/dataSchemaVR1_cleaned.RData"))
+load(paste0(path2parent, "/schemaVR2/data/dataSchemaVR2_cleaned.RData"))
+load(paste0(path2parent, "/schemaVR3/data/dataSchemaVR3_cleaned.RData"))
+load(paste0(path2parent, "/schemaVR4/data/dataSchemaVR4_cleaned.RData"))
+
+# Add to one data frame
+# Combine data to one data frame
+combinedData_AFC <- data.frame(Experiment = c(rep('1', length(dataSchemaVR1_AFC$subNum)),
+                                              rep('2', length(dataSchemaVR2_AFC$subNum)),
+                                              rep('3', length(dataSchemaVR3_AFC$subNum)),
+                                              rep('3', length(dataSchemaVR4_AFC$subNum))),
+                               setNum        = c(rep('1', length(dataSchemaVR1_AFC$subNum)),
+                                                rep('2', length(dataSchemaVR2_AFC$subNum)),
+                                                as.character(dataSchemaVR3_AFC$setNum),
+                                                as.character(dataSchemaVR4_AFC$setNum)),
+                               subNum = c(as.character(dataSchemaVR1_AFC$subNum),
+                                          as.character(dataSchemaVR2_AFC$subNum),
+                                          as.character(dataSchemaVR3_AFC$subNum),
+                                          as.character(dataSchemaVR4_AFC$subNum)),
+                               objNum = c(dataSchemaVR1_AFC$objNum,
+                                          dataSchemaVR2_AFC$objNum,
+                                          dataSchemaVR3_AFC$objNum,
+                                          dataSchemaVR4_AFC$objNum),
+                               objNam = c(as.character(dataSchemaVR1_AFC$objName),
+                                          as.character(dataSchemaVR2_AFC$objName),
+                                          as.character(dataSchemaVR3_AFC$objNam),
+                                          as.character(dataSchemaVR4_AFC$objNam)),
+                               targetLocation = c(dataSchemaVR1_AFC$targetLocation,
+                                                  dataSchemaVR2_AFC$targetLocation,
+                                                  dataSchemaVR3_AFC$targetLocation,
+                                                  dataSchemaVR4_AFC$targetLocation),
+                               objLocTargetRating = c(dataSchemaVR1_AFC$objLocTargetRating,
+                                                      dataSchemaVR2_AFC$objLocTargetRating,
+                                                      dataSchemaVR3_AFC$objLocTargetRating,
+                                                      dataSchemaVR4_AFC$objLocTargetRating),
+                               accAFC = c(dataSchemaVR1_AFC$accAFC,
+                                          dataSchemaVR2_AFC$accAFC,
+                                          dataSchemaVR3_AFC$accAFC,
+                                          dataSchemaVR4_AFC$accAFC))
+
+combinedData_AFC$Exp    <- combinedData_AFC$objLocTargetRating 
+combinedData_AFC$subNum <- as.character(combinedData_AFC$subNum)
+```
+
+# Aim of this document
+In this document I try to see if there is anything that could explain the variability between the sets with respect to the U-shape. A full analysis is provided with set as a random as well as with set as a fixed effect. 
+
+
+__Important point__: As predicted, there were some issues with convergenves and singularity. I therefore had to sometimes drop terms or just give up. 
+
+```{r plot_by_set, echo = FALSE}
+ggplot(combinedData_AFC, aes(x = objLocTargetRating, y = accAFC)) +
+  facet_grid( .~setNum)+ geom_smooth(method = 'loess') + 
+  coord_cartesian(ylim = c(0,1)) + 
+  labs(title = 'Plotting relationship between expectancy and memory by set', y = '3AFC accuracy', x = 'Expectancy')
+
+```
+
+Especially 'problematic' is the set 246 which shows an inverted U-shape, which in some models with which I played around is even significant. 
+
+
+# Checking accuracy on the object level
+
+A Table with all object at all the different locations is provided in case you want to look something up. 
+
+```{r object_analysis1, echo = FALSE}
+objects <- ddply(combinedData_AFC, c('objNum', 'objNam ', 'setNum', 'targetLocation'), summarise, acc = mean(accAFC), n = length(accAFC), exp = mean(objLocTargetRating))
+
+
+kable(objects)
+# ggplot(objects, aes(x = exp, y = mean)) + geom_point() + geom_smooth()
+```
+
+The first conclusion is that there is huge variation in the mean accuracy ranging from `r min(objects$mean)` to `r max(objects$mean)`. 
+
+I went through the table of object/location accuracy and identified the following suspicious values (These are mostly values that very low (eyeballed)):
+
+ - microwave at 14, 
+ - bowl of fruits at 1,
+ - mixer at 14,
+ - bread at 19,
+ - mug at 3,
+ - helmet at 9,
+ - fan at 2
+ 
+None of these are included in 246. 
+ 
+
+Interestingly, really visible but expected combinations like the mixer at 3 (8_3) has only an accuracy of 0.75. ]
+
+Furthermore, I've checked all screenshots from 246 and cannot really see anything that sticks out. 
+
+# How to sets differ from each other in terms of the expectancy distribution. 
+```{r binned_expectancy}
+# Get sets
+sets <- unique(combinedData_AFC$setNum)
+
+# Parameters for the analysis
+numBins <- 8 
+bins    <- seq(from = -100, to = 100, length.out = numBins + 1)
+
+# Create empty DF
+binDF <- data.frame(bin   = integer(0),
+                   length = integer(0),
+                   set    = character(0))
+# Empty vector for difference values
+summed_absolute_diff <- c()
+
+# Loop through all sets
+for(i in 1:length(sets)){
+  # Get set data only
+  temp <- combinedData_AFC[combinedData_AFC$setNum == sets[i], 'objLocTargetRating']
+  
+  # Create empty var
+  binned <- c()
+  
+  # Loop through the bins
+  for(j in 1:(numBins)){
+    binned[j] <- length(temp[temp >= bins[j] & temp  <= bins[j + 1]])
+  }
+  
+  # Calculate this value
+  summed_absolute_diff[i] <- sum(abs(mean(binned) - binned))
+  
+  # Add to DF
+  binDF <- rbind(binDF,
+                 data.frame(bin = 1:numBins, freq = binned/sum(binned), set    = rep(sets[i], numBins)))
+
+}
+
+diffDF <- data.frame(set = sets,
+                     difference = summed_absolute_diff)
+```
+
+
+```{r bin_plot, echo = FALSE}
+ggplot(binDF, aes(x = bin, y = freq)) + facet_grid(.~ set) + geom_bar(stat = 'identity')
+```
+
+```{r bin_table, echo = FALSE}
+kable(diffDF)
+```
+
+Examining the binned frequency values and the summed absolute difference from the mean that there is nothing apparently wrong with set 246. 
+
+# Analysing set as random effect
+In the following, the data of Experiment 3 and 4 is analysed with regard to the question whether the quadratic component significantly varies across sets. For this I __tried__ to compare a model where the quadratic component varies as a function of set versus a model where only the intercept and the linear component varies as a function of the set.
+
+Note the model comparison is __attempted__ between these two models
+
+m1: Y ~ sExp +  I(sExp*sExp) + (sExp  | setNum) + (1 | subNum) + (1 | objNum)
+
+m2: Y ~ sExp +  I(sExpz\*sExp) + (sExp  +  I(sExp\*sExp) | setNum) + (1 | subNum) + (1 | objNum)
+
+These models had issues to converge so that sometimes they either didn't converge at all or I had to remove some components (e.g. the random intercept for set or the random slope for the linear component) because of singularity issues. 
+
+**Please check the code chunks for the exact models!** To be clear -1 or -sExp means a particular effect is *not* included. This was always done because otherwise a model could not be estimated without issues. 
+
+## Experiment 3
+```{r set_dist_exp3, echo = FALSE}
+set_exp3 <- ddply(dataSchemaVR3_AFC, c('subNum'), summarise, setNum = setNum[1])
+
+kable(table(set_exp3$setNum))
+```
+
+The Table above contains the distribution of sets for Experiment 3, which shows that all sets occur five times apart from set 846, which was used four times because one participant had to be removed. 
+
+### Recogntion
+```{r random_slope_exp3_AFC, echo = TRUE}
+# Scale
+dataSchemaVR3_AFC$sExp <- dataSchemaVR3_AFC$objLocTargetRating/(sd(dataSchemaVR3_AFC$objLocTargetRating)*2)
+
+m1 <- glmer(accAFC ~ sExp +  I(sExp*sExp) + 
+                      (-1 + sExp  | setNum) + 
+                      (1 | subNum) + 
+                      (1 | objNum), 
+                      data =  dataSchemaVR3_AFC, family = 'binomial')
+
+m2 <-  glmer(accAFC ~ sExp +  I(sExp*sExp) + 
+                      (-1 + sExp  +  I(sExp*sExp) | setNum)+ 
+                      (1 | subNum) + 
+                      (1 | objNum), 
+                      data =  dataSchemaVR3_AFC, family = 'binomial', control = glmerControl(optimizer ='optimx', optCtrl=list(method='L-BFGS-B')))
+
+
+kable(anova(m1, m2))
+```
+
+Model comparison shows that m2 did not significantly fit the data better than m1. 
+
+M2 has singular fit that arises from the correlation between setNum sExp and I(sExp * sExp) being 1.
+
+This can be seen in this table. 
+```{r ranef1, echo = FALSE}
+kable(ranef(m2)$setNum)
+```
+
+I don't think we can estimate the model they way we want. Here are nevertheless the results:
+
+```{r results_AFC, echo = FALSE}
+summary(m2)
+```
+
+In m2, neither the linear nor the quadratic effect were significant. 
+
+### Remember rates
+```{r random_slope_exp3_remember, echo = TRUE}
+# Calculate remember rates
+remembered <- rep(0, dim(dataSchemaVR3)[1])
+remembered[dataSchemaVR3$resCon == 1] <- 1
+dataSchemaVR3$remembered <- remembered
+
+# Exclude no-memory (i.e. hasn't seen object) 
+dataSchemaVR3 <- dataSchemaVR3[dataSchemaVR3$resCon != 0, ]
+
+# Scale
+dataSchemaVR3$sExp <- dataSchemaVR3$objLocTargetRating/(sd(dataSchemaVR3$objLocTargetRating)*2)
+
+m1 <- glmer(remembered ~ sExp +  I(sExp*sExp)  + 
+                        (1 | subNum) + 
+                        (1 | objNum), 
+                        data =  dataSchemaVR3, family = 'binomial')
+
+m2 <-  glmer(remembered ~ sExp +  I(sExp*sExp) + 
+                          (1 + -sExp  +  I(sExp*sExp) | setNum)+ 
+                          (1 | subNum) + 
+                          (1 | objNum), 
+                          data =  dataSchemaVR3, family = 'binomial')
+
+kable(anova(m1, m2))
+```
+
+For remember I also did not find that adding a random effect for the quadratic effects significantly improve the model fit.
+
+For m2, there is still singularity issue that arises because the correlation between the intercept and the quadratic term is -1. 
+
+```{r ranef2, echo = FALSE}
+kable(ranef(m2)$setNum)
+```
+
+I again think we can't really estimate this model. However,  m2 shows that there is a U-shape for remember ratings. 
+
+```{r results_remember, echo = FALSE}
+summary(m2)
+```
+
+### Recall 
+```{r random_slope_exp3_recall, echo = TRUE}
+# Scale
+dataSchemaVR3_recall$sExp <- dataSchemaVR3_recall$objLocTargetRating/(sd(dataSchemaVR3_recall$objLocTargetRating)*2)
+
+m1 <- glmer(accRecall ~ sExp +  I(sExp*sExp) + 
+                        (1 | setNum) + 
+                        (1 | subNum) + 
+                        (1 | objNum), 
+                        data =  dataSchemaVR3_recall, family = 'binomial')
+
+m2 <-  glmer(accRecall ~ sExp +  I(sExp*sExp) + 
+                         (1 + -sExp  +  I(sExp*sExp) | setNum) + 
+                         (1 | subNum) + 
+                         (1 | objNum), 
+                         data =  dataSchemaVR3_recall, family = 'binomial')
+
+kable(anova(m1, m2))
+```
+
+Again m2 (with random quadratic component) did not fit better than m1.
+
+For m2, there is still singularity issue that arises because the correlation between the intercept and the quadratic term is -1. 
+
+```{r ranef3, echo = FALSE}
+kable(ranef(m2)$setNum)
+```
+
+If I also removed the random intercept, it doesn't help as the random slope for the quadratic terms because essentially zero.  In contrast to remember ratings, there was not U-shape. 
+
+```{r results_recall, echo = FALSE}
+summary(m2)
+```
+
+## Experiment 4
+```{r set_dist_exp4, echo = FALSE}
+set_exp4 <- ddply(dataSchemaVR4_AFC, c('subNum'), summarise, setNum = setNum[1])
+
+kable(table(set_exp4$setNum))
+```
+
+The Table above contains the distribution of sets for Experiment 4, which the distribution of sets is pretty unbalanced. 
+
+### Recogntion
+```{r random_slope_exp4_AFC, echo = TRUE}
+# Scale
+dataSchemaVR4_AFC$sExp <- dataSchemaVR4_AFC$objLocTargetRating/(sd(dataSchemaVR4_AFC$objLocTargetRating)*2)
+
+m1 <- glmer(accAFC ~ sExp +  I(sExp*sExp) + 
+                      (1 + -sExp  | setNum) + 
+                      (1 | subNum) + 
+                      (1 | objNum), data =  dataSchemaVR4_AFC, family = 'binomial')
+
+m2 <-  glmer(accAFC ~ sExp +  I(sExp*sExp) + 
+                      (1 + sExp  +  I(sExp*sExp) | setNum)+ 
+                      (1 | subNum) + 
+                      (1 | objNum), 
+                      data =  dataSchemaVR4_AFC, family = 'binomial', control = glmerControl(optimizer ='optimx', optCtrl=list(method='L-BFGS-B')))
+
+kable(anova(m1, m2))
+```
+
+Model comparison shows that m2 did not significantly fit the data better than m1. 
+
+In m2, neither the linear nor the quadratic effect were significant. 
+
+```{r results_AFC_exp4, echo = FALSE}
+summary(m2)
+```
+
+As you can see, the fit is still singular but I have no idea why. 
+
+### Remember rates
+```{r random_slope_exp4_remember, echo = TRUE}
+# Calculate remember rates
+remembered <- rep(0, dim(dataSchemaVR4)[1])
+remembered[dataSchemaVR4$resCon == 1] <- 1
+dataSchemaVR4$remembered <- remembered
+
+# Exclude no-memory (i.e. hasn't seen object) 
+dataSchemaVR4 <- dataSchemaVR4[dataSchemaVR4$resCon != 0, ]
+
+# Scale
+dataSchemaVR4$sExp <- dataSchemaVR4$objLocTargetRating/(sd(dataSchemaVR4$objLocTargetRating)*2)
+
+m1 <- glmer(remembered ~ sExp +  I(sExp*sExp) + 
+                         (sExp  | setNum) + 
+                         (1 | subNum) + 
+                         (1 | objNum), 
+                         data =  dataSchemaVR4, family = 'binomial')
+
+m2 <-  glmer(remembered ~ sExp +  I(sExp*sExp) + 
+                          (-1 + -sExp  +  I(sExp*sExp) | setNum) + 
+                          (1 | subNum) + 
+                          (1 | objNum), 
+                          data =  dataSchemaVR4, family = 'binomial', control = glmerControl(optimizer ='optimx', optCtrl=list(method='L-BFGS-B')))
+
+kable(anova(m1, m2))
+```
+
+
+For remember I also did not find that adding a random effect for the quadratic effects significantly improves the model fit. Using m2, shows that there is a only a significant negative linear component. 
+
+```{r results_remember_exp4, echo = FALSE}
+summary(m2)
+```
+
+### Recall 
+```{r random_slope_exp4_recall, echo = TRUE}
+# Scale
+dataSchemaVR4_recall$sExp <- dataSchemaVR4_recall$objLocTargetRating/(sd(dataSchemaVR4_recall$objLocTargetRating)*2)
+
+m1 <- glmer(accRecall ~ sExp +  I(sExp*sExp) + 
+                        (sExp  | setNum) + 
+                        (1 | subNum) + 
+                        (1 | objNum), 
+                        data =  dataSchemaVR4_recall, family = 'binomial')
+
+m2 <-  glmer(accRecall ~ sExp +  
+                         I(sExp*sExp) + 
+                         (-1 + -sExp  +  
+                         I(sExp*sExp) | setNum) + 
+                         (1 | subNum) + 
+                         (1 | objNum), 
+                         data =  dataSchemaVR4_recall, family = 'binomial')
+
+kable(anova(m1, m2))
+```
+
+Again m2 (with random quadratic component) did not fit better than m1. In contrast to remember ratings, there the U-shape reached significance but the model also had issues with singular fit. 
+
+```{r results_recall_exp4, echo = FALSE}
+summary(m2)
+```
+
+## Combinded data
+### Recognition
+```{r prepare1, echo = FALSE}
+# Bind to one DF
+dataSchemaVR3_4_AFC <- data.frame(Experiment = c(rep('3', length(dataSchemaVR3_AFC$subNum)),
+                                                 rep('4', length(dataSchemaVR4_AFC$subNum))),
+                                  setNum        = c(as.character(dataSchemaVR3_AFC$setNum),
+                                                 as.character(dataSchemaVR4_AFC$setNum)),
+                                  subNum = c(as.character(dataSchemaVR3_AFC$subNum),
+                                             as.character(dataSchemaVR4_AFC$subNum)),
+                                  objNum = c(dataSchemaVR3_AFC$objNum,
+                                             dataSchemaVR4_AFC$objNum),
+                                  objLocTargetRating = c(dataSchemaVR3_AFC$objLocTargetRating,
+                                                         dataSchemaVR4_AFC$objLocTargetRating),
+                                  accAFC = c(dataSchemaVR3_AFC$accAFC,
+                                             dataSchemaVR4_AFC$accAFC))
+```
+
+```{r random_slope_combined, echo = TRUE}
+# Scale
+dataSchemaVR3_4_AFC$sExp <- dataSchemaVR3_4_AFC$objLocTargetRating/(sd(dataSchemaVR3_4_AFC$objLocTargetRating)*2)
+
+m1 <- glmer(accAFC ~ sExp +  I(sExp*sExp) + 
+                      (sExp | setNum) + 
+                      (1 | subNum) + 
+                      (1 | objNum), 
+                      data =  dataSchemaVR3_4_AFC, family = 'binomial')
+
+m2 <-  glmer(accAFC ~ sExp +  I(sExp*sExp) + 
+                      (sExp  +  I(sExp*sExp) | setNum) + 
+                      (1 | subNum) + 
+                      (1 | objNum), 
+                      data =  dataSchemaVR3_4_AFC, family = 'binomial', control = glmerControl(optimizer ='optimx', optCtrl=list(method='L-BFGS-B')))
+
+kable(anova(m1, m2))
+```
+
+The model m2 does not fit the data better than m1 and there is no significant quadratic relationship. M2 converged but gave me a warning:  Parameters or bounds appear to have different scalings. This can cause poor performance in optimization. No idea if that is a cause for concern. In any case, no effects are significant. 
+
+```{r random_slope_combined_results, echo = FALSE}
+summary(m2)
+```
+
+
+
+### Recall
+```{r prepare2, echo = FALSE}
+# Bind to one DF
+# Combine data to one data frame
+dataSchemaVR3_4_recall <- data.frame(Experiment = c(rep('3', length(dataSchemaVR3_recall$subNum)),
+                                                    rep('4', length(dataSchemaVR4_recall$subNum))),
+                                     setNum        = c(as.character(dataSchemaVR3_recall$setNum),
+                                                   as.character(dataSchemaVR4_recall$setNum)),
+                                     subNum = c(as.character(dataSchemaVR3_recall$subNum),
+                                               as.character(dataSchemaVR4_recall$subNum)),
+                                     objNum = c(dataSchemaVR3_recall$objNum,
+                                                dataSchemaVR4_recall$objNum),
+                                     objLocTargetRating = c(dataSchemaVR3_recall$objLocTargetRating,
+                                                           dataSchemaVR4_recall$objLocTargetRating),
+                                     accRecall = c(dataSchemaVR3_recall$accRecall,
+                                                   dataSchemaVR4_recall$accRecall))
+
+dataSchemaVR3_4_recall$Exp    <- dataSchemaVR3_4_recall$objLocTargetRating 
+dataSchemaVR3_4_recall$subNum <- as.character(dataSchemaVR3_4_recall$subNum)
+```
+
+```{r random_slope_recall_combined, echo = TRUE}
+# Scale
+dataSchemaVR3_4_recall$sExp <- dataSchemaVR3_4_recall$objLocTargetRating/(sd(dataSchemaVR3_4_recall$objLocTargetRating)*2)
+
+m1 <- glmer(accRecall ~ sExp +  I(sExp*sExp) + 
+                        (-1 + sExp  | setNum) + 
+                        (1 | subNum) + 
+                        (1 | objNum), 
+                        data =  dataSchemaVR3_4_recall, family = 'binomial')
+
+m2 <-  glmer(accRecall ~ sExp +  I(sExp*sExp) + 
+                          (-1 + -sExp  +  I(sExp*sExp) | setNum) + 
+                          (1 | subNum) + 
+                          (1 | objNum), 
+                          data =  dataSchemaVR3_4_recall, family = 'binomial', control = glmerControl(optimizer ='optimx', optCtrl=list(method='L-BFGS-B')))
+
+kable(anova(m1, m2))
+```
+
+M2 does not fit better than m1 but there is a U-shape that is significant. The singular fit in m2 does not go away when adding the random slope for the quadratic effect. When I remove everything but the random slope for the quadratic effect, it is estimated to be zero. 
+
+```{r random_slope_recall_combined_results, echo = FALSE}
+summary(m2)
+```
+
+### Remember
+```{r prepare3, echo = FALSE}
+# Bind to one DF
+# Combine data to one data frame
+dataSchemaVR3_4        <- data.frame(Experiment = c(rep('3', length(dataSchemaVR3$subNum)),
+                                                    rep('4', length(dataSchemaVR4$subNum))),
+                                     setNum        = c(as.character(dataSchemaVR3$setNum),
+                                                    as.character(dataSchemaVR4$setNum)),
+                                     subNum = c(as.character(dataSchemaVR3$subNum),
+                                                as.character(dataSchemaVR4$subNum)),
+                                     objNum = c(dataSchemaVR3$objNum,
+                                                dataSchemaVR4$objNum),
+                                     objLocTargetRating = c(dataSchemaVR3$objLocTargetRating,
+                                                            dataSchemaVR4$objLocTargetRating),
+                                     resCon = c(as.numeric(as.character(dataSchemaVR3$resCon)),
+                                                as.numeric(as.character(dataSchemaVR4$resCon))))
+
+# Creating new labels
+remembered <- rep(0, dim(dataSchemaVR3_4)[1])
+remembered[dataSchemaVR3_4$resCon == 1] <- 1
+dataSchemaVR3_4$remembered <- remembered
+```
+
+```{r random_slope_remember_combined, echo = TRUE}
+# Scale
+dataSchemaVR3_4$sExp <- dataSchemaVR3_4$objLocTargetRating/(sd(dataSchemaVR3_4$objLocTargetRating)*2)
+
+m1 <- glmer(remembered ~ sExp +  I(sExp*sExp) + 
+                         (1 + -sExp  | setNum) + 
+                         (1 | subNum) + 
+                         (1 | objNum), 
+                         data =  dataSchemaVR3_4, family = 'binomial')
+
+m2 <-  glmer(remembered ~ sExp +  I(sExp*sExp) + 
+                          (-1 + -sExp  +  I(sExp*sExp) | setNum) + 
+                          (1 | subNum) + 
+                          (1 | objNum), 
+                          data =  dataSchemaVR3_4, family = 'binomial', control = glmerControl(optimizer ='optimx', optCtrl=list(method='L-BFGS-B')))
+
+kable(anova(m1, m2))
+```
+
+M2 does not fit better than m1 but there is a U-shape that is significant. There is significant negative relationship and a U-shape. Here, the model actually didn't produce an issue. 
+
+```{r random_slope_remember_combined_results, echo = FALSE}
+summary(m2)
+```
+
+# Analysing set as fixed effect
+Here the models that I try to use:
+
+m1: Y ~ sExp\*setNum +  I(sExp\*sExp)  + (1 | subNum) + (1 | objNum)
+
+m2: Y ~ sExp\*setNum +  I(sExp\*sExp)\*setNum + (1 | subNum) + (1 | objNum)
+
+
+## Experiment 3
+### Recognition
+```{r random_slope_exp3_4_AFC_fixed, echo = TRUE}
+# Scale
+dataSchemaVR3_4_AFC$sExp <- dataSchemaVR3_4_AFC$objLocTargetRating/(sd(dataSchemaVR3_4_AFC$objLocTargetRating)*2)
+
+m1 <- glmer(accAFC ~ sExp*setNum +  
+                     I(sExp*sExp) + 
+                     (1 | subNum) + 
+                     (1 | objNum), 
+                     data =  dataSchemaVR3_4_AFC, family = 'binomial')
+
+m2 <- glmer(accAFC ~ sExp*setNum +  
+                     I(sExp*sExp)*setNum + 
+                     (1 | subNum) + 
+                     (1 | objNum), 
+                     data =  dataSchemaVR3_4_AFC, family = 'binomial')
+
+kable(anova(m1, m2, test = "Chisq"))
+```
+
+Even though adding the interaction between set and the quadratic effect didn't improve the fit significantly, there seems to be significant effects. 
+
+```{r results_exp3_4_AFC_fixed, echo = FALSE}
+summary(m2)
+```
+
+### Recall
+```{r random_slope_exp3_recal_fixedl, echo = TRUE}
+# Scale
+dataSchemaVR3_recall$sExp <- dataSchemaVR3_recall$objLocTargetRating/(sd(dataSchemaVR3_recall$objLocTargetRating)*2)
+
+m1 <- glmer(accRecall ~ sExp*setNum +  
+                       I(sExp*sExp) + 
+                       (1 | subNum) + 
+                       (1 | objNum), 
+                       data =  dataSchemaVR3_recall, family = 'binomial')
+
+m2 <-  glmer(accRecall ~ sExp*setNum +  
+                         I(sExp*sExp)*setNum + 
+                         (1 | subNum) + 
+                         (1 | objNum), 
+                         data =  dataSchemaVR3_recall, family = 'binomial', control = glmerControl(optimizer ='optimx', optCtrl=list(method='L-BFGS-B')))
+
+
+kable(anova(m1, m2, test = "Chisq"))
+```
+
+Again m2 did not fit better than m1 but there is a U-shape and 'only' indications that there is an interactions (as trends). 
+
+```{r results_recall_exp3_fixed, echo = FALSE}
+summary(m2)
+```
+
+### Remember rates
+```{r random_slope_exp3_remember_fixed, echo = TRUE}
+# Calculate remember rates
+remembered <- rep(0, dim(dataSchemaVR3)[1])
+remembered[dataSchemaVR3$resCon == 1] <- 1
+dataSchemaVR3$remembered <- remembered
+
+# Exclude no-memory (i.e. hasn't seen object) 
+dataSchemaVR3 <- dataSchemaVR3[dataSchemaVR3$resCon != 0, ]
+
+# Scale
+dataSchemaVR3$sExp <- dataSchemaVR3$objLocTargetRating/(sd(dataSchemaVR3$objLocTargetRating)*2)
+
+m1 <- glmer(remembered ~ sExp*setNum + 
+                         I(sExp*sExp) + 
+                         (1 | subNum) + 
+                         (1 | objNum), 
+                         data =  dataSchemaVR3, family = 'binomial')
+
+m2 <- glmer(remembered ~ sExp*setNum + 
+                         I(sExp*sExp)*setNum + 
+                         (1 | subNum) + 
+                         (1 | objNum), 
+                         data =  dataSchemaVR3, family = 'binomial')
+
+kable(anova(m1, m2, test = "Chisq"))
+```
+
+Here m2 _*nearly*_ fits better than m1. In this case, there is a U-shape and an interaction for 848. 
+
+```{r results_remember_exp3_fixed, echo = FALSE}
+summary(m2)
+```
+
+## Experiment 4
+### Recognition
+```{r random_slope_exp4_AFC_fixed, echo = TRUE}
+# Scale
+dataSchemaVR4_AFC$sExp <- dataSchemaVR4_AFC$objLocTargetRating/(sd(dataSchemaVR4_AFC$objLocTargetRating)*2)
+
+m1 <- glmer(accAFC ~ sExp*setNum +  
+                     I(sExp*sExp) + 
+                     (1 | subNum) + 
+                     (1 | objNum), 
+                     data =  dataSchemaVR4_AFC, family = 'binomial')
+
+m2 <- glmer(accAFC ~ sExp*setNum +  
+                     I(sExp*sExp)*setNum + 
+                     (1 | subNum) + 
+                     (1 | objNum), 
+                     data =  dataSchemaVR4_AFC, family = 'binomial', control = glmerControl(optimizer ='optimx', optCtrl=list(method='L-BFGS-B')))
+
+
+kable(anova(m1, m2, test = "Chisq"))
+```
+
+Here, m2 _*does not*_ fit the data better than m1. In this model there are no significant effects. The problem here was that I can't get m2 to converge. 
+
+```{r results_exp4_AFC_fixed, echo = FALSE}
+summary(m2)
+```
+
+### Recall
+```{r random_slope_exp4_recal_fixedl, echo = TRUE}
+# Scale
+dataSchemaVR4_recall$sExp <- dataSchemaVR4_recall$objLocTargetRating/(sd(dataSchemaVR4_recall$objLocTargetRating)*2)
+
+m1 <- glmer(accRecall ~ sExp*setNum +  
+                        I(sExp*sExp) + 
+                        (1 | subNum) + 
+                        (1 | objNum), 
+                        data =  dataSchemaVR4_recall, family = 'binomial')
+
+m2 <- glmer(accRecall ~ sExp*setNum +  
+                        I(sExp*sExp)*setNum + 
+                        (1 | subNum) + 
+                        (1 | objNum), 
+                        data =  dataSchemaVR4_recall, family = 'binomial')
+
+
+kable(anova(m1, m2, test = "Chisq"))
+```
+
+M2 does not fit the data better than m1 and there are not significant effects of interest. 
+
+```{r results_recall_exp4_fixed, echo = FALSE}
+summary(m2)
+```
+
+### Remember rates
+```{r random_slope_exp4_remember_fixed, echo = TRUE}
+# Calculate remember rates
+remembered <- rep(0, dim(dataSchemaVR4)[1])
+remembered[dataSchemaVR4$resCon == 1] <- 1
+dataSchemaVR4$remembered <- remembered
+
+# Exclude no-memory (i.e. hasn't seen object) 
+dataSchemaVR4 <- dataSchemaVR4[dataSchemaVR4$resCon != 0, ]
+
+# Scale
+dataSchemaVR4$sExp <- dataSchemaVR4$objLocTargetRating/(sd(dataSchemaVR4$objLocTargetRating)*2)
+
+m1 <- glmer(remembered ~ sExp*setNum +  
+                         I(sExp*sExp) + 
+                         (1 | subNum) + 
+                         (1 | objNum), 
+                         data =  dataSchemaVR4, family = 'binomial')
+
+m2 <- glmer(remembered ~ sExp*setNum +  
+                         I(sExp*sExp)*setNum + 
+                         (1 | subNum) + 
+                         (1 | objNum), 
+                         data =  dataSchemaVR4, family = 'binomial', control = glmerControl(optimizer ='optimx', optCtrl=list(method='L-BFGS-B')))
+
+
+kable(anova(m1, m2, test = "Chisq"))
+```
+
+M2 did not fir the data better than m1 and there are no significant effects of interest. 
+
+```{r results_remember_exp4_fixed, echo = FALSE}
+summary(m2)
+```
+
+## Combined data
+### Recognition
+```{r prepare4, echo = FALSE}
+# Bind to one DF
+dataSchemaVR3_4_AFC <- data.frame(Experiment = c(rep('3', length(dataSchemaVR3_AFC$subNum)),
+                                                 rep('4', length(dataSchemaVR4_AFC$subNum))),
+                                  setNum        = c(as.character(dataSchemaVR3_AFC$setNum),
+                                                 as.character(dataSchemaVR4_AFC$setNum)),
+                                  subNum = c(as.character(dataSchemaVR3_AFC$subNum),
+                                             as.character(dataSchemaVR4_AFC$subNum)),
+                                  objNum = c(dataSchemaVR3_AFC$objNum,
+                                             dataSchemaVR4_AFC$objNum),
+                                  objLocTargetRating = c(dataSchemaVR3_AFC$objLocTargetRating,
+                                                         dataSchemaVR4_AFC$objLocTargetRating),
+                                  accAFC = c(dataSchemaVR3_AFC$accAFC,
+                                             dataSchemaVR4_AFC$accAFC))
+```
+
+```{r fixed_combined, echo = TRUE}
+# Scale
+dataSchemaVR3_4_AFC$sExp <- dataSchemaVR3_4_AFC$objLocTargetRating/(sd(dataSchemaVR3_4_AFC$objLocTargetRating)*2)
+
+m1 <- glmer(accAFC ~ sExp*setNum +  
+                     I(sExp*sExp) + 
+                     (1 | subNum) + 
+                     (1 | objNum), 
+                     data =  dataSchemaVR3_4_AFC, family = 'binomial')
+
+m2 <-  glmer(accAFC ~ sExp*setNum +  
+                      I(sExp*sExp)*setNum + 
+                      (1 | subNum) + 
+                      (1 | objNum), 
+                      data =  dataSchemaVR3_4_AFC, family = 'binomial')
+
+kable(anova(m1, m2, test = "Chisq"))
+```
+
+The model m2 does not fit the data better than m1 and there is no significant quadratic relationship.
+
+```{r fixed_combined_results, echo = FALSE}
+summary(m2)
+```
+
+### Recall
+```{r prepare5, echo = FALSE}
+# Bind to one DF
+# Combine data to one data frame
+dataSchemaVR3_4_recall <- data.frame(Experiment = c(rep('3', length(dataSchemaVR3_recall$subNum)),
+                                                    rep('4', length(dataSchemaVR4_recall$subNum))),
+                                     setNum        = c(as.character(dataSchemaVR3_recall$setNum),
+                                                   as.character(dataSchemaVR4_recall$setNum)),
+                                     subNum = c(as.character(dataSchemaVR3_recall$subNum),
+                                               as.character(dataSchemaVR4_recall$subNum)),
+                                     objNum = c(dataSchemaVR3_recall$objNum,
+                                                dataSchemaVR4_recall$objNum),
+                                     objLocTargetRating = c(dataSchemaVR3_recall$objLocTargetRating,
+                                                           dataSchemaVR4_recall$objLocTargetRating),
+                                     accRecall = c(dataSchemaVR3_recall$accRecall,
+                                                   dataSchemaVR4_recall$accRecall))
+
+dataSchemaVR3_4_recall$Exp    <- dataSchemaVR3_4_recall$objLocTargetRating 
+dataSchemaVR3_4_recall$subNum <- as.character(dataSchemaVR3_4_recall$subNum)
+```
+
+```{r fixed_recall_combined, echo = TRUE}
+# Scale
+dataSchemaVR3_4_recall$sExp <- dataSchemaVR3_4_recall$objLocTargetRating/(sd(dataSchemaVR3_4_recall$objLocTargetRating)*2)
+
+m1 <- glmer(accRecall ~ sExp*setNum +  
+                        I(sExp*sExp) + 
+                        (1 | subNum) + 
+                        (1 | objNum), 
+                       data =  dataSchemaVR3_4_recall, family = 'binomial', control = glmerControl(optimizer ='optimx', optCtrl=list(method='L-BFGS-B')))
+
+m2 <- glmer(accRecall ~ sExp*setNum +  
+                        I(sExp*sExp)*setNum + 
+                        (1 | subNum) + 
+                        (1 | objNum), 
+                        data =  dataSchemaVR3_4_recall, family = 'binomial', control = glmerControl(optimizer ='optimx', optCtrl=list(method='L-BFGS-B', maxfun=2e4*10)))
+
+kable(anova(m1, m2, test = "Chisq"))
+```
+
+M2 does not fit better than m1 but there is no a U-shape that is significant. More importantly, I can't get m2 to converge. 
+
+```{r fixed_recall_combined_results, echo = FALSE}
+summary(m2)
+```
+
+
+### Remember
+```{r prepare6, echo = FALSE}
+# Bind to one DF
+# Combine data to one data frame
+dataSchemaVR3_4        <- data.frame(Experiment = c(rep('3', length(dataSchemaVR3$subNum)),
+                                                    rep('4', length(dataSchemaVR4$subNum))),
+                                     setNum        = c(as.character(dataSchemaVR3$setNum),
+                                                    as.character(dataSchemaVR4$setNum)),
+                                     subNum = c(as.character(dataSchemaVR3$subNum),
+                                                as.character(dataSchemaVR4$subNum)),
+                                     objNum = c(dataSchemaVR3$objNum,
+                                                dataSchemaVR4$objNum),
+                                     objLocTargetRating = c(dataSchemaVR3$objLocTargetRating,
+                                                            dataSchemaVR4$objLocTargetRating),
+                                     resCon = c(as.numeric(as.character(dataSchemaVR3$resCon)),
+                                                as.numeric(as.character(dataSchemaVR4$resCon))))
+
+# Creating new labels
+remembered <- rep(0, dim(dataSchemaVR3_4)[1])
+remembered[dataSchemaVR3_4$resCon == 1] <- 1
+dataSchemaVR3_4$remembered <- remembered
+```
+
+```{r fixed_remember_combined, echo = TRUE}
+# Scale
+dataSchemaVR3_4$sExp <- dataSchemaVR3_4$objLocTargetRating/(sd(dataSchemaVR3_4$objLocTargetRating)*2)
+
+m1 <- glmer(remembered ~ sExp*setNum +  
+                         I(sExp*sExp) + 
+                         (1 | subNum) + 
+                         (1 | objNum), 
+                          data =  dataSchemaVR3_4, family = 'binomial')
+
+m2 <- glmer(remembered ~ sExp*setNum +  
+                         I(sExp*sExp)*setNum + 
+                         (1 | subNum) + 
+                         (1 | objNum), 
+                         data =  dataSchemaVR3_4, family = 'binomial', control = glmerControl(optimizer ='optimx', optCtrl=list(method='L-BFGS-B', maxfun=2e4*10)))
+
+kable(anova(m1, m2, test = "Chisq"))
+```
+
+M2 does not fit better than m1, there is no U-shape that is significant. I can't get m2 to converge. 
+
+```{r fixed_remember_combined_results, echo = FALSE}
+summary(m2)
+```
+
+
+# Use Experiment as between factor
+### Recognition
+```{r  preapre7, echo = FALSE}
+# Bind to one DF
+dataSchemaVR3_4_AFC <- data.frame(Experiment = c(rep('3', length(dataSchemaVR3_AFC$subNum)),
+                                                 rep('4', length(dataSchemaVR4_AFC$subNum))),
+                                  setNum        = c(as.character(dataSchemaVR3_AFC$setNum),
+                                                 as.character(dataSchemaVR4_AFC$setNum)),
+                                  subNum = c(as.character(dataSchemaVR3_AFC$subNum),
+                                             as.character(dataSchemaVR4_AFC$subNum)),
+                                  objNum = c(dataSchemaVR3_AFC$objNum,
+                                             dataSchemaVR4_AFC$objNum),
+                                  objLocTargetRating = c(dataSchemaVR3_AFC$objLocTargetRating,
+                                                         dataSchemaVR4_AFC$objLocTargetRating),
+                                  accAFC = c(dataSchemaVR3_AFC$accAFC,
+                                             dataSchemaVR4_AFC$accAFC))
+```
+
+```{r  exp_as_factor1, echo = TRUE}
+# Scale
+dataSchemaVR3_4_AFC$sExp <- dataSchemaVR3_4_AFC$objLocTargetRating/(sd(dataSchemaVR3_4_AFC$objLocTargetRating)*2)
+
+m1 <- glmer(accAFC ~ sExp*Experiment +  
+                     I(sExp*sExp)*Experiment + 
+                     (1 | subNum) + 
+                     (1 | objNum), data =  dataSchemaVR3_4_AFC, family = 'binomial')
+```
+
+There is no significant effect. 
+
+```{r exp_as_factor1_results, echo = FALSE}
+summary(m1)
+```
+
+### Recall
+```{r prepare8, echo = FALSE}
+# Bind to one DF
+# Combine data to one data frame
+dataSchemaVR3_4_recall <- data.frame(Experiment = c(rep('3', length(dataSchemaVR3_recall$subNum)),
+                                                    rep('4', length(dataSchemaVR4_recall$subNum))),
+                                     setNum        = c(as.character(dataSchemaVR3_recall$setNum),
+                                                   as.character(dataSchemaVR4_recall$setNum)),
+                                     subNum = c(as.character(dataSchemaVR3_recall$subNum),
+                                               as.character(dataSchemaVR4_recall$subNum)),
+                                     objNum = c(dataSchemaVR3_recall$objNum,
+                                                dataSchemaVR4_recall$objNum),
+                                     objLocTargetRating = c(dataSchemaVR3_recall$objLocTargetRating,
+                                                           dataSchemaVR4_recall$objLocTargetRating),
+                                     accRecall = c(dataSchemaVR3_recall$accRecall,
+                                                   dataSchemaVR4_recall$accRecall))
+
+dataSchemaVR3_4_recall$Exp    <- dataSchemaVR3_4_recall$objLocTargetRating 
+dataSchemaVR3_4_recall$subNum <- as.character(dataSchemaVR3_4_recall$subNum)
+```
+
+```{r exp_as_factor2, echo = TRUE}
+# Scale
+dataSchemaVR3_4_recall$sExp <- dataSchemaVR3_4_recall$objLocTargetRating/(sd(dataSchemaVR3_4_recall$objLocTargetRating)*2)
+
+m1 <- glmer(accRecall ~ sExp*Experiment +  
+                        I(sExp*sExp)*Experiment + 
+                        (1 | subNum) + 
+                        (1 | objNum), 
+                        data =  dataSchemaVR3_4_recall, family = 'binomial', control = glmerControl(optimizer ='optimx', optCtrl=list(method='L-BFGS-B')))
+
+```
+
+I can't get the model to converge to converge. 
+
+```{r exp_as_factor2_results, echo = FALSE}
+summary(m1)
+```
+
+### Remember
+```{r prepare9, echo = FALSE}
+# Bind to one DF
+# Combine data to one data frame
+dataSchemaVR3_4        <- data.frame(Experiment = c(rep('3', length(dataSchemaVR3$subNum)),
+                                                    rep('4', length(dataSchemaVR4$subNum))),
+                                     setNum        = c(as.character(dataSchemaVR3$setNum),
+                                                    as.character(dataSchemaVR4$setNum)),
+                                     subNum = c(as.character(dataSchemaVR3$subNum),
+                                                as.character(dataSchemaVR4$subNum)),
+                                     objNum = c(dataSchemaVR3$objNum,
+                                                dataSchemaVR4$objNum),
+                                     objLocTargetRating = c(dataSchemaVR3$objLocTargetRating,
+                                                            dataSchemaVR4$objLocTargetRating),
+                                     resCon = c(as.numeric(as.character(dataSchemaVR3$resCon)),
+                                                as.numeric(as.character(dataSchemaVR4$resCon))))
+
+# Creating new labels
+remembered <- rep(0, dim(dataSchemaVR3_4)[1])
+remembered[dataSchemaVR3_4$resCon == 1] <- 1
+dataSchemaVR3_4$remembered <- remembered
+```
+
+```{r exp_as_factor3, echo = TRUE}
+# Scale
+dataSchemaVR3_4$sExp <- dataSchemaVR3_4$objLocTargetRating/(sd(dataSchemaVR3_4$objLocTargetRating)*2)
+
+m1 <- glmer(remembered ~ sExp*Experiment +  I(sExp*sExp)*Experiment + (1 | subNum) + (1 | objNum), data =  dataSchemaVR3_4, family = 'binomial')
+```
+
+No interaction between Experiment and anything but a U-shape. 
+
+```{r exp_as_factor3_results, echo = FALSE}
+summary(m1)
+```
+
+
+# Additional analysis as reminder
+accAFC ~ I(sExp*sExp) + (1 | subNum) + (1 | objNum), data = Exp3
+
+```{r add1, echo = TRUE}
+
+m1 <- glmer(accAFC ~ sExp +  I(sExp*sExp)+ (1 | subNum) + (1 | objNum), data =  dataSchemaVR3_AFC, family = 'binomial')
+
+summary(m1)
+```
+
+accAFC ~ I(sExp*sExp) + (1 | subNum) + (1 | objNum), data = Exp3+half-Exp4 (ie results in preprint)
+
+```{r add2_1, echo = FALSE}
+exclude <- c('20LKXT',
+             '4MGPEO',
+             'Q4MFFK',
+             '6JZSA4',
+             '3M9BPC',
+             'CHUE9C',
+             'YX3UOC',
+             '4RVW7W',
+             'ELAY56',
+             '8W4FDN',
+             'GABN4L',
+             '6EJJKQ',
+             'H0614B',
+             'RZRY01',
+             'IJEISG',
+             'CZDF7Z',
+             'MK58X8',
+             'B8VVUD',
+             'PRN9GQ',
+             '762HC1',
+             'FZP5RJ') 
+
+```
+ 
+
+```{r add2_2, echo = TRUE}
+sub_dat <- dataSchemaVR3_4_AFC[!(dataSchemaVR3_4_AFC$subNum  %in% exclude), ]
+
+m1 <- glmer(accAFC ~ sExp +  I(sExp*sExp)+ (1 | subNum) + (1 | objNum), data =  sub_dat, family = 'binomial')
+
+summary(m1)
+```
+ 
+
+accAFC ~ I(sExp*sExp) + (1 | subNum) + (1 | objNum), data = Exp3+all-Exp4
+
+```{r add3, echo = TRUE}
+
+m1 <- glmer(accAFC ~ sExp +  I(sExp*sExp)+ (1 | subNum) + (1 | objNum), data =  dataSchemaVR3_4_AFC, family = 'binomial')
+
+summary(m1)
+```
+
+ 
+accAFC ~ Exp34 * I(sExp*sExp) + (1 | subNum) + (1 | objNum), data = Exp3+all-Exp4#
+
+????
