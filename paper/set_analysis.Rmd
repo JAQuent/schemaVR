@@ -1,0 +1,127 @@
+---
+title: "Results of set analysis"
+author: "Joern Alexander Quent"
+date: "24/07/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# Libraries
+library(assortedRFunctions) # install via devtools::install_github("JAQuent/assortedRFunctions")
+library(knitr)
+library(ggplot2)
+library(brms)
+library(plyr)
+library(lmerTest)
+library(MRColour)
+library(BayesFactor)
+library(cowplot)
+library(polspline)
+library(gridExtra)
+library(grid)
+
+# Options
+options(scipen=999)
+opts_knit$set(eval.after = 'fig.cap')
+opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, include = TRUE)
+
+######################################################
+# Path to parent folder schemaVR
+path2parent <- "D:/Alex/Laptop/Desktop/schemaVR" # This need to be changed to run this document
+######################################################
+```
+
+```{r AFC_data}
+# Load data
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR3_4_AFC_zeroPrior_set_20210724_131122.RData"))
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR3_4_AFC_zeroPrior_20210724_162125.RData "))
+```
+
+```{r AFC_model_comp}
+BF_AFC <- bayes_factor(model_schemaVR3_4_AFC, model_schemaVR3_4_AFC_set)
+```
+
+
+```{r AFC_reports}
+fixef_schemaVR3_4_AFC_set <- fixef(model_schemaVR3_4_AFC_set)
+report1                <- brms_fixef_report(fixef_schemaVR3_4_AFC_set[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR3_4_AFC_set[3,], 3)
+report3                <- brms_fixef_report(fixef_schemaVR3_4_AFC_set[4,], 3)
+```
+
+
+```{r compare_funtion}
+# Create a quick function to compare one set against all other sets with hypothesis
+compare_function <- function(set){
+  sets    <- c('111', '246', '388', '498', '848')
+  set_str <- c("IsExpMUsExp",
+               "IsExpMUsExp+set246:IsExpMUsExp",
+               "IsExpMUsExp+set388:IsExpMUsExp",
+               "IsExpMUsExp+set498:IsExpMUsExp",
+               "IsExpMUsExp+set848:IsExpMUsExp")
+  
+  indices <- 1:5
+  index   <- which(sets == set)
+  
+  index_o <- indices[1:5 != index] # indices for the other sets
+  all_other_sets_str <- paste0("(", set_str[index_o[1]], " + ",
+                                    set_str[index_o[2]], " + ", 
+                                    set_str[index_o[3]], " + ", 
+                                    set_str[index_o[4]], ")/4")
+    
+  hypo  <-  paste0(set_str[index], " = ", all_other_sets_str)
+  return(hypo)
+}
+```
+
+
+
+```{r AFC_compare_sets}
+set111_vs_all <- hypothesis(model_schemaVR3_4_AFC_set, compare_function('111'))
+set246_vs_all <- hypothesis(model_schemaVR3_4_AFC_set, compare_function('246'))
+set388_vs_all <- hypothesis(model_schemaVR3_4_AFC_set, compare_function('388'))
+set498_vs_all <- hypothesis(model_schemaVR3_4_AFC_set, compare_function('498'))
+set848_vs_all <- hypothesis(model_schemaVR3_4_AFC_set, compare_function('848'))
+```
+
+
+```{r recollection_data}
+# Load data
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR3_4_recollection_zeroPrior_set_20210724_133458.RData"))
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR3_4_recollection_zeroPrior_20210724_170411.RData "))
+```
+
+```{r recollection_model_comp}
+BF_recollection <- bayes_factor(model_schemaVR4_rem, model_schemaVR4_rem_set)
+```
+
+
+```{r recollection_compare_sets}
+set111_vs_all <- hypothesis(model_schemaVR4_rem_set, compare_function('111'))
+set246_vs_all <- hypothesis(model_schemaVR4_rem_set, compare_function('246'))
+set388_vs_all <- hypothesis(model_schemaVR4_rem_set, compare_function('388'))
+set498_vs_all <- hypothesis(model_schemaVR4_rem_set, compare_function('498'))
+set848_vs_all <- hypothesis(model_schemaVR4_rem_set, compare_function('848'))
+```
+
+
+
+
+```{r recall_data}
+# Load data
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR3_4_recall_zeroPrior_set_20210724_132539.RData"))
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR3_4_recall_zeroPrior_20210724_135859.RData "))
+```
+
+```{r recall_model_comp}
+BF_recall <- bayes_factor(model_schemaVR3_4_recall, model_schemaVR3_4_recall_set)
+```
+
+
+```{r recall_compare_sets}
+set111_vs_all <- hypothesis(model_schemaVR3_4_recall_set, compare_function('111'))
+set246_vs_all <- hypothesis(model_schemaVR3_4_recall_set, compare_function('246'))
+set388_vs_all <- hypothesis(model_schemaVR3_4_recall_set, compare_function('388'))
+set498_vs_all <- hypothesis(model_schemaVR3_4_recall_set, compare_function('498'))
+set848_vs_all <- hypothesis(model_schemaVR3_4_recall_set, compare_function('848'))
+```

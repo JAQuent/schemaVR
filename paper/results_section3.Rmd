@@ -1,0 +1,1140 @@
+---
+title: "Results section 3"
+author: "Joern Alexander Quent"
+date: "27/05/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# Libraries
+library(assortedRFunctions) # install via devtools::install_github("JAQuent/assortedRFunctions")
+library(knitr)
+library(ggplot2)
+library(brms)
+library(plyr)
+library(lmerTest)
+library(MRColour)
+library(BayesFactor)
+library(cowplot)
+library(polspline)
+library(gridExtra)
+library(grid)
+
+# Options
+options(scipen=999)
+opts_knit$set(eval.after = 'fig.cap')
+opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, include = TRUE)
+
+######################################################
+# Path to parent folder schemaVR
+path2parent <- "D:/Alex/Laptop/Desktop/schemaVR" # This need to be changed to run this document
+######################################################
+```
+
+# Pooled analysis
+```{r pooled_3AFC}
+# /*
+# ----------------------------- Data --------------------------
+# */
+# Loading all .RData files
+load("D:/Alex/Laptop/Desktop/schemaVR/paper/data/dataSchemaVR1_cleaned.RData")
+load("D:/Alex/Laptop/Desktop/schemaVR/paper/data/dataSchemaVR2_cleaned.RData")
+load("D:/Alex/Laptop/Desktop/schemaVR/paper/data/dataSchemaVR3_cleaned.RData")
+load("D:/Alex/Laptop/Desktop/schemaVR/schemaVR4/data/dataSchemaVR4_cleaned.RData")
+
+# Create AFC data for schemaVR4
+dataSchemaVR4_AFC    <- subset(dataSchemaVR4, dataSchemaVR4$resCon != 0)
+
+# Combine data to one data frame
+combinedData_AFC <- data.frame(Experiment = c(rep('1', length(dataSchemaVR1_AFC$subNum)),
+                                              rep('2', length(dataSchemaVR2_AFC$subNum)),
+                                              rep('3', length(dataSchemaVR3_AFC$subNum)),
+                                              rep('3', length(dataSchemaVR4_AFC$subNum))),
+                               set        = c(rep('1', length(dataSchemaVR1_AFC$subNum)),
+                                              rep('2', length(dataSchemaVR2_AFC$subNum)),
+                                              as.character(dataSchemaVR3_AFC$setNum),
+                                              as.character(dataSchemaVR4_AFC$setNum)),
+                               subNum = c(as.character(dataSchemaVR1_AFC$subNum),
+                                          as.character(dataSchemaVR2_AFC$subNum),
+                                          as.character(dataSchemaVR3_AFC$subNum),
+                                          as.character(dataSchemaVR4_AFC$subNum)),
+                               objNum = c(dataSchemaVR1_AFC$objNum,
+                                          dataSchemaVR2_AFC$objNum,
+                                          dataSchemaVR3_AFC$objNum,
+                                          dataSchemaVR4_AFC$objNum),
+                               objLocTargetRating = c(dataSchemaVR1_AFC$objLocTargetRating,
+                                                      dataSchemaVR2_AFC$objLocTargetRating,
+                                                      dataSchemaVR3_AFC$objLocTargetRating,
+                                                      dataSchemaVR4_AFC$objLocTargetRating),
+                               accAFC = c(dataSchemaVR1_AFC$accAFC,
+                                          dataSchemaVR2_AFC$accAFC,
+                                          dataSchemaVR3_AFC$accAFC,
+                                          dataSchemaVR4_AFC$accAFC))
+
+combinedData_AFC$Exp    <- combinedData_AFC$objLocTargetRating 
+combinedData_AFC$subNum <- as.character(combinedData_AFC$subNum)
+combinedData_AFC$s_x <- (combinedData_AFC$Exp - mean(combinedData_AFC$Exp ))/(sd(combinedData_AFC$Exp)/0.5)
+```
+
+```{r pooled_3AFC_analysis}
+pooled_3AFC <- glmer(accAFC ~  s_x + I(s_x*s_x) 
+                     + (1 | subNum)
+                     + (1 | objNum), 
+                    data = combinedData_AFC, 
+                    family = binomial, 
+                    control = glmerControl(optimizer = "bobyqa"),
+                    nAGQ = 1)
+
+pooled_3AFC_tab <- createResultTable(pooled_3AFC)
+```
+
+```{r pooled_recall}
+# Re creating recall DF because there was an error in the code
+dataSchemaVR2_recall <- subset(dataSchemaVR2, dataSchemaVR2$recallMemory != 0 | is.na(dataSchemaVR2$recallMemory))
+dataSchemaVR3_recall <- subset(dataSchemaVR3, dataSchemaVR3$recallMemory != 0 | is.na(dataSchemaVR3$recallMemory))
+dataSchemaVR4_recall <- subset(dataSchemaVR4, dataSchemaVR4$recallMemory != 0 | is.na(dataSchemaVR4$recallMemory))
+
+# Combine data to one data frame
+combinedData_recall <- data.frame(Experiment = c(rep('1', length(dataSchemaVR1_recall$subNum)),
+                                              rep('2', length(dataSchemaVR2_recall$subNum)),
+                                              rep('3', length(dataSchemaVR3_recall$subNum)),
+                                              rep('3', length(dataSchemaVR4_recall$subNum))),
+                               set        = c(rep('1', length(dataSchemaVR1_recall$subNum)),
+                                              rep('2', length(dataSchemaVR2_recall$subNum)),
+                                              as.character(dataSchemaVR3_recall$setNum),
+                                              as.character(dataSchemaVR4_recall$setNum)),
+                               subNum = c(as.character(dataSchemaVR1_recall$subNum),
+                                          as.character(dataSchemaVR2_recall$subNum),
+                                          as.character(dataSchemaVR3_recall$subNum),
+                                          as.character(dataSchemaVR4_recall$subNum)),
+                               objNum = c(dataSchemaVR1_recall$objNum,
+                                          dataSchemaVR2_recall$objNum,
+                                          dataSchemaVR3_recall$objNum,
+                                          dataSchemaVR4_recall$objNum),
+                               objLocTargetRating = c(dataSchemaVR1_recall$objLocTargetRating,
+                                                      dataSchemaVR2_recall$objLocTargetRating,
+                                                      dataSchemaVR3_recall$objLocTargetRating,
+                                                      dataSchemaVR4_recall$objLocTargetRating),
+                               accRecall = c(dataSchemaVR1_recall$accRecall,
+                                             dataSchemaVR2_recall$accRecall,
+                                             dataSchemaVR3_recall$accRecall,
+                                             dataSchemaVR4_recall$accRecall),
+                               euclideanDist = c(dataSchemaVR1_recall$euclideanDist,
+                                                 dataSchemaVR2_recall$euclideanDist,
+                                                 dataSchemaVR3_recall$euclideanDist,
+                                                 dataSchemaVR4_recall$euclideanDist))
+
+combinedData_recall$Exp    <- combinedData_recall$objLocTargetRating 
+combinedData_recall$subNum <- as.character(combinedData_recall$subNum)
+
+# Scaling based on Gelman et al. (2008) and https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
+# Mean = 0 and SD = 0.5
+combinedData_recall$s_x <- (combinedData_recall$Exp - mean(combinedData_recall$Exp ))/(sd(combinedData_recall$Exp)/0.5)
+```
+
+```{r pooled_recall_analysis}
+pooled_recall <- glmer(accRecall ~  s_x + I(s_x*s_x) 
+                     + (1 | subNum)
+                     + (1 | objNum), 
+                    data = combinedData_recall, 
+                    family = binomial, 
+                    control = glmerControl(optimizer = "bobyqa"),
+                    nAGQ = 1)
+
+pooled_recall_tab <- createResultTable(pooled_recall)
+```
+
+```{r pooled_euclidDistance_analysis}
+pooled_euclidDistance <- glmer(euclideanDist ~  s_x + I(s_x*s_x) 
+                     + (1 | subNum)
+                     + (1 | objNum), 
+                     family = Gamma,
+                     data = combinedData_recall)
+
+pooled_euclidDistance_tab <- createResultTable(pooled_euclidDistance)
+```
+
+```{r pooled_recollection}
+# Combine data to one data frame
+combinedData_remember <- data.frame(Experiment = c(rep('2', length(dataSchemaVR2$subNum)),
+                                                   rep('3', length(dataSchemaVR3$subNum)),
+                                                   rep('3', length(dataSchemaVR4$subNum))),
+                               set        = c(rep('2', length(dataSchemaVR2$subNum)),
+                                              as.character(dataSchemaVR3$setNum),
+                                              as.character(dataSchemaVR4$setNum)),
+                               subNum = c(as.character(dataSchemaVR2$subNum),
+                                          as.character(dataSchemaVR3$subNum),
+                                          as.character(dataSchemaVR4$subNum)),
+                               objNum = c(dataSchemaVR2$objNum,
+                                          dataSchemaVR3$objNum,
+                                          dataSchemaVR4$objNum),
+                               objLocTargetRating = c(dataSchemaVR2$objLocTargetRating,
+                                                      dataSchemaVR3$objLocTargetRating,
+                                                      dataSchemaVR4$objLocTargetRating),
+                               resCon = c(as.integer(as.character(dataSchemaVR2$resCon)),
+                                          as.integer(as.character(dataSchemaVR3$resCon)),
+                                          as.integer(as.character(dataSchemaVR4$resCon))))
+
+
+# Creating new labels
+remembered <- rep(0, dim(combinedData_remember)[1])
+remembered[combinedData_remember$resCon == 1] <- 1
+combinedData_remember$remembered <- remembered
+
+# Exclude no-memory (i.e. hasn't seen object) 
+combinedData_remember <- combinedData_remember[combinedData_remember$resCon != 0, ]
+
+
+# Scaling based on Gelman et al. (2008) and https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
+# Mean = 0 and SD = 0.5
+combinedData_remember$Exp  <- combinedData_remember$objLocTargetRating 
+combinedData_remember$s_x <- (combinedData_remember$Exp - mean(combinedData_remember$Exp ))/(sd(combinedData_remember$Exp)/0.5)
+```
+
+```{r pooled_recollection_analysis}
+pooled_recollection <- glmer(remembered ~  s_x + I(s_x*s_x) 
+                             + (1 | subNum)
+                             + (1 | objNum), 
+                            data = combinedData_remember, 
+                            family = binomial, 
+                            control = glmerControl(optimizer = "bobyqa"),
+                            nAGQ = 1)
+
+pooled_recollection_tab <- createResultTable(pooled_recollection)
+```
+
+```{r pooled_recollection_exclusive}
+# Creating new labels
+remembered <- rep(0, dim(combinedData_remember)[1])
+remembered[combinedData_remember$resCon == 1] <- 1
+remembered[combinedData_remember$resCon == 2] <- NA_integer_ # Exclude familiar trials 
+combinedData_remember$remembered <- remembered
+
+# Exclude no-memory (i.e. hasn't seen object) 
+combinedData_remember <- combinedData_remember[combinedData_remember$resCon != 0, ]
+
+
+# Scaling based on Gelman et al. (2008) and https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
+# Mean = 0 and SD = 0.5
+combinedData_remember$Exp  <- combinedData_remember$objLocTargetRating 
+combinedData_remember$s_x <- (combinedData_remember$Exp - mean(combinedData_remember$Exp ))/(sd(combinedData_remember$Exp)/0.5)
+```
+
+```{r pooled_recollection_exclusive_analysis}
+pooled_recollection_exclusive <- glmer(remembered ~  s_x + I(s_x*s_x) 
+                             + (1 | subNum)
+                             + (1 | objNum), 
+                            data = combinedData_remember, 
+                            family = binomial, 
+                            control = glmerControl(optimizer = "bobyqa"),
+                            nAGQ = 1)
+
+pooled_recollection_exclusive_tab <- createResultTable(pooled_recollection_exclusive)
+```
+
+```{r pooled_familiar_ind}
+# Combine data to one data frame
+combinedData_familiar_ind <- data.frame(Experiment = c(rep('2', length(dataSchemaVR2$subNum)),
+                                                       rep('3', length(dataSchemaVR3$subNum)),
+                                                       rep('3', length(dataSchemaVR4$subNum))),
+                               set        = c(rep('2', length(dataSchemaVR2$subNum)),
+                                              as.character(dataSchemaVR3$setNum),
+                                              as.character(dataSchemaVR4$setNum)),
+                               subNum = c(as.character(dataSchemaVR2$subNum),
+                                          as.character(dataSchemaVR3$subNum),
+                                          as.character(dataSchemaVR4$subNum)),
+                               objNum = c(dataSchemaVR2$objNum,
+                                          dataSchemaVR3$objNum,
+                                          dataSchemaVR4$objNum),
+                               objLocTargetRating = c(dataSchemaVR2$objLocTargetRating,
+                                                      dataSchemaVR3$objLocTargetRating,
+                                                      dataSchemaVR4$objLocTargetRating),
+                               resCon = c(as.integer(as.character(dataSchemaVR2$resCon)),
+                                          as.integer(as.character(dataSchemaVR3$resCon)),
+                                          as.integer(as.character(dataSchemaVR4$resCon))))
+
+
+# Creating new labels
+# Coding familiar judgements as independent
+familiar_ind <- rep(0, dim(combinedData_familiar_ind)[1])
+familiar_ind[combinedData_familiar_ind$resCon == 1] <- NA_integer_
+familiar_ind[dataSchemaVR4$resCon == 2] <- 1
+combinedData_familiar_ind$familiar_ind <- familiar_ind
+
+# Exclude no-memory (i.e. hasn't seen object) 
+combinedData_familiar_ind <- combinedData_familiar_ind[combinedData_familiar_ind$resCon != 0, ]
+# Scaling based on Gelman et al. (2008) and https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
+# Mean = 0 and SD = 0.5
+combinedData_familiar_ind$Exp  <- combinedData_familiar_ind$objLocTargetRating 
+combinedData_familiar_ind$s_x <- (combinedData_familiar_ind$Exp - mean(combinedData_familiar_ind$Exp ))/(sd(combinedData_familiar_ind$Exp)/0.5)
+
+```
+
+```{r pooled_familiar_ind_anlaysis}
+pooled_familiar_ind <- glmer(familiar_ind ~  s_x + I(s_x*s_x) 
+                             + (1 | subNum)
+                             + (1 | objNum), 
+                            data = combinedData_familiar_ind, 
+                            family = binomial, 
+                            control = glmerControl(optimizer = "bobyqa"),
+                            nAGQ = 1)
+
+pooled_familiar_ind_tab <- createResultTable(pooled_familiar_ind)
+```
+
+```{r pooled_familiar_red}
+# Combine data to one data frame
+combinedData_familiar_red <- data.frame(Experiment = c(rep('2', length(dataSchemaVR2$subNum)),
+                                                       rep('3', length(dataSchemaVR3$subNum)),
+                                                       rep('3', length(dataSchemaVR4$subNum))),
+                                        set        = c(rep('2', length(dataSchemaVR2$subNum)),
+                                                       as.character(dataSchemaVR3$setNum),
+                                                       as.character(dataSchemaVR4$setNum)),
+                                        subNum = c(as.character(dataSchemaVR2$subNum),
+                                                   as.character(dataSchemaVR3$subNum),
+                                                   as.character(dataSchemaVR4$subNum)),
+                                        objNum = c(dataSchemaVR2$objNum,
+                                                   dataSchemaVR3$objNum,
+                                                   dataSchemaVR4$objNum),
+                                        objLocTargetRating = c(dataSchemaVR2$objLocTargetRating,
+                                                               dataSchemaVR3$objLocTargetRating,
+                                                               dataSchemaVR4$objLocTargetRating),
+                                        resCon = c(as.integer(as.character(dataSchemaVR2$resCon)),
+                                                   as.integer(as.character(dataSchemaVR3$resCon)),
+                                                   as.integer(as.character(dataSchemaVR4$resCon))))
+
+
+# Creating new labels
+# Coding familiar judgements as redundant
+familiar_red <- rep(0, dim(combinedData_familiar_red)[1])
+familiar_red[combinedData_familiar_red$resCon == 1] <- 1
+familiar_red[combinedData_familiar_red$resCon == 2] <- 1
+combinedData_familiar_red$familiar_red <- familiar_red
+
+# Exclude no-memory (i.e. hasn't seen object) 
+combinedData_familiar_red <- combinedData_familiar_red[combinedData_familiar_red$resCon != 0, ]
+# Scaling based on Gelman et al. (2008) and https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
+# Mean = 0 and SD = 0.5
+combinedData_familiar_red$Exp  <- combinedData_familiar_red$objLocTargetRating 
+combinedData_familiar_red$s_x <- (combinedData_familiar_red$Exp - mean(combinedData_familiar_red$Exp ))/(sd(combinedData_familiar_red$Exp)/0.5)
+```
+
+```{r pooled_familiar_red_anlaysis}
+pooled_familiar_red <- glmer(familiar_red ~  s_x + I(s_x*s_x) 
+                             + (1 | subNum)
+                             + (1 | objNum), 
+                            data = combinedData_familiar_red, 
+                            family = binomial, 
+                            control = glmerControl(optimizer = "bobyqa"),
+                            nAGQ = 1)
+
+pooled_familiar_red_tab <- createResultTable(pooled_familiar_red)
+```
+
+```{r pooled_recall_normative}
+normativeData <- read.table("D:/Alex/Laptop/Desktop/schemaVR/schemaVR3/data/normativeData.txt", 
+                            header = TRUE, 
+                            sep = "\t")
+
+normativeData$objectNames <- as.character(normativeData$objectNames)
+dataSchemaVR1$objNam      <- as.character(dataSchemaVR1$objNam)
+dataSchemaVR2$objName     <- as.character(dataSchemaVR2$objNam)
+dataSchemaVR3$objNam      <- as.character(dataSchemaVR3$objNam)
+dataSchemaVR4$objNam      <- as.character(dataSchemaVR4$objNam)
+normativeData$objectNames[normativeData$objectNames == 'fruit bowl'] <- 'bowl of fruits'
+
+
+# Getting normative expectancy for target
+dataSchemaVR1$objLocTargetNorm  <- NA
+dataSchemaVR1$generalRatingNorm <- NA
+# Add normative location rating
+for(i in 1:dim(dataSchemaVR1)[1]){
+  dataSchemaVR1$objLocTargetNorm[i] <- normativeData[normativeData$objectNames == as.character(dataSchemaVR1$objName[i]), 
+                                                     paste("loc", dataSchemaVR1$targetLocation[i], sep = "")]
+  dataSchemaVR1$generalRatingNorm[i] <- normativeData[normativeData$objectNames == as.character(dataSchemaVR1$objName[i]), 
+                                                     'general']
+}
+
+# Getting normative expectancy for target
+dataSchemaVR2$objLocTargetNorm  <- NA
+dataSchemaVR2$generalRatingNorm <- NA
+# Add normative location rating
+for(i in 1:dim(dataSchemaVR2)[1]){
+  dataSchemaVR2$objLocTargetNorm[i] <- normativeData[normativeData$objectNames == as.character(dataSchemaVR2$objName[i]), 
+                                                     paste("loc", dataSchemaVR2$targetLocation[i], sep = "")]
+  dataSchemaVR2$generalRatingNorm[i] <- normativeData[normativeData$objectNames == as.character(dataSchemaVR2$objName[i]), 
+                                                     'general']
+}
+
+# Getting normative expectancy for target
+dataSchemaVR3$objLocTargetNorm  <- NA
+dataSchemaVR3$generalRatingNorm <- NA
+# Add normative location rating
+for(i in 1:dim(dataSchemaVR3)[1]){
+  dataSchemaVR3$objLocTargetNorm[i] <- normativeData[normativeData$objectNames == as.character(dataSchemaVR3$objNam[i]), 
+                                                     paste("loc", dataSchemaVR3$targetLocation[i], sep = "")]
+  dataSchemaVR3$generalRatingNorm[i] <- normativeData[normativeData$objectNames == as.character(dataSchemaVR3$objNam[i]), 
+                                                     'general']
+}
+
+# Getting normative expectancy for target
+dataSchemaVR4$objLocTargetNorm  <- NA
+dataSchemaVR4$generalRatingNorm <- NA
+# Add normative location rating
+for(i in 1:dim(dataSchemaVR4)[1]){
+  dataSchemaVR4$objLocTargetNorm[i] <- normativeData[normativeData$objectNames == as.character(dataSchemaVR4$objNam[i]), 
+                                                     paste("loc", dataSchemaVR4$targetLocation[i], sep = "")]
+  dataSchemaVR4$generalRatingNorm[i] <- normativeData[normativeData$objectNames == as.character(dataSchemaVR4$objNam[i]), 
+                                                     'general']
+}
+
+# Re creating recall DF because there was an error in the code
+dataSchemaVR1_recall <- subset(dataSchemaVR1, dataSchemaVR1$recallNoMemory == 0 | is.na(dataSchemaVR1$recallNoMemory))
+dataSchemaVR2_recall <- subset(dataSchemaVR2, dataSchemaVR2$recallMemory != 0 | is.na(dataSchemaVR2$recallMemory))
+dataSchemaVR3_recall <- subset(dataSchemaVR3, dataSchemaVR3$recallMemory != 0 | is.na(dataSchemaVR3$recallMemory))
+dataSchemaVR4_recall <- subset(dataSchemaVR4, dataSchemaVR4$recallMemory != 0 | is.na(dataSchemaVR4$recallMemory))
+
+#### Combine data to one data frame
+combinedData_recall <- data.frame(Experiment = c(rep('1', length(dataSchemaVR1_recall$subNum)),
+                                              rep('2', length(dataSchemaVR2_recall$subNum)),
+                                              rep('3', length(dataSchemaVR3_recall$subNum)),
+                                              rep('3', length(dataSchemaVR4_recall$subNum))),
+                               set        = c(rep('1', length(dataSchemaVR1_recall$subNum)),
+                                              rep('2', length(dataSchemaVR2_recall$subNum)),
+                                              as.character(dataSchemaVR3_recall$setNum),
+                                              as.character(dataSchemaVR4_recall$setNum)),
+                               subNum = c(as.character(dataSchemaVR1_recall$subNum),
+                                          as.character(dataSchemaVR2_recall$subNum),
+                                          as.character(dataSchemaVR3_recall$subNum),
+                                          as.character(dataSchemaVR4_recall$subNum)),
+                               objNum = c(dataSchemaVR1_recall$objNum,
+                                          dataSchemaVR2_recall$objNum,
+                                          dataSchemaVR3_recall$objNum,
+                                          dataSchemaVR4_recall$objNum),
+                               objLocTargetRating = c(dataSchemaVR1_recall$objLocTargetRating,
+                                                      dataSchemaVR2_recall$objLocTargetRating,
+                                                      dataSchemaVR3_recall$objLocTargetRating,
+                                                      dataSchemaVR4_recall$objLocTargetRating),
+                               accRecall = c(dataSchemaVR1_recall$accRecall,
+                                             dataSchemaVR2_recall$accRecall,
+                                             dataSchemaVR3_recall$accRecall,
+                                             dataSchemaVR4_recall$accRecall),
+                               euclideanDist = c(dataSchemaVR1_recall$euclideanDist,
+                                                 dataSchemaVR2_recall$euclideanDist,
+                                                 dataSchemaVR3_recall$euclideanDist,
+                                                 dataSchemaVR4_recall$euclideanDist),
+                               objLocTargetNorm = c(dataSchemaVR1_recall$objLocTargetNorm,
+                                                    dataSchemaVR2_recall$objLocTargetNorm,
+                                                    dataSchemaVR3_recall$objLocTargetNorm,
+                                                    dataSchemaVR4_recall$objLocTargetNorm),
+                               generalRatingNorm = c(dataSchemaVR1_recall$generalRatingNorm,
+                                                    dataSchemaVR2_recall$generalRatingNorm,
+                                                    dataSchemaVR3_recall$generalRatingNorm,
+                                                    dataSchemaVR4_recall$generalRatingNorm))
+
+combinedData_recall$subNum <- as.factor(combinedData_recall$subNum)
+combinedData_recall$objLocTargetNorm <- (combinedData_recall$objLocTargetNorm - mean(combinedData_recall$objLocTargetNorm ))/(sd(combinedData_recall$objLocTargetNorm)/0.5)
+combinedData_recall$generalRatingNorm <- (combinedData_recall$generalRatingNorm - mean(combinedData_recall$generalRatingNorm ))/(sd(combinedData_recall$generalRatingNorm)/0.5)
+
+pooled_norm_recall <- glmer(accRecall ~  objLocTargetNorm + 
+                  I(objLocTargetNorm*objLocTargetNorm) + # generalRatingNorm+
+                  (1 | subNum) + (1 | objNum), data = combinedData_recall, 
+                family = binomial, 
+                control = glmerControl(optimizer = "bobyqa"),
+                nAGQ = 1)
+
+pooled_norm_recall_tap <- createResultTable(pooled_norm_recall)
+```
+
+```{r corr_between_rating, eval = FALSE}
+cor.test(combinedData_AFC$objLocTargetRating, combinedData_AFC$objLocTargetNorm)
+
+
+ggplot(combinedData_AFC, aes(objLocTargetRating, objLocTargetNorm)) + 
+  geom_point() +
+  geom_smooth(method = 'loess', colour = 'red') +
+  geom_smooth(method = 'lm', colour = 'blue') +
+  labs(title = 'Correlation between normative and individual ratings',
+       x = "Participants' rartings",
+       y = 'Normative ratings')
+```
+
+```{r pooled_AFC_normative}
+# Re creating recall DF because there was an error in the code
+dataSchemaVR1_AFC    <- subset(dataSchemaVR1, dataSchemaVR1$resCon != 1)
+dataSchemaVR2_AFC    <- subset(dataSchemaVR2, dataSchemaVR2$resCon != 0)
+dataSchemaVR3_AFC    <- subset(dataSchemaVR3, dataSchemaVR3$resCon != 0)
+dataSchemaVR4_AFC    <- subset(dataSchemaVR4, dataSchemaVR4$resCon != 0)
+
+#### Combine data to one data frame
+combinedData_AFC <- data.frame(Experiment = c(rep('1', length(dataSchemaVR1_AFC$subNum)),
+                                              rep('2', length(dataSchemaVR2_AFC$subNum)),
+                                              rep('3', length(dataSchemaVR3_AFC$subNum)),
+                                              rep('3', length(dataSchemaVR4_AFC$subNum))),
+                               set        = c(rep('1', length(dataSchemaVR1_AFC$subNum)),
+                                              rep('2', length(dataSchemaVR2_AFC$subNum)),
+                                              as.character(dataSchemaVR3_AFC$setNum),
+                                              as.character(dataSchemaVR4_AFC$setNum)),
+                               subNum = c(as.character(dataSchemaVR1_AFC$subNum),
+                                          as.character(dataSchemaVR2_AFC$subNum),
+                                          as.character(dataSchemaVR3_AFC$subNum),
+                                          as.character(dataSchemaVR4_AFC$subNum)),
+                               objNum = c(dataSchemaVR1_AFC$objNum,
+                                          dataSchemaVR2_AFC$objNum,
+                                          dataSchemaVR3_AFC$objNum,
+                                          dataSchemaVR4_AFC$objNum),
+                               objLocTargetRating = c(dataSchemaVR1_AFC$objLocTargetRating,
+                                                      dataSchemaVR2_AFC$objLocTargetRating,
+                                                      dataSchemaVR3_AFC$objLocTargetRating,
+                                                      dataSchemaVR4_AFC$objLocTargetRating),
+                               accAFC = c(dataSchemaVR1_AFC$accAFC,
+                                          dataSchemaVR2_AFC$accAFC,
+                                          dataSchemaVR3_AFC$accAFC,
+                                          dataSchemaVR4_AFC$accAFC),
+                               objLocTargetNorm = c(dataSchemaVR1_AFC$objLocTargetNorm,
+                                                    dataSchemaVR2_AFC$objLocTargetNorm,
+                                                    dataSchemaVR3_AFC$objLocTargetNorm,
+                                                    dataSchemaVR4_AFC$objLocTargetNorm),
+                               generalRatingNorm = c(dataSchemaVR1_AFC$generalRatingNorm,
+                                                     dataSchemaVR2_AFC$generalRatingNorm,
+                                                     dataSchemaVR3_AFC$generalRatingNorm,
+                                                     dataSchemaVR4_AFC$generalRatingNorm))
+
+combinedData_AFC$subNum <- as.factor(combinedData_AFC$subNum)
+combinedData_AFC$objLocTargetNorm <- (combinedData_AFC$objLocTargetNorm - mean(combinedData_AFC$objLocTargetNorm ))/(sd(combinedData_AFC$objLocTargetNorm)/0.5)
+combinedData_AFC$generalRatingNorm <- (combinedData_AFC$generalRatingNorm - mean(combinedData_AFC$generalRatingNorm ))/(sd(combinedData_AFC$generalRatingNorm)/0.5)
+
+pooled_norm_AFC <- glmer(accAFC ~  objLocTargetNorm + 
+                  I(objLocTargetNorm*objLocTargetNorm) +# generalRatingNorm+
+                  (1 | subNum) + (1 | objNum), data = combinedData_AFC, 
+                family = binomial, 
+                control = glmerControl(optimizer = "bobyqa"),
+                nAGQ = 1)
+
+pooled_norm_AFC_tap <- createResultTable(pooled_norm_AFC)
+
+# plot(combinedData_AFC$)
+```
+
+```{r pooled_analyis_result_table}
+pooled_recall_tab$measure <- 'recall'
+pooled_euclidDistance_tab$measure <- 'euclidDistance'
+pooled_3AFC_tab$measure <- '3AFC'
+pooled_recollection_tab$measure <- 'recollection'
+pooled_recollection_exclusive_tab$measure <- 'recollection (exclusivity)'
+pooled_familiar_ind_tab$measure <- 'familiarity (independence)'
+pooled_familiar_red_tab$measure <- 'familiarity (redundancy)'
+
+pooled_analysis <- rbind(pooled_recall_tab, pooled_euclidDistance_tab, pooled_3AFC_tab, 
+                        pooled_recollection_tab, pooled_recollection_exclusive_tab,
+                        pooled_familiar_ind_tab, pooled_familiar_red_tab)
+
+kable(pooled_analysis)
+```
+
+# Experiment 2
+## Recollection & familiarity
+### Recollection
+#### Independence
+```{r exp2_recollection}
+
+load(paste0(path2parent, "/schemaVR2/analysis/schemaVR2_RK_sequential_20210623_181032.RData"))
+
+
+fixef_schemaVR2_rem <- fixef(model_schemaVR2_rem)
+report1                <- brms_fixef_report(fixef_schemaVR2_rem[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR2_rem[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR2_rem)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_rem_lin1  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+# Calculate savage dickey ratio
+postDist        <- posterior_samples(model_schemaVR2_rem)$b_IsExpMUsExp
+areaPrior       <- 0.5 # because it's symmetrical 
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_rem_quad1  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_lin1` 
+
+Quadratic `r report2`. BF10 = `r bf_rem_quad1`
+
+
+#### Exclusive
+```{r exp2_recollection_exclusive}
+load(paste0(path2parent, "/schemaVR2/analysis/schemaVR2_RK_exclusive_20210624_094836.RData"))
+
+
+fixef_schemaVR2_rem_exclusive <- fixef(model_schemaVR2_rem_exclusive)
+report1                <- brms_fixef_report(fixef_schemaVR2_rem_exclusive[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR2_rem_exclusive[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR2_rem_exclusive)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_rem_exclu_lin1  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+# Calculate savage dickey ratio
+postDist        <- posterior_samples(model_schemaVR2_rem_exclusive)$b_IsExpMUsExp
+areaPrior       <- 0.5 # because it's symmetrical 
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_rem_exclu_quad1  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_exclu_lin1` 
+
+Quadratic `r report2`. BF10 = `r bf_rem_exclu_quad1`
+
+### Familiarity
+#### Inpendence
+```{r exp2_familiar}
+
+fixef_schemaVR2_familiar_ind <- fixef(model_schemaVR2_familiar_ind)
+report1                <- brms_fixef_report(fixef_schemaVR2_familiar_ind[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR2_familiar_ind[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR2_familiar_ind)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_familiar_ind_lin1  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+# Calculate savage dickey ratio
+postDist        <- posterior_samples(model_schemaVR2_familiar_ind)$b_IsExpMUsExp
+areaPrior       <- 0.5 # because it's symmetrical 
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_familiar_ind_quad1  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_familiar_ind_lin1` 
+
+Quadratic `r report2`. BF10 = `r bf_familiar_ind_quad1`
+
+#### Redundancy
+```{r exp2_familiar_red}
+
+fixef_schemaVR2_familiar_red <- fixef(model_schemaVR2_familiar_red)
+report1                <- brms_fixef_report(fixef_schemaVR2_familiar_red[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR2_familiar_red[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR2_familiar_red)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_familiar_red_lin1  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+# Calculate savage dickey ratio
+postDist        <- posterior_samples(model_schemaVR2_familiar_red)$b_IsExpMUsExp
+areaPrior       <- 0.5 # because it's symmetrical 
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_familiar_red_quad1  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_familiar_red_lin1` 
+
+Quadratic `r report2`. BF10 = `r bf_familiar_red_quad1`
+
+# Experiment 3a
+## Recollection & familiarity
+### Zero prior
+#### Recollection
+```{r exp3a_recollection_zeroPrior}
+load(paste0(path2parent, "/schemaVR3/analysis/schemaVR3_RK_zeroPrior_20210708_123822.RData"))
+
+
+fixef_schemaVR3_rem <- fixef(model_schemaVR3_rem)
+report1                <- brms_fixef_report(fixef_schemaVR3_rem[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR3_rem[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR3_rem)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_rem_lin2_zeroPrior  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+postDist        <- posterior_samples(model_schemaVR3_rem)$b_IsExpMUsExp
+areaPrior       <- 0.5 # because it's symmetrical 
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_rem_quad2_zeroPrior  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_lin2_zeroPrior` 
+
+Quadratic `r report2`. BF10 = `r bf_rem_quad2_zeroPrior`
+
+##### Exclusive 
+```{r exp3a_recollection_exclusive_zeroPrior}
+load(paste0(path2parent, "/schemaVR3/analysis/schemaVR3_RK_exclusive_zeroPrior_20210708_131006.RData"))
+
+
+fixef_schemaVR3_exclusive_rem <- fixef(model_schemaVR3_rem_exclusive)
+report1                <- brms_fixef_report(fixef_schemaVR3_exclusive_rem[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR3_exclusive_rem[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR3_rem_exclusive)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_rem_exclu_lin2_zeroPrior  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+postDist        <- posterior_samples(model_schemaVR3_rem_exclusive)$b_IsExpMUsExp
+areaPrior       <- 0.5 # because it's symmetrical 
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_rem_exclu_quad2_zeroPrior  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_lin2_zeroPrior` 
+
+Quadratic `r report2`. BF10 = `r bf_rem_quad2_zeroPrior`
+
+#### Familiarity
+##### Independance
+```{r exp3_familiar_zeroPrior}
+
+fixef_schemaVR3_familiar_ind <- fixef(model_schemaVR3_familiar_ind)
+report1                <- brms_fixef_report(fixef_schemaVR3_familiar_ind[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR3_familiar_ind[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR3_familiar_ind)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_familiar_ind_lin1_zeroPrior  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+postDist        <- posterior_samples(model_schemaVR3_familiar_ind)$b_IsExpMUsExp
+areaPrior       <- 0.5 # because it's symmetrical 
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_familiar_ind_quad1_zeroPrior  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_familiar_ind_lin1_zeroPrior` 
+
+Quadratic `r report2`. BF10 = `r bf_familiar_ind_quad1_zeroPrior`
+
+##### Redundancy
+```{r exp3_familiar_red_zeroPrior}
+
+fixef_schemaVR3_familiar_red <- fixef(model_schemaVR3_familiar_red)
+report1                <- brms_fixef_report(fixef_schemaVR3_familiar_red[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR3_familiar_red[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR3_familiar_red)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_familiar_red_lin2_zeroPrior  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+# Calculate savage dickey ratio
+postDist        <- posterior_samples(model_schemaVR3_familiar_red)$b_IsExpMUsExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_familiar_red_quad2_zeroPrior   <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_familiar_red_lin2_zeroPrior` 
+
+Quadratic `r report2`. BF10 = `r bf_familiar_red_quad2_zeroPrior`
+
+
+### Sequential
+#### Recollection
+```{r exp3a_recollection_sequential}
+
+load(paste0(path2parent, "/schemaVR3/analysis/schemaVR3_RK_sequential_20210709_124519.RData"))
+
+fixef_schemaVR3_rem <- fixef(model_schemaVR3_rem)
+report1                <- brms_fixef_report(fixef_schemaVR3_rem[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR3_rem[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR3_rem)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 104.49, 0.29, 0.26)
+bf_rem_lin2  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+postDist        <- posterior_samples(model_schemaVR3_rem)$b_IsExpMUsExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 104.51, 1.48, 0.57)
+bf_rem_quad2  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_lin2`, PB10 = `r bf_rem_lin1*bf_rem_lin2`
+
+Quadratic `r report2`. BF10 = `r bf_rem_quad2`, PB10 = `r bf_rem_quad1*bf_rem_quad2`
+
+
+```{r exp3a_recollection_prior}
+kable(model_schemaVR3_rem$prior)
+```
+
+
+##### Exclusive 
+```{r exp3a_recollection_exclusive_sequential}
+load(paste0(path2parent, "/schemaVR3/analysis/schemaVR3_RK_exclusive_sequential_20210709_161206.RData"))
+
+fixef_schemaVR3_rem_exclusive <- fixef(model_schemaVR3_rem_exclusive)
+report1                <- brms_fixef_report(fixef_schemaVR3_rem_exclusive[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR3_rem_exclusive[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR3_rem_exclusive)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 115.1, 0.32, 0.32)
+bf_rem_exclu_lin2  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+postDist        <- posterior_samples(model_schemaVR3_rem_exclusive)$b_IsExpMUsExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 55.59, 1.32, 0.96)
+bf_rem_exclu_quad2  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_lin2`, PB10 = `r bf_rem_exclu_lin1*bf_rem_exclu_lin2`
+
+Quadratic `r report2`. BF10 = `r bf_rem_quad2`, PB10 = `r bf_rem_exclu_quad1*bf_rem_exclu_quad2`
+
+
+```{r exp3a_recollection_exclusive_prior}
+kable(model_schemaVR3_rem_exclusive$prior)
+```
+
+
+## Familiarity
+```{r exp3a_familiar_sequential}
+
+fixef_schemaVR3_familiar_ind <- fixef(model_schemaVR3_familiar_ind)
+report1                <- brms_fixef_report(fixef_schemaVR3_familiar_ind[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR3_familiar_ind[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR3_familiar_ind)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 ,87.19, 0.1, 0.61)
+bf_familiar_ind_lin2  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+postDist        <- posterior_samples(model_schemaVR3_familiar_ind)$b_IsExpMUsExp
+areaPrior       <-  NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 87.19, 0.1, 0.3)
+bf_familiar_ind_quad2  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_familiar_ind_lin2`, PB10 = `r bf_familiar_ind_lin1*bf_familiar_ind_lin2`
+
+Quadratic `r report2`. BF10 = `r bf_familiar_ind_quad2`, PB10 = `r bf_familiar_ind_quad1*bf_familiar_ind_quad2`
+
+
+
+```{r exp3a_familiar_sequential_prior}
+kable(model_schemaVR3_familiar_ind$prior)
+```
+
+
+
+```{r exp3a_familiar_red}
+
+fixef_schemaVR3_familiar_red <- fixef(model_schemaVR3_familiar_red)
+report1                      <- brms_fixef_report(fixef_schemaVR3_familiar_red[2,], 3)
+report2                      <- brms_fixef_report(fixef_schemaVR3_familiar_red[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR3_familiar_red)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 111.07, 0.19, 0.28)
+bf_familiar_red_lin2  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+# Calculate savage dickey ratio
+postDist        <- posterior_samples(model_schemaVR3_familiar_red)$b_IsExpMUsExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 76.77, 0.96, 0.58)
+bf_familiar_red_quad2   <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+```{r exp3a_familiar_red_prior}
+kable(model_schemaVR3_familiar_red$prior)
+```
+
+Linear `r report1`. BF10 = `r bf_familiar_ind_lin2`, PB10 = `r bf_familiar_red_lin1*bf_familiar_red_lin2`
+
+Quadratic `r report2`. BF10 = `r bf_familiar_ind_quad2`, PB10 = `r bf_familiar_red_quad1*bf_familiar_red_quad2`
+
+
+# Experiment 3b
+## Recollection & familiarity
+### Zero prior
+#### Recollection
+```{r exp3b_recollection_zeroPrior}
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_RK_zeroPrior_20210708_125502.RData"))
+
+
+fixef_schemaVR4_rem <- fixef(model_schemaVR4_rem)
+report1                <- brms_fixef_report(fixef_schemaVR4_rem[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR4_rem[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR4_rem)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_rem_lin2_zeroPrior  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+postDist        <- posterior_samples(model_schemaVR4_rem)$b_IsExpMUsExp
+areaPrior       <- 0.5 # because it's symmetrical 
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_rem_quad2_zeroPrior  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_lin2_zeroPrior` 
+
+Quadratic `r report2`. BF10 = `r bf_rem_quad2_zeroPrior`
+
+##### Exclusive 
+```{r exp3b_recollection_exclusive_zeroPrior}
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_RK_exclusive_zeroPrior_20210708_130553.RData"))
+
+
+fixef_schemaVR4_exclusive_rem <- fixef(model_schemaVR4_rem_exclusive)
+report1                <- brms_fixef_report(fixef_schemaVR4_exclusive_rem[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR4_exclusive_rem[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR4_rem_exclusive)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_rem_exclu_lin2_zeroPrior  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+postDist        <- posterior_samples(model_schemaVR4_rem_exclusive)$b_IsExpMUsExp
+areaPrior       <- 0.5 # because it's symmetrical 
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_rem_exclu_quad2_zeroPrior  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_lin2_zeroPrior` 
+
+Quadratic `r report2`. BF10 = `r bf_rem_quad2_zeroPrior`
+
+#### Familiarity
+##### Independance
+```{r exp3b_familiar_zeroPrior}
+
+fixef_schemaVR4_familiar_ind <- fixef(model_schemaVR4_familiar_ind)
+report1                <- brms_fixef_report(fixef_schemaVR4_familiar_ind[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR4_familiar_ind[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR4_familiar_ind)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_familiar_ind_lin1_zeroPrior  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+postDist        <- posterior_samples(model_schemaVR4_familiar_ind)$b_IsExpMUsExp
+areaPrior       <- 0.5 # because it's symmetrical 
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_familiar_ind_quad1_zeroPrior  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_familiar_ind_lin1_zeroPrior` 
+
+Quadratic `r report2`. BF10 = `r bf_familiar_ind_quad1_zeroPrior`
+
+##### Redundancy
+```{r exp3b_familiar_red_zeroPrior}
+
+fixef_schemaVR4_familiar_red <- fixef(model_schemaVR4_familiar_red)
+report1                <- brms_fixef_report(fixef_schemaVR4_familiar_red[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR4_familiar_red[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR4_familiar_red)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_familiar_red_lin2_zeroPrior  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+# Calculate savage dickey ratio
+postDist        <- posterior_samples(model_schemaVR4_familiar_red)$b_IsExpMUsExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 7, 0, 1)
+bf_familiar_red_quad2_zeroPrior   <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_familiar_red_lin2_zeroPrior` 
+
+Quadratic `r report2`. BF10 = `r bf_familiar_red_quad2_zeroPrior`
+
+### Sequential
+#### Recollection
+```{r exp3b_recollection_sequential}
+
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_RK_sequential_20210709_143030.RData"))
+
+fixef_schemaVR4_rem <- fixef(model_schemaVR4_rem)
+report1                <- brms_fixef_report(fixef_schemaVR4_rem[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR4_rem[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR4_rem)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 126.96, 0.03, 0.17)
+bf_rem_lin2  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+postDist        <- posterior_samples(model_schemaVR4_rem)$b_IsExpMUsExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 142.09, 1.47, 0.4)
+bf_rem_quad2  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_lin2`, PB10 = `r bf_rem_lin1*bf_rem_lin2`
+
+Quadratic `r report2`. BF10 = `r bf_rem_quad2`, PB10 = `r bf_rem_quad1*bf_rem_quad2`
+
+```{r exp3b_recollection_prior}
+kable(model_schemaVR4_rem$prior)
+```
+
+
+##### Exclusive 
+```{r exp3b_recollection_exclusive_sequential}
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_RK_exclusive_sequential_20210709_164643.RData"))
+
+fixef_schemaVR4_rem_exclusive <- fixef(model_schemaVR4_rem_exclusive)
+report1                <- brms_fixef_report(fixef_schemaVR4_rem_exclusive[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR4_rem_exclusive[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR4_rem_exclusive)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 112.25, 0.03, 0.21)
+bf_rem_exclu_lin2  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+postDist        <- posterior_samples(model_schemaVR4_rem_exclusive)$b_IsExpMUsExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 113.73, 1.44, 0.49)
+bf_rem_exclu_quad2  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_lin2`, PB10 = `r bf_rem_exclu_lin1*bf_rem_exclu_lin2`
+
+Quadratic `r report2`. BF10 = `r bf_rem_quad2`, PB10 = `r bf_rem_exclu_quad1*bf_rem_exclu_quad2`
+
+
+```{r exp3b_recollection_exclusive_prior}
+kable(model_schemaVR4_rem_exclusive$prior)
+```
+
+
+## Familiarity
+```{r exp3b_familiar_sequential}
+
+fixef_schemaVR4_familiar_ind <- fixef(model_schemaVR4_familiar_ind)
+report1                <- brms_fixef_report(fixef_schemaVR4_familiar_ind[2,], 3)
+report2                <- brms_fixef_report(fixef_schemaVR4_familiar_ind[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR3_familiar_ind)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 ,82.92, -0.04, 0.22)
+bf_familiar_ind_lin2  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+postDist        <- posterior_samples(model_schemaVR4_familiar_ind)$b_IsExpMUsExp
+areaPrior       <-  NA # doesn't matter
+priorDensity    <- dstudent_t(0 ,67.99, 0.11, 0.48)
+bf_familiar_ind_quad2  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+Linear `r report1`. BF10 = `r bf_familiar_ind_lin2`, PB10 = `r bf_familiar_ind_lin1*bf_familiar_ind_lin2`
+
+Quadratic `r report2`. BF10 = `r bf_familiar_ind_quad2`, PB10 = `r bf_familiar_ind_quad1*bf_familiar_ind_quad2`
+
+
+```{r exp3b_familiar_sequential_prior}
+kable(model_schemaVR4_familiar_ind$prior)
+```
+
+
+```{r exp3b_familiar_red}
+
+fixef_schemaVR4_familiar_red <- fixef(model_schemaVR4_familiar_red)
+report1                      <- brms_fixef_report(fixef_schemaVR4_familiar_red[2,], 3)
+report2                      <- brms_fixef_report(fixef_schemaVR4_familiar_red[3,], 3)
+
+# Linear
+postDist        <- posterior_samples(model_schemaVR4_familiar_red)$b_sExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 84.5, -0.05, 0.19)
+bf_familiar_red_lin2  <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+
+# Quadratic term
+# Calculate savage dickey ratio
+postDist        <- posterior_samples(model_schemaVR4_familiar_red)$b_IsExpMUsExp
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , 116.98, 1.01, 0.43)
+bf_familiar_red_quad2   <- round(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), 2)
+```
+
+```{r exp3b_familiar_red_prior}
+kable(model_schemaVR4_familiar_red$prior)
+```
+
+Linear `r report1`. BF10 = `r bf_familiar_ind_lin2`, PB10 = `r bf_familiar_red_lin1*bf_familiar_red_lin2`
+
+Quadratic `r report2`. BF10 = `r bf_familiar_ind_quad2`, PB10 = `r bf_familiar_red_quad1*bf_familiar_red_quad2`
+
+
+# Interrupted regression
+## Recall
+```{r searchLight_recall}
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_recall_searchlight_20210721_070321.RData"))
+
+
+results[, 1:13] <- round(results[, 1:13], 2)
+
+kable(results)
+```
+
+## 3AFC
+```{r searchLight_AFC}
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_AFC_searchlight_20210720_203724.RData"))
+
+results[, 1:13] <- round(results[, 1:13], 2)
+
+kable(results)
+```
+
+## Recollection
+```{r searchLight_recollection}
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_remember_searchlight_20210721_072326.RData"))
+
+results[, 1:13] <- round(results[, 1:13], 2)
+
+kable(results)
+```
+
+## Familiarity (independence)
+```{r searchLight_familiar}
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_familiar_ind_searchlight_20210721_073807.RData"))
+
+results[, 1:13] <- round(results[, 1:13], 2)
+
+kable(results)
+```
+
