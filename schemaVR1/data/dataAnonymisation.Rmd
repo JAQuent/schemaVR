@@ -39,7 +39,7 @@ dataSchemaVR1 <- combData
 rm(combData)
 ```
 
-The data frame contains all data from all trials from all sub-tasks. In addition to trial, information the data contains information which is unneccesary for analysis but might enable people to identify other participants. This information includes the subject number, date of session, gender and age. For instance, if participants remember their own subject number, they can guess other people's idenity and hence performance. The same is true for the date of the session. All of this can be especially problematic in cases where participants are mostly drawn from a local student population.
+The data frame contains all data from all trials from all sub-tasks. In addition to trial, information the data contains information which is unnecessary for analysis but might enable people to identify other participants. This information includes the subject number, date of session, gender and age. For instance, if participants remember their own subject number, they can guess other people's identity and hence performance. The same is true for the date of the session. All of this can be especially problematic in cases where participants are mostly drawn from a local student population.
 
 ## Replacing subject number
 In the first step, I therefore anonymise the subject number. For this, I've written a function that can be found anonymise() for my own use. 
@@ -49,7 +49,7 @@ anonSubNum           <- anonymise(dataSchemaVR1$subNum, fileName = fileName)
 dataSchemaVR1$subNum <- anonSubNum
 ```
 
-The function takes the subject idenitifer in this case running integers and replaces it with alpha numeric strings. 
+The function takes the subject identifier in this case running integers and replaces it with alpha numeric strings. 
 ```{r}
 levels(anonSubNum)
 ```
