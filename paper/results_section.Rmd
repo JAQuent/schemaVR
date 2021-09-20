@@ -879,7 +879,7 @@ str4 <- mean_SD_str2(dat2, 1)
 str5 <- mean_SD_str2(dat3, 1)
 ```
 
-Like Experiment 1 and 2, the average expectancy for incorrectly-placed objects `r str1` was clearly higher than for correctly-placed objects `r str2`, $BF_{10}$ = `r schemaVR4_tTest3`, *d* = `r d1`. We again submitted the data to a 2 x 3 repeated measure ANOVA with correctness (0 vs. 1) and retrieval quality (remember vs. familiar vs. guess) as factors. There was extreme evidence for a main effect of retrieval quality, $BF_{10}$ = `r bf_anova2`, evidence for a main effect of correctness was also extremely strong, $BF_{10}$ = `r bf_anova3`. Furthermore, there was moderate evidence for the null hypothesis for the interaction of both factors, $BF_{01}$ = `r bf_anova1`. Mean expectancy for remember judgement, `r str3`, was lower than familiar judgments, `r str4`, $BF_{10}$ = `r test_1_vs_2`, *d* = `r d_1_vs_2`, and guess judgements, `r str5`, $BF_{10}$ = `r test_1_vs_3`, *d* = `r d_1_vs_3`. However, familiar and guess judgement did not show a difference in their mean expectancy ratings, $BF_{10}$ = `r test_2_vs_3`, *d* = `r d_2_vs_3` ($BF_{01}$ = `r test_2_vs_3_BF01`). 
+Like Experiment 1 and 2, the average expectancy for incorrectly-placed objects `r str1` was clearly higher than for correctly-placed objects `r str2`, $BF_{10}$ = `r schemaVR4_tTest3`, *d* = `r d3`. We again submitted the data to a 2 x 3 repeated measure ANOVA with correctness (0 vs. 1) and retrieval quality (remember vs. familiar vs. guess) as factors. There was extreme evidence for a main effect of retrieval quality, $BF_{10}$ = `r bf_anova2`, evidence for a main effect of correctness was also extremely strong, $BF_{10}$ = `r bf_anova3`. Furthermore, there was moderate evidence for the null hypothesis for the interaction of both factors, $BF_{01}$ = `r bf_anova1`. Mean expectancy for remember judgement, `r str3`, was lower than familiar judgments, `r str4`, $BF_{10}$ = `r test_1_vs_2`, *d* = `r d_1_vs_2`, and guess judgements, `r str5`, $BF_{10}$ = `r test_1_vs_3`, *d* = `r d_1_vs_3`. However, familiar and guess judgement did not show a difference in their mean expectancy ratings, $BF_{10}$ = `r test_2_vs_3`, *d* = `r d_2_vs_3` ($BF_{01}$ = `r test_2_vs_3_BF01`). 
 
 
 # Experiment 4
@@ -1275,95 +1275,6 @@ str4 <- mean_SD_str2(dat2, 1)
 str5 <- mean_SD_str2(dat3, 1)
 ```
 
-Like Experiment 1 and 2, the average expectancy for incorrectly-placed objects `r str1` was clearly higher than for correctly-placed objects `r str2`, $BF_{10}$ = `r schemaVR4_tTest3`, *d* = `r d1`. We again submitted the data to a 2 x 3 repeated measure ANOVA with correctness (0 vs. 1) and retrieval quality (remember vs. familiar vs. guess) as factors. There was extreme evidence for a main effect of retrieval quality, $BF_{10}$ = `r bf_anova2`, evidence for a main effect of correctness was also extremely strong, $BF_{10}$ = `r bf_anova3`. Furthermore, there was moderate evidence for the null hypothesis for the interaction of both factors, $BF_{01}$ = `r bf_anova1`. Mean expectancy for remember judgment, `r str3`, was lower than familiar judgments, `r str4`, $BF_{10}$ = `r test_1_vs_2`, *d* = `r d_1_vs_2`, and guess judgments, `r str5`, $BF_{10}$ = `r test_1_vs_3`, *d* = `r d_1_vs_3`. However, familiar and guess judgment did not show a difference in their mean expectancy ratings, $BF_{10}$ = `r test_2_vs_3`, *d* = `r d_2_vs_3` ($BF_{01}$ = `r test_2_vs_3_BF01`). 
+Like Experiment 1 and 2, the average expectancy for incorrectly-placed objects `r str1` was clearly higher than for correctly-placed objects `r str2`, $BF_{10}$ = `r schemaVR4_tTest3`, *d* = `r d3`. We again submitted the data to a 2 x 3 repeated measure ANOVA with correctness (0 vs. 1) and retrieval quality (remember vs. familiar vs. guess) as factors. There was extreme evidence for a main effect of retrieval quality, $BF_{10}$ = `r bf_anova2`, evidence for a main effect of correctness was also extremely strong, $BF_{10}$ = `r bf_anova3`. Furthermore, there was moderate evidence for the null hypothesis for the interaction of both factors, $BF_{01}$ = `r bf_anova1`. Mean expectancy for remember judgment, `r str3`, was lower than familiar judgments, `r str4`, $BF_{10}$ = `r test_1_vs_2`, *d* = `r d_1_vs_2`, and guess judgments, `r str5`, $BF_{10}$ = `r test_1_vs_3`, *d* = `r d_1_vs_3`. However, familiar and guess judgment did not show a difference in their mean expectancy ratings, $BF_{10}$ = `r test_2_vs_3`, *d* = `r d_2_vs_3` ($BF_{01}$ = `r test_2_vs_3_BF01`). 
 
-
-
-
-
-
-# Interrupted regression
-## Recall
-```{r}
-# Loading data
-load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_recall_searchlight_20210516_223646.RData"))
-
-# Get breaking points
-br1  <- results$breakingPoint[1]
-br6  <- results$breakingPoint[6]
-br10 <- results$breakingPoint[10]
-
-# Get slopes and BF
-sl1    <- round(results$slope1[6], 2)
-CI_l1  <- round(results$q2.5_1[6], 2)
-CI_u1  <- round(results$q97.5_1[6], 2)
-BF_sl1 <- round(results$bf_OR_1[6], 2)
-sl2    <- round(results$slope2[6], 2)
-CI_l2  <- round(results$q2.5_2[6], 2)
-CI_u2  <- round(results$q97.5_2[6], 2)
-BF_sl2 <- round(results$bf_OR_2[6], 2)
-```
-
-We tested equally spaced breaking points between `r br1` and `r br10`. As predicted we found evidence for a true u-shape at breakpoint `r br6` where we estimated slope 1 to be $\beta$ = `r sl1` (95 % CI [`r CI_l1`, `r CI_u1`]), $BF_{10}$ = `r BF_sl1` and slope 2 to be  $\beta$ = `r sl2` (95 % CI [`r CI_l2`, `r CI_u2`]), $BF_{10}$ = `r BF_sl2`, where the CI for slope 1 & 2 did not overlap with zero. The quantified evidence in terms of the $BF_{10}$ was convincing based on our simulations. 
-
-```{r}
-kable(results)
-```
-
-## 3AFC
-```{r}
-path2parent <- path2parent_current
-# Loading data
-load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_AFC_searchlight_20210515_094333.RData"))
-
-# Get breaking points
-br1  <- results$breakingPoint[1]
-br3  <- results$breakingPoint[3]
-br4  <- results$breakingPoint[4]
-br10 <- results$breakingPoint[10]
-
-# Get slopes and BF
-sl1    <- round(results$slope1[4], 2)
-CI_l1  <- round(results$q2.5_1[4], 2)
-CI_u1  <- round(results$q97.5_1[4], 2)
-BF_sl1 <- round(results$bf_OR_1[4], 2)
-sl2    <- round(results$slope2[4], 2)
-CI_l2  <- round(results$q2.5_2[4], 2)
-CI_u2  <- round(results$q97.5_2[4], 2)
-BF_sl2 <- round(results$bf_OR_2[4], 2)
-```
-
-We tested equally spaced breaking points between `r br1` and `r br10`. As predicted we found evidence for a true u-shape at breakpoint `r br4` where we estimated slope 1 to be $\beta$ = `r sl1` (95 % CI [`r CI_l1`, `r CI_u1`]), $BF_{10}$ = `r BF_sl1` and slope 2 to be  $\beta$ = `r sl2` (95 % CI [`r CI_l2`, `r CI_u2`]), $BF_{10}$ = `r BF_sl2`, where the CI for slope 1 & 2 did not overlap with zero. The quantified evidence in terms of the $BF_{10}$ was convincing based on our simulations. 
-
-```{r}
-kable(results)
-```
-
-## Remember
-```{r}
-path2parent <- path2parent_current
-# Loading data
-load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_remember_searchlight_20210515_104341.RData"))
-
-# Get breaking points
-br1  <- results$breakingPoint[1]
-br6  <- results$breakingPoint[6]
-br10 <- results$breakingPoint[10]
-
-# Get slopes and BF
-sl1    <- round(results$slope1[6], 2)
-CI_l1  <- round(results$q2.5_1[6], 2)
-CI_u1  <- round(results$q97.5_1[6], 2)
-BF_sl1 <- round(results$bf_OR_1[6], 2)
-sl2    <- round(results$slope2[6], 2)
-CI_l2  <- round(results$q2.5_2[6], 2)
-CI_u2  <- round(results$q97.5_2[6], 2)
-BF_sl2 <- round(results$bf_OR_2[6], 2)
-```
-
-```{r}
-kable(results)
-```
-
-We tested equally spaced breaking points between `r br1` and `r br10`. As predicted we found evidence for a true u-shape at breakpoint `r br6` where we estimated slope 1 to be $\beta$ = `r sl1` (95 % CI [`r CI_l1`, `r CI_u1`]), $BF_{10}$ = `r BF_sl1` and slope 2 to be  $\beta$ = `r sl2` (95 % CI [`r CI_l2`, `r CI_u2`]), $BF_{10}$ = `r BF_sl2`, where the CI for slope 1 & 2 did not overlap with zero. The quantified evidence in terms of the $BF_{10}$ was convincing based on our simulations. 
 
