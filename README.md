@@ -1,17 +1,34 @@
-GitHub Repository for schemaVR project
+GitHub Repository for the schemaVR project
 ================
 
+Authors: Joern Alexander Quent, Andrea Greve & Rik Henson
 
+The main aim of this project was to provide evidence that memory and expectancy follow a U-shape as predicted by the SLIMM framework. 
 
-Instructions: 
+For more information see pre-print: https://psyarxiv.com/xq37j/
 
-download analysis files and run script
+This repository contains all the relevant code and material for this project.
 
-# Background
+# How to use this repository: 
+1. Clone the repository. 
+2. Run the script (***downloads_and_moves_files_from_osf.R***) that will download all the _.RData_ files that are too large for GitHub and move them to the correct locations. 
+3. See _Guide_ how to navigate the repository. 
+4. If there are questions, please contact me _alexander.quent AT rub.de_.
 
-This is the GitHub repository for my schemaVR project. Note this repo is
-currently under constructions (04/03/2021).
+# Guide through repository
+## Files
 
-# Guide through repo
+- ***downloads_and_moves_files_from_osf.R*** Script that downloads files that are too large to be uploaded to GitHub and moves content to correct file locations. These files are mainly the fitted models that are generated in the schemaVR folders and important to run the result files. The required disk space for this is approximately 20 GB. 
+- ***paper.Rproj*** file (R project file) can be found in the paper folder. 
+
+## Folders and their content
+
+Note that these folders only exist in the local copy that includes raw data:
+
+- ***normativeStudy*** contains the data from the normative study. For more information and code see https://github.com/JAQuent/ratingStudy. 
+- ***paper*** contains result documents, material for figures and some background work.  
+- ***schemaVR1*** to ***schemaVR4***  contain all material that is specific to the various iterations of the experiment. Most importantly these folders contain the analysis scripts under `\analysis\scripts`
 
 # More information
+
+The build task can be found here. The unity project for schemaVR3 can be found here. 
