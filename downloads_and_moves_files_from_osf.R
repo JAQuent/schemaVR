@@ -19,6 +19,9 @@
 # via R might fail because you don't use windows, for which this script is written. The script will check if all
 # archives again and download all of them if not. 
 
+# If the files don't unzip proberly, unzip them manually in a folder called temporayStorage and run from 
+# "Load .txt file with file names and location for moving"
+
 # If that script doesn't run at all, the correct file locations are found in fileLocations.txt. 
 
 # Get start time
@@ -30,11 +33,11 @@ path2parent <- "D:/Alex/Laptop/Desktop/schemaVR" # This need to be changed to ru
 ######################################################
 
 # download the files from those OSF urls
-urls <- c("https://osf.io/f8wsd/download",  
-          "https://osf.io/wvd2j/download",
-          "https://osf.io/tk3jg/download",
-          "https://osf.io/jstv4/download",
-          "https://osf.io/txwjs/download")
+urls <- c("https://osf.io/4p2th/download",  
+          "https://osf.io/9dtbk/download",
+          "https://osf.io/xe4am/download",
+          "https://osf.io/39s8z/download",
+          "https://osf.io/uny9e/download")
 
 # Internal variable/file names etc.
 fileNames  <- c("RData_files_from_osf1.zip", 
@@ -84,7 +87,7 @@ if(!downloaded){
 dir.create(tempStore)
 
 # Unzip the file to tempStore via a loop
-for(i in 1:lengths(urls)){
+for(i in 1:length(urls)){
   unzip(fileNames[i], exdir = paste0(path2parent, "/", tempStore)) 
 }
 
