@@ -1,7 +1,8 @@
 GitHub Repository for the schemaVR project
 ================
 
-Authors: Joern Alexander Quent, Andrea Greve & Rik Henson
+Collaborators: Joern Alexander Quent, Andrea Greve & Rik Henson
+Status: __In Preparation__ 
 
 The main aim of this project was to provide evidence that memory and expectancy follow a U-shape as predicted by the SLIMM framework. 
 
