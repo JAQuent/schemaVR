@@ -11,8 +11,6 @@ This README provides a quick overview of what is to be found in this folder.
 
 # Folders and their content
 
-Note that these folders only exist in the local copy that includes raw data:
-
 - ***background_work*** contains the data from the normative study. For more information and code see https://github.com/JAQuent/ratingStudy. 
 	- ***analyse_pooled_data_rik.R*** A script to quickly analyse the pooled results across all experiments. Currently set-up to compare results from Exp 1 and Exp 4 (Exp 3b in text). Sequential and pooled analysis is compared here. 
 	- ***does_sequential_order_matter.R*** Undocumented script with generated data comparing pooled and sequential approach of analysing data. 
