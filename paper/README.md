@@ -1,7 +1,7 @@
 README
 ======
 
-This README provide a quick overview of what is to be found in this folder.
+This README provides a quick overview of what is to be found in this folder.
 
  
 # Files
