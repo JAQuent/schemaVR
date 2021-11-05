@@ -1,9 +1,9 @@
-function [ ] = retrievalTask1(subNo)
+function [ ] = retrievalTask(subNo)
 %retrievalTask1 
 % % % % % % % % % % % % % % % % % % % % % % % % % 
 % 3AFC recogntion location task 
 % Author: Alexander Quent (alex.quent at mrc-cbu.cam.ac.uk
-% Version: 1.4
+% Version: 2.0
 % % % % % % % % % % % % % % % % % % % % % % % % %
 
 %% Explanations
@@ -46,7 +46,7 @@ try
     space  = KbName('space');
     escape = KbName('ESCAPE');
     AFC    = [KbName('1!') KbName('2@') KbName('3#')];
-    CON    = [KbName('1!') KbName('2@') KbName('3#')]; 
+    CON    = [KbName('0)') KbName('1!') KbName('2@') KbName('3#')]; 
     % numberKeys need sto be adjusted for the respective layout of the
     % keyboard.
 
@@ -57,7 +57,7 @@ try
     
     % Instruction
     lineLength    = 70;
-    messageIntro1 = WrapString('Retrieval task \n\n At each trial you will see the same object in three locations and your task is to choose the correct one out of 3 alternatives by pressing number at top of the keyboard that corresponds to the picture. \n\n After this, you will be asked to indicate how confident you were with that decision on a 3-item scale (1 = Did not see object | 2 = Guess the object was there | 3 = Know the object was there) by pressing the corresponding key at the top of the keyboard. For all decisions, you can take as much time as you need. \n Please press spacebar to start',lineLength);
+    messageIntro1 = WrapString('Retrieval task \n\n At each trial you will see the same object in three locations and your task is to choose the correct one out of 3 alternatives by pressing number at top of the keyboard that corresponds to the picture. \n\n After that decision, please indicate how you made that decision. If you don’t remember seeing the object at all, press 0 for no memory. When you didn’t know the object was there, but you guess, press 1 for guess. If that location just looks familiar to you, now, press 2 for familiar. Another option is that you remembered that this particular item was there because you remembered it was next the sink or next to another item. In this case you press 3 for remember.\n Please press spacebar to start',lineLength);
 
     % Opening window and setting preferences
     try
@@ -82,7 +82,7 @@ try
     HideCursor;
 
     % Output files
-    datafilename = strcat('data/retrievalTask_' ,num2str(subNo),'.dat'); % name of data file to write to
+    datafilename = strcat('data/retrievalTask_',num2str(subNo),'.dat'); % name of data file to write to
     mSave        = strcat('data/retrievalTask_',num2str(subNo),'.mat'); % name of another data file to write to (in .mat format)
     mSaveALL     = strcat('data/retrievalTask_',num2str(subNo),'all.mat'); % name of another data file to write to (in .mat format)
     % Checking for existing result file to prevent accidentally overwriting
@@ -207,10 +207,10 @@ try
         end
 
         %% Confidence rating
-        DrawFormattedText(myScreen, '1 = Did not see object | 2 = Guess the object was there | 3 = Know the object was there', 'center', 'center');
+        DrawFormattedText(myScreen, '0 = no memory |  1 = guess \n 2 = familiar | 3 = remember', 'center', 'center');
         conOnset = Screen('Flip', myScreen);
         [~, secs, keyCode] = KbCheck; % saves whether a key has been pressed, seconds and the key which has been pressed.
-        while keyCode(CON(1)) == 0 && keyCode(CON(2)) == 0 && keyCode(CON(3)) == 0
+        while keyCode(CON(1)) == 0 && keyCode(CON(2)) == 0 && keyCode(CON(3)) == 0 && keyCode(CON(4)) == 0
             [~, secs, keyCode] = KbCheck;
         end
         conOffset    = Screen('Flip', myScreen);
@@ -220,11 +220,13 @@ try
 
         % Coding confidence response
         if keyCode(CON(1)) == 1
-            responses(trial, 2) = 1;
+            responses(trial, 2) = 0;
         elseif keyCode(CON(2)) == 1
-            responses(trial, 2) = 2;
-        elseif keyCode(CON(3)) == 1
             responses(trial, 2) = 3;
+        elseif keyCode(CON(3)) == 1
+            responses(trial, 2) = 2;
+        elseif keyCode(CON(4)) == 1
+            responses(trial, 2) = 1;
         end
 
         %% Saving data
@@ -271,9 +273,9 @@ try
         results{trial, 16} = conPreTime;
         results{trial, 17} = RT(trial, 2);
         results{trial, 18} = responses(trial, 2);
-        results{trial, 19} = responses(trial, 2);
-        results{trial, 20} = responses(trial, 2);
-        results{trial, 21} = responses(trial, 2);
+        results{trial, 19} = left;
+        results{trial, 20} = middle;
+        results{trial, 21} = right;
     end
     %% End of experiment
     % Saving .m files and closing files
