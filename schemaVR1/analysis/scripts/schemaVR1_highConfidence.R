@@ -33,9 +33,9 @@ load(paste0(path2parent, "/schemaVR1/data/dataSchemaVR1_cleaned.RData"))
 
 # Scaling based on Gelman et al. (2008) and https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
 # Mean = 0 and SD = 0.5
-dataSchemaVR1_AFC$Exp  <- dataSchemaVR1_AFC$objLocTargetRating 
+dataSchemaVR1_AFC$Exp      <- dataSchemaVR1_AFC$objLocTargetRating 
 dataSchemaVR1_AFC$highConf <- ifelse(dataSchemaVR1_AFC$resCon == 3, 1, 0)
-dataSchemaVR1_AFC$sExp <- (dataSchemaVR1_AFC$objLocTargetRating - mean(dataSchemaVR1_AFC$objLocTargetRating))/sd(dataSchemaVR1_AFC$objLocTargetRating)*0.5
+dataSchemaVR1_AFC$sExp     <- (dataSchemaVR1_AFC$objLocTargetRating - mean(dataSchemaVR1_AFC$objLocTargetRating))/sd(dataSchemaVR1_AFC$objLocTargetRating)*0.5
 
 
 # /* 
