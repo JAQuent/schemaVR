@@ -1,4 +1,4 @@
-GitHub Repository for the schemaVR project
+GitHub Repository for the __schemaVR__ project
 ================
 
 Collaborators: Joern Alexander Quent, Andrea Greve & Rik Henson
