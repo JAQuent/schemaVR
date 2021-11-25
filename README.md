@@ -32,4 +32,4 @@ Note that these folders only exist in the local copy that includes raw data:
 
 # More information
 
-The build task can be found [here](https://github.com/JAQuent/schemaVR/blob/master/schemaVR3/experiment/build_schemaVR3_task.zip). The unity project for schemaVR3 can be found [here](https://osf.io/nqb52/download). 
+The build task can be found [here](https://github.com/JAQuent/schemaVR/blob/master/schemaVR3/experiment/build_schemaVR3_task.zip). The unity project for schemaVR3 can be found [here](https://osf.io/ekzj9/download). 
