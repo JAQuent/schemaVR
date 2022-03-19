@@ -1,0 +1,75 @@
+---
+title: "Interrupted regression tables"
+author: "Joern Alexander Quent"
+date: "18/03/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# Libraries
+library(assortedRFunctions) # install via devtools::install_github("JAQuent/assortedRFunctions")
+library(knitr)
+library(brms)
+library(plyr)
+library(lmerTest)
+library(BayesFactor)
+library(polspline)
+
+
+# Options
+options(scipen=999)
+opts_knit$set(eval.after = 'fig.cap')
+opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, include = TRUE)
+
+# How many digits?
+digits <- 3
+
+######################################################
+# Path to parent folder schemaVR
+path2parent  <- "E:/Alex/Laptop/Desktop/schemaVR" # This need to be changed to run this document
+path2parent2 <- path2parent # to reset
+######################################################
+```
+
+
+# Interrupted regression
+## Recall
+```{r searchLight_recall}
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_recall_searchlight_20210721_070321.RData"))
+
+
+results[, 1:13] <- signif(results[, 1:13], digits)
+
+kable(results)
+```
+
+## 3AFC
+```{r searchLight_AFC}
+path2parent <- path2parent2
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_AFC_searchlight_20210720_203724.RData"))
+
+results[, 1:13] <- signif(results[, 1:13], digits)
+
+kable(results)
+```
+
+## Recollection
+```{r searchLight_recollection}
+path2parent <- path2parent2
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_remember_searchlight_20210721_072326.RData"))
+
+results[, 1:13] <- signif(results[, 1:13], digits)
+
+kable(results)
+```
+
+## Familiarity (independence)
+```{r searchLight_familiar}
+path2parent <- path2parent2
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_familiar_ind_searchlight_20210721_073807.RData"))
+
+results[, 1:13] <- signif(results[, 1:13], digits)
+
+kable(results)
+```
+
