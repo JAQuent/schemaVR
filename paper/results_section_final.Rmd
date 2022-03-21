@@ -1,0 +1,2015 @@
+---
+title: "Result section for: Shape of U: The non-monotonic relationship between object-location memory and expectedness"
+author: "Quent JA, Greve A & Henson RN"
+date: "13/02/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# Libraries
+library(assortedRFunctions) # install via devtools::install_github("JAQuent/assortedRFunctions")
+library(knitr)
+library(ggplot2)
+library(brms)
+library(plyr)
+library(BayesFactor)
+library(polspline)
+library(stringr)
+
+# Options
+options(scipen=999)
+opts_knit$set(eval.after = 'fig.cap')
+opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, include = FALSE)
+memory.limit(size= 7545*3)
+digits1 <- 3
+digits2 <- 3
+
+######################################################
+# Path to parent folder schemaVR
+path2parent <- "E:/Alex/Laptop/Desktop/schemaVR" # This need to be changed to run this document
+######################################################
+
+# Needed because some of the load files include a different path2parent
+path2parent_current <- path2parent
+```
+
+
+# Pilot experiment 
+```{r load_image1}
+# Load data for recall
+load(paste0(path2parent, "/schemaVR1/analysis/schemaVR1_recall_zeroPrior_20220206_140651.RData"))
+```
+
+## Results
+### Recall
+```{r exp1_recall_zeroPrior}
+# Convert some BFs 
+BF_m1_vs_m2_recall <- signif(as.numeric(BF_m1_vs_m2_recall)[1], digits1) # Convert for evidence for intercept model
+BF_m1_vs_m3_recall <- signif(as.numeric(BF_m1_vs_m3_recall)[1], digits1) # Convert for evidence for intercept model
+
+# Use the right model 
+currentModel  <- model_schemaVR1_recall
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_recall_lin1  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior       <- 0.5 # because it's symmetrical 
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_recall_quad1 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'greater'), digits1)
+```
+
+
+With random intercept vs. without BF = `r BF_m1_vs_m2_recall`
+
+With random slopes vs. without (but random intercept) BF = `r BF_m1_vs_m3_recall`
+
+Linear `r report1`. BF10 = `r bf_recall_lin1`
+
+Quadratic `r report2`. BF10 = `r bf_recall_quad1`
+
+
+### 3AFC
+```{r load_image2}
+# Load image
+load(paste0(path2parent, "/schemaVR1/analysis/schemaVR1_AFC_zeroPrior_20220206_120713.RData"))
+```
+
+
+```{r exp1_AFC_zeroPrior}
+# Convert some BFs 
+BF_m1_vs_m2_AFC <- signif(as.numeric(BF_m1_vs_m2_AFC)[1], digits1) # Convert for evidence for intercept model
+BF_m1_vs_m3_AFC <- signif(as.numeric(BF_m1_vs_m3_AFC)[1], digits1) # Convert for evidence for intercept model
+
+# Use the right model 
+currentModel  <- model_schemaVR1_AFC
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist      <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior     <- NA # doesn't matter
+priorDensity  <- dstudent_t(0 , df, mu, sigma)
+bf_AFC_lin1   <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- 0.5 # because it's symmetrical 
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_AFC_quad1 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'greater'), digits1)
+```
+
+
+With random intercept vs. without BF =  `r BF_m1_vs_m2_AFC`
+
+With random slopes vs. without (but random intercept) BF =  `r BF_m1_vs_m3_AFC`
+
+Linear `r report1`. BF10 = `r bf_AFC_lin1`
+
+Quadratic `r report2`. BF10 = `r bf_AFC_quad1`
+
+# Experiment 1
+## Results
+### Recall
+#### Model with zero prior
+```{r exp2_recall_zeroPrior}
+# Load image
+load(paste0(path2parent, "/schemaVR2/analysis/schemaVR2_recall_zeroPrior_20220206_141250.RData"))
+
+# Use the right model 
+currentModel  <- model_schemaVR2_recall
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_recall_lin2_zero  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior       <- 0.5 # because it's symmetrical 
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_recall_quad2_zero <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'greater'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_recall_lin2_zero` 
+
+Quadratic `r report2`. BF10 = `r bf_recall_quad2_zero`
+
+#### Model using posterior as prior
+
+```{r exp2_recall_sequential}
+# Load image
+load(paste0(path2parent, "/schemaVR2/analysis/schemaVR2_recall_sequential_20220206_145748.RData"))
+
+# Use the right model 
+currentModel  <- model_schemaVR2_recall
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[3])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_recall_lin2  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[2])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- integrate(dstudent_t,  mu =  mu, df = df, sigma = sigma, lower = 0, upper = Inf, abs.tol = 0)$value 
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_recall_quad2 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'greater'), digits1)
+```
+
+
+Linear `r report1`. BF10 = `r bf_recall_lin2` , PB10 = `r signif(bf_recall_lin1*bf_recall_lin2, digits1)`
+
+Quadratic `r report2`. BF10 = `r bf_recall_quad2`, PB10 = `r signif(bf_recall_quad1*bf_recall_quad2, digits1)`
+
+Priors
+
+```{r exp2_recall_priors, include = TRUE}
+kable(currentModel$prior)
+```
+
+### 3AFC
+#### Model with zero prior
+```{r exp2_AFC_zero_priors}
+# Load image
+load(paste0(path2parent, "/schemaVR2/analysis/schemaVR2_AFC_zeroPrior_20220206_124055.RData"))
+
+# Use the right model 
+currentModel  <- model_schemaVR2_AFC
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_AFC_lin2_zero  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- integrate(dstudent_t,  mu =  mu, df = df, sigma = sigma, lower = 0, upper = Inf, abs.tol = 0)$value 
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_AFC_quad2_zero <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'greater'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_AFC_lin2_zero` 
+
+Quadratic `r report2`. BF10 = `r bf_AFC_quad2_zero`
+
+#### Model using posterior as prior
+
+```{r exp2_AFC_sequential}
+# Load image
+load(paste0(path2parent, "/schemaVR2/analysis/schemaVR2_AFC_sequential_20220206_123117.RData"))
+
+# Use the right model 
+currentModel  <- model_schemaVR2_AFC
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[3])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_AFC_lin2  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[2])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- integrate(dstudent_t,  mu =  mu, df = df, sigma = sigma, lower = 0, upper = Inf, abs.tol = 0)$value 
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_AFC_quad2 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'greater'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_AFC_lin2`, PB10 = `r signif(bf_AFC_lin1*bf_AFC_lin2, digits1)` 
+
+Quadratic `r report2`. BF10 = `r bf_AFC_quad2`, PB10 = `r signif(bf_AFC_quad1*bf_AFC_quad2, digits1)`
+
+Priors
+
+```{r exp2_AFC_priors, include = TRUE}
+kable(currentModel$prior)
+```
+
+### Remember
+#### Model with zero prior
+```{r exp2_rem}
+# Load image
+load(paste0(path2parent, "/schemaVR2/analysis/schemaVR2_RK_zeroPrior_20220206_175604.RData"))
+
+# Use the right model 
+currentModel  <- model_schemaVR2_rem
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_rem_lin1  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_rem_quad1 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_lin1` 
+
+Quadratic `r report2`. BF10 = `r bf_rem_quad1`
+
+### Familiarity
+#### Model with zero prior
+```{r exp2_familiar}
+# Use the right model 
+currentModel       <- model_schemaVR2_familiar_ind
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_familiar_ind_lin1  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_familiar_ind_quad1 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_familiar_ind_lin1` 
+
+Quadratic `r report2`. BF10 = `r bf_familiar_ind_quad1`
+
+### Bias
+```{r exp2_bias}
+# Finding the expectancy of the closest location for an object
+dataSchemaVR2$closestObjLocNorm <- NA
+# Add normative location rating
+for(i in 1:dim(dataSchemaVR2)[1]){
+  if(!is.na(dataSchemaVR2$closestLoc[i])){
+    # Necessary to use if statement because some values are NA and cannot be used to index
+   dataSchemaVR2$closestObjLocNorm[i] <- dataSchemaVR2[i, paste("loc", dataSchemaVR2$closestLoc[i], sep = "")] 
+  }
+}
+
+###########################
+# Overall bias
+schemaVR2_recallBias_data <- ddply(subset(dataSchemaVR2, recallMemory != 0),
+                                   c('subNum', 'accRecall'),
+                                   summarise, 
+                                   closestObjLocNorm = mean(closestObjLocNorm, na.rm = TRUE))
+
+schemaVR2_recallBias     <- ddply(schemaVR2_recallBias_data, 
+                                  c('accRecall'),
+                                  summarise, 
+                                  mean = mean(closestObjLocNorm, na.rm = TRUE),
+                                  sd = sd(closestObjLocNorm, na.rm = TRUE))
+
+# Calculate tests
+x                <- schemaVR2_recallBias_data[schemaVR2_recallBias_data$accRecall == 0, 3]
+y                <- schemaVR2_recallBias_data[schemaVR2_recallBias_data$accRecall == 1, 3]
+schemaVR2_tTest3 <- reportBF(ttestBF(x, y, paired = TRUE), 0)
+
+# Create report strings
+d1               <- signif(mean(x-y)/sd(x-y), 2)
+str1             <- mean_SD_str(schemaVR2_recallBias[1,2], schemaVR2_recallBias[1,3])
+str2             <- mean_SD_str(schemaVR2_recallBias[2,2], schemaVR2_recallBias[2,3])
+
+###########################
+# Examining this effect as function of r/f/g # (0 = no memory, 1 = remember, 2 = familiar, 3 = guess)
+schemaVR2_recallBias_rfg_data <- ddply(subset(dataSchemaVR2, recallMemory != 0),
+                                   c('subNum', 'accRecall', 'recallMemory'),
+                                   summarise, 
+                                   closestObjLocNorm = mean(closestObjLocNorm, na.rm = TRUE))
+# Convert to factor
+schemaVR2_recallBias_rfg_data$accRecall    <- as.factor(schemaVR2_recallBias_rfg_data$accRecall)
+schemaVR2_recallBias_rfg_data$subNum       <- as.factor(schemaVR2_recallBias_rfg_data$subNum)
+schemaVR2_recallBias_rfg_data$recallMemory <- as.factor(schemaVR2_recallBias_rfg_data$recallMemory)
+
+
+# Run BF ANOVA
+bias_anova <- anovaBF(closestObjLocNorm ~ accRecall * recallMemory + subNum, 
+                      whichRandom = 'subNum', 
+                      data = schemaVR2_recallBias_rfg_data,
+                      whichModels = 'top',
+                      iterations = 100000)
+
+bf_anova1 <- reportBF(1/bias_anova[1])
+bf_anova2 <- reportBF(1/bias_anova[2])
+bf_anova3 <- reportBF(1/bias_anova[3], 0)
+
+# Aggregate
+schemaVR2_recallBias_rfg <- ddply(schemaVR2_recallBias_rfg_data, 
+                              c('accRecall','recallMemory'),
+                              summarise, 
+                              mean = mean(closestObjLocNorm, na.rm = TRUE),
+                              sd = sd(closestObjLocNorm, na.rm = TRUE))
+
+```
+
+Like Experiment 1, the average expectancy for incorrectly-placed objects was `r str1` and so clearly higher than for correctly-placed, which was `r str2`, $BF_{10}$ = `r schemaVR2_tTest3`, *d* = `r d1`. Subsequently, we decided to examine whether this recall bias varies as function of whether a participants classifies a particular response as remember, familiar or guess. Therefore, we submit the data to a 2 x 3 repeated measure ANOVA with correctness (0 vs. 1) and retrieval quality (remember vs. familiar vs. guess) as factors. There was inconclusive evidence regarding a main effect of retrieval quality, $BF_{10}$ = `r bf_anova2`, evidence for a main effect of correctness was extremely strong, $BF_{10}$ = `r bf_anova3`. Furthermore, there was weak evidence for the null hypothesis for the interaction of both factors, $BF_{10}$ = `r bf_anova1`. 
+
+# Experiment 2a
+## Results
+### Recall
+#### Model with zero prior
+```{r exp3_recall_zero}
+# Load image
+load(paste0(path2parent, "/schemaVR3/analysis/schemaVR3_recall_zeroPrior_20220206_141855.RData"))
+
+# Use the right model 
+currentModel  <- model_schemaVR3_recall
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_recall_lin3_zero  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- integrate(dstudent_t,  mu =  mu, df = df, sigma = sigma, lower = 0, upper = Inf, abs.tol = 0)$value 
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_recall_quad3_zero <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'greater'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_recall_lin3_zero` 
+
+Quadratic `r report2`. BF10 = `r bf_recall_quad3_zero`
+
+#### Model using posterior as prior
+```{r exp3_recall_sequential}
+# Load image
+load(paste0(path2parent, "/schemaVR3/analysis/schemaVR3_recall_sequential_20220206_151744.RData"))
+
+# Use the right model 
+currentModel  <- model_schemaVR3_recall
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[3])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_recall_lin3  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[2])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- integrate(dstudent_t,  mu =  mu, df = df, sigma = sigma, lower = 0, upper = Inf, abs.tol = 0)$value 
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_recall_quad3 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'greater'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_recall_lin3`, PB10 `r signif(bf_recall_lin1*bf_recall_lin2*bf_recall_lin3, digits1)`
+
+Quadratic `r report2`. BF10 = `r bf_recall_quad3`, PB10 `r signif(bf_recall_quad1*bf_recall_quad2*bf_recall_quad3, digits1)`
+
+Priors
+
+```{r exp3_recall_priors, include = TRUE}
+kable(currentModel$prior)
+```
+
+
+### 3AFC
+#### Model with zero prior
+```{r exp3_load_AFC_zero}
+# Load image
+load(paste0(path2parent, "/schemaVR3/analysis/schemaVR3_AFC_zeroPrior_20220206_124402.RData"))
+
+# Use the right model 
+currentModel  <- model_schemaVR3_AFC
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_AFC_lin3_zero  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- integrate(dstudent_t,  mu =  mu, df = df, sigma = sigma, lower = 0, upper = Inf, abs.tol = 0)$value 
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_AFC_quad3_zero <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'greater'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_AFC_lin3_zero` 
+
+Quadratic `r report2`. BF10 = `r bf_AFC_quad3_zero`
+
+
+#### Model using posterior as prior
+```{r exp3_load_AFC_sequential}
+# Load image
+load(paste0(path2parent, "/schemaVR3/analysis/schemaVR3_AFC_sequential_20220206_133108.RData"))
+
+# Use the right model 
+currentModel  <- model_schemaVR3_AFC
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[3])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_AFC_lin3  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[2])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- integrate(dstudent_t,  mu =  mu, df = df, sigma = sigma, lower = 0, upper = Inf, abs.tol = 0)$value 
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_AFC_quad3 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'greater'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_AFC_lin3`, PB10 = `r signif(bf_AFC_lin1*bf_AFC_lin2*bf_AFC_lin3, digits1)`
+
+Quadratic `r report2`. BF10 = `r bf_AFC_quad3`, PB10 = `r signif(bf_AFC_quad1*bf_AFC_quad2*bf_AFC_quad3, digits1)`
+
+Priors
+
+```{r exp3_AFC_priors, include = TRUE}
+kable(currentModel$prior)
+```
+
+### Remember
+#### Model with zero prior
+```{r exp3_rem_zero}
+# Load image
+load(paste0(path2parent, "/schemaVR3/analysis/schemaVR3_RK_zeroPrior_20220206_180411.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVR3_rem
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist         <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior        <- NA # doesn't matter
+priorDensity     <- dstudent_t(0 , df, mu, sigma)
+bf_rem_lin2_zero <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_rem_quad2_zero <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_lin2_zero` 
+
+Quadratic `r report2`. BF10 = `r bf_rem_quad2_zero`
+
+
+#### Model using posterior as prior
+```{r exp3_rem_sequential}
+# Load image
+load(paste0(path2parent, "/schemaVR3/analysis/schemaVR3_RK_sequential_20220207_114930.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVR3_rem
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[3])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_rem_lin2  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[2])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_rem_quad2 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_lin2`, PB10 = `r signif(bf_rem_lin1*bf_rem_lin2, digits1)`
+
+Quadratic `r report2`. BF10 = `r bf_rem_quad2`, PB10 = `r signif(bf_rem_quad1*bf_rem_quad2, digits1)`
+
+Priors
+
+```{r exp3_rem_priors, include = TRUE}
+kable(currentModel$prior)
+```
+
+### Familiarity
+#### Model with zero prior
+```{r exp3_familiar_zero}
+# Load image
+load(paste0(path2parent, "/schemaVR3/analysis/schemaVR3_RK_zeroPrior_20220206_180411.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVR3_familiar_ind
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_familiar_ind_lin2_zero  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_familiar_ind_quad2_zero <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_familiar_ind_lin2_zero` 
+
+Quadratic `r report2`. BF10 = `r bf_familiar_ind_quad2_zero`
+
+#### Model using posterior as prior
+```{r exp3_familiar_sequential}
+# Load image
+load(paste0(path2parent, "/schemaVR3/analysis/schemaVR3_RK_sequential_20220207_114930.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVR3_familiar_ind
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[3])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_familiar_ind_lin2  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[2])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_familiar_ind_quad2 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_familiar_ind_lin2`, PB10 = `r signif(bf_familiar_ind_lin1*bf_familiar_ind_lin2, digits1)`
+
+Quadratic `r report2`. BF10 = `r bf_familiar_ind_quad2`, PB10 = `r signif(bf_familiar_ind_quad1*bf_familiar_ind_quad2, digits1)`
+
+Priors
+
+```{r exp3_familiar_priors, include = TRUE}
+kable(currentModel$prior)
+```
+
+### Bias
+```{r exp3_bias}
+path2parent <- path2parent_current
+# Loading data
+load(paste0(path2parent, "/schemaVR3/data/schemaVR3_closestLocation.RData"))
+
+
+schemaVR3_recallBias_data <- ddply(subset(dataSchemaVR3, recallMemory != 0),
+                                   c('subNum', 'accRecall'),
+                                   summarise, 
+                                   closestObjLocNorm = mean(closestObjLocNorm, na.rm = TRUE))
+
+## Remove SDSAO7 & MA4VYJ 
+exclude <- c('SDSAO7', 'MA4VYJ', 'QDE1JE')
+schemaVR3_recallBias_data <- schemaVR3_recallBias_data[!(schemaVR3_recallBias_data$subNum %in% exclude),]
+
+schemaVR3_recallBias     <- ddply(schemaVR3_recallBias_data, 
+                                  c('accRecall'),
+                                  summarise, 
+                                  mean = mean(closestObjLocNorm, na.rm = TRUE),
+                                  sd = sd(closestObjLocNorm, na.rm = TRUE))
+
+x <- schemaVR3_recallBias_data[schemaVR3_recallBias_data$accRecall == 0, 3]
+y <- schemaVR3_recallBias_data[schemaVR3_recallBias_data$accRecall == 1, 3]
+schemaVR4_tTest3 <- signif(as.numeric(as.vector(ttestBF(x, y, paired = TRUE))))
+d3               <- signif(mean(x-y)/sd(x-y), 2)
+
+###########################
+# Examining this effect as function of r/f/g # (0 = no memory, 1 = remember, 2 = familiar, 3 = guess)
+schemaVR3_recallBias_rfg_data <- ddply(subset(dataSchemaVR3, recallMemory != 0),
+                                       c('subNum', 'accRecall', 'recallMemory'),
+                                       summarise, 
+                                       closestObjLocNorm = mean(closestObjLocNorm, na.rm = TRUE))
+# Convert to factor
+schemaVR3_recallBias_rfg_data$accRecall    <- as.factor(schemaVR3_recallBias_rfg_data$accRecall)
+schemaVR3_recallBias_rfg_data$subNum       <- as.factor(as.numeric(as.factor(schemaVR3_recallBias_rfg_data$subNum))) 
+# had do this because I got this error r in rawToChar(as.raw(out)) : embedded nul in string: 'subNum\0íŽQ'
+schemaVR3_recallBias_rfg_data$recallMemory <- as.factor(schemaVR3_recallBias_rfg_data$recallMemory)
+
+
+# Run BF ANOVA
+bias_anova <- anovaBF(closestObjLocNorm ~ accRecall * recallMemory + subNum, 
+                      whichRandom = 'subNum', 
+                      data = schemaVR3_recallBias_rfg_data,
+                      whichModels = 'top',
+                      iterations = 100000)
+
+bf_anova1 <- reportBF(bias_anova[1])
+bf_anova2 <- reportBF(1/bias_anova[2], 0)
+bf_anova3 <- reportBF(1/bias_anova[3], 0)
+
+# Aggregate
+schemaVR3_recallBias_rfg <- ddply(schemaVR3_recallBias_rfg_data, 
+                                  c('accRecall','recallMemory'),
+                                  summarise, 
+                                  mean = mean(closestObjLocNorm, na.rm = TRUE),
+                                  sd = sd(closestObjLocNorm, na.rm = TRUE))
+
+# Add NA values for each participant so that those without response have only NA values. In the other case, they are just ignored. 
+N         <- length(unique(schemaVR3_recallBias_rfg_data$subNum))
+
+# Create NA DF
+add_NA_df <- data.frame(subNum = rep(unique(schemaVR3_recallBias_rfg_data$subNum), each = 6),
+                        accRecall = rep(c(0, 0, 0, 1 , 1, 1), N),
+                        recallMemory = rep(c(1, 2, 3, 1 , 2, 3), N),
+                        closestObjLocNorm = rep(NA, N*6))
+
+# Add this to the main DF
+schemaVR3_recallBias_rfg_data <- rbind(schemaVR3_recallBias_rfg_data, add_NA_df)
+
+# Follow up test when collapsed across correctness
+schemaVR3_recallBias_followUp <- ddply(subset(schemaVR3_recallBias_rfg_data, recallMemory != 0),
+                                       c('subNum', 'recallMemory'),
+                                       summarise, 
+                                       closestObjLocNorm = mean(closestObjLocNorm, na.rm = TRUE))
+
+# Get data for follow up test
+dat1 <- schemaVR3_recallBias_followUp[schemaVR3_recallBias_followUp$recallMemory == 1, 'closestObjLocNorm']
+dat2 <- schemaVR3_recallBias_followUp[schemaVR3_recallBias_followUp$recallMemory == 2, 'closestObjLocNorm']
+dat3 <- schemaVR3_recallBias_followUp[schemaVR3_recallBias_followUp$recallMemory == 3, 'closestObjLocNorm']
+
+# Run follow up tests and get Cohen's d values
+# As some contain NA values, select only those where both are no NA.
+temp1 <- dat1[!(is.na(dat1) | is.na(dat2))]
+temp2 <- dat2[!(is.na(dat1) | is.na(dat2))]
+test_1_vs_2 <- reportBF(ttestBF(temp1, temp2, paired =  TRUE), 0)
+d_1_vs_2    <- signif(abs(mean(temp1 - temp2)/sd(temp1 - temp2)), 2)
+
+temp1 <- dat1[!(is.na(dat1) | is.na(dat3))]
+temp2 <- dat3[!(is.na(dat1) | is.na(dat3))]
+test_1_vs_3 <- reportBF(ttestBF(temp1, temp2, paired =  TRUE), 0)
+d_1_vs_3    <- signif(abs(mean(temp1 - temp2)/sd(temp1 - temp2)), 2)
+
+temp1 <- dat2[!(is.na(dat2) | is.na(dat3))]
+temp2 <- dat3[!(is.na(dat2) | is.na(dat3))]
+test_2_vs_3      <- reportBF(ttestBF(temp1, temp2, paired =  TRUE), 2)  
+test_2_vs_3_BF01 <- signif(1/ test_2_vs_3, 2)
+d_2_vs_3         <- signif(abs(mean(temp1 - temp2)/sd(temp1 - temp2)), 2)
+
+# Create string for reporting
+str1 <- mean_SD_str2(schemaVR3_recallBias_data$closestObjLocNorm[schemaVR3_recallBias_data$accRecall == 0], 1)
+str2 <- mean_SD_str2(schemaVR3_recallBias_data$closestObjLocNorm[schemaVR3_recallBias_data$accRecall == 1], 1)
+str3 <- mean_SD_str2(dat1, 1)
+str4 <- mean_SD_str2(dat2, 1)
+str5 <- mean_SD_str2(dat3, 1)
+```
+
+Like Experiment 1 and 2, the average expectancy for incorrectly-placed objects `r str1` was clearly higher than for correctly-placed objects `r str2`, $BF_{10}$ = `r schemaVR4_tTest3`, *d* = `r d3`. We again submitted the data to a 2 x 3 repeated measure ANOVA with correctness (0 vs. 1) and retrieval quality (remember vs. familiar vs. guess) as factors. There was extreme evidence for a main effect of retrieval quality, $BF_{10}$ = `r bf_anova2`, evidence for a main effect of correctness was also extremely strong, $BF_{10}$ = `r bf_anova3`. Furthermore, there was moderate evidence for the null hypothesis for the interaction of both factors, $BF_{01}$ = `r bf_anova1`. Mean expectancy for remember judgement, `r str3`, was lower than familiar judgments, `r str4`, $BF_{10}$ = `r test_1_vs_2`, *d* = `r d_1_vs_2`, and guess judgements, `r str5`, $BF_{10}$ = `r test_1_vs_3`, *d* = `r d_1_vs_3`. However, familiar and guess judgement did not show a difference in their mean expectancy ratings, $BF_{10}$ = `r test_2_vs_3`, *d* = `r d_2_vs_3` ($BF_{01}$ = `r test_2_vs_3_BF01`). 
+
+
+# Experiment 2b
+## Results
+### Recall
+#### Model with zero prior
+```{r exp4_recall_zero}
+# Load image
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_recall_zeroPrior_20220206_142253.RData"))
+
+# Use the right model 
+currentModel  <- model_schemaVR4_recall
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_recall_lin4_zero  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- integrate(dstudent_t,  mu =  mu, df = df, sigma = sigma, lower = 0, upper = Inf, abs.tol = 0)$value 
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_recall_quad4_zero <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'greater'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_recall_lin4_zero` 
+
+Quadratic `r report2`. BF10 = `r bf_recall_quad4_zero`
+
+#### Model using posterior as prior
+```{r exp4_recall_sequential}
+# Load image
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_recall_sequential_20220206_154319.RData"))
+
+# Use the right model 
+currentModel  <- model_schemaVR4_recall
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[3])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_recall_lin4  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[2])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- integrate(dstudent_t,  mu =  mu, df = df, sigma = sigma, lower = 0, upper = Inf, abs.tol = 0)$value 
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_recall_quad4 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'greater'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_recall_lin4`, PB10 `r signif(bf_recall_lin1*bf_recall_lin2*bf_recall_lin3*bf_recall_lin4, digits1)`
+
+Quadratic `r report2`. BF10 = `r bf_recall_quad4`, PB10 `r signif(bf_recall_quad1*bf_recall_quad2*bf_recall_quad3*bf_recall_quad4, digits1)`
+
+Priors
+
+```{r exp4_recall_priors, include = TRUE}
+kable(currentModel$prior)
+```
+
+### 3AFC
+#### Model with zero prior
+```{r exp4_load_AFC_zero}
+# Load image
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_AFC_zeroPrior_20220206_124753.RData"))
+
+# Use the right model 
+currentModel  <- model_schemaVR4_AFC
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_AFC_lin4_zero  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- integrate(dstudent_t,  mu =  mu, df = df, sigma = sigma, lower = 0, upper = Inf, abs.tol = 0)$value 
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_AFC_quad4_zero <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'greater'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_AFC_lin4_zero` 
+
+Quadratic `r report2`. BF10 = `r bf_AFC_quad4_zero`
+
+
+#### Model using posterior as prior
+```{r exp4_load_AFC_sequential}
+# Load image
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_AFC_sequential_20220206_135656.RData"))
+
+# Use the right model 
+currentModel  <- model_schemaVR4_AFC
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[3])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_AFC_lin4  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[2])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- integrate(dstudent_t,  mu =  mu, df = df, sigma = sigma, lower = 0, upper = Inf, abs.tol = 0)$value 
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_AFC_quad4 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'greater'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_AFC_lin4`, PB10 = `r signif(bf_AFC_lin1*bf_AFC_lin2*bf_AFC_lin3*bf_AFC_lin4, digits1)`
+
+Quadratic `r report2`. BF10 = `r bf_AFC_quad4`, PB10 = `r signif(bf_AFC_quad1*bf_AFC_quad2*bf_AFC_quad3*bf_AFC_quad4, digits1)`
+
+Priors
+
+```{r exp4_AFC_priors, include = TRUE}
+kable(currentModel$prior)
+```
+
+### Remember
+#### Model with zero prior
+```{r exp4_rem_zero}
+# Load image
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_RK_zeroPrior_20220206_181450.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVR4_rem
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_rem_lin3_zero  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_rem_quad3_zero <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_lin3_zero` 
+
+Quadratic `r report2`. BF10 = `r bf_rem_quad3_zero`
+
+
+#### Model using posterior as prior
+```{r exp4_rem_sequential}
+# Load image
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_RK_sequential_20220207_141708.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVR4_rem
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[3])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_rem_lin3  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[2])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_rem_quad3 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_lin3`, PB10 = `r signif(bf_rem_lin1*bf_rem_lin2*bf_rem_lin3, digits1)`
+
+Quadratic `r report2`. BF10 = `r bf_rem_quad3`, PB10 = `r signif(bf_rem_quad1*bf_rem_quad2*bf_rem_quad3, digits1)`
+
+Priors
+
+```{r exp4_rem_priors, include = TRUE}
+kable(currentModel$prior)
+```
+
+### Familiarity
+#### Model with zero prior
+```{r exp4_familiar_zero}
+# Load image
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_RK_zeroPrior_20220206_181450.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVR4_familiar_ind
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_familiar_ind_lin3_zero  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_familiar_ind_quad3_zero <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_familiar_ind_lin3_zero` 
+
+Quadratic `r report2`. BF10 = `r bf_familiar_ind_quad3_zero`
+
+#### Model using posterior as prior
+```{r exp4_familiar_sequential}
+# Load image
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_RK_sequential_20220207_141708.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVR4_familiar_ind
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[3])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_familiar_ind_lin3  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[2])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_familiar_ind_quad3 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_familiar_ind_lin3`, PB10 = `r signif(bf_familiar_ind_lin1*bf_familiar_ind_lin2*bf_familiar_ind_lin3, digits1)`
+
+Quadratic `r report2`. BF10 = `r bf_familiar_ind_quad3`, PB10 = `r signif(bf_familiar_ind_quad1*bf_familiar_ind_quad2*bf_familiar_ind_quad3, digits1)`
+
+Priors
+
+```{r exp4_familiar_priors, include = TRUE}
+kable(currentModel$prior)
+```
+
+### Bias
+```{r exp4_bias}
+path2parent <- path2parent_current
+
+load(paste0(path2parent, "/schemaVR4/data/schemaVR4_closestLocation.RData"))
+
+
+
+schemaVR4_recallBias_data <- ddply(subset(dataSchemaVR4, recallMemory != 0),
+                                   c('subNum', 'accRecall'),
+                                   summarise, 
+                                   closestObjLocNorm = mean(closestObjLocNorm, na.rm = TRUE))
+
+## Remove SDSAO7 & MA4VYJ 
+exclude <- c('SDSAO7', 'MA4VYJ', 'QDE1JE', 'LDH64F', 'QW0EG8')
+schemaVR4_recallBias_data <- schemaVR4_recallBias_data[!(schemaVR4_recallBias_data$subNum %in% exclude),]
+
+schemaVR4_recallBias     <- ddply(schemaVR4_recallBias_data, 
+                                  c('accRecall'),
+                                  summarise, 
+                                  mean = mean(closestObjLocNorm, na.rm = TRUE),
+                                  sd = sd(closestObjLocNorm, na.rm = TRUE))
+
+x <- schemaVR4_recallBias_data[schemaVR4_recallBias_data$accRecall == 0, 3]
+y <- schemaVR4_recallBias_data[schemaVR4_recallBias_data$accRecall == 1, 3]
+schemaVR4_tTest3 <- signif(as.numeric(as.vector(ttestBF(x, y, paired = TRUE))))
+d3               <- signif(mean(x-y)/sd(x-y), 2)
+
+#
+# Examining this effect as function of r/f/g # (0 = no memory, 1 = remember, 2 = familiar, 3 = guess)
+schemaVR4_recallBias_rfg_data <- ddply(subset(dataSchemaVR4, recallMemory != 0),
+                                       c('subNum', 'accRecall', 'recallMemory'),
+                                       summarise, 
+                                       closestObjLocNorm = mean(closestObjLocNorm, na.rm = TRUE))
+# Convert to factor
+schemaVR4_recallBias_rfg_data$accRecall    <- as.factor(schemaVR4_recallBias_rfg_data$accRecall)
+schemaVR4_recallBias_rfg_data$subNum       <- as.factor(as.numeric(as.factor(schemaVR4_recallBias_rfg_data$subNum))) 
+# had do this because I got this error r in rawToChar(as.raw(out)) : embedded nul in string: 'subNum\0íŽQ'
+schemaVR4_recallBias_rfg_data$recallMemory <- as.factor(schemaVR4_recallBias_rfg_data$recallMemory)
+
+
+# Run BF ANOVA
+bias_anova <- anovaBF(closestObjLocNorm ~ accRecall * recallMemory + subNum, 
+                      whichRandom = 'subNum', 
+                      data = schemaVR4_recallBias_rfg_data,
+                      whichModels = 'top',
+                      iterations = 100000)
+
+bf_anova1 <- reportBF(bias_anova[1])
+bf_anova2 <- reportBF(1/bias_anova[2], 0)
+bf_anova3 <- reportBF(1/bias_anova[3], 0)
+
+# Aggregate
+schemaVR4_recallBias_rfg <- ddply(schemaVR4_recallBias_rfg_data, 
+                                  c('accRecall','recallMemory'),
+                                  summarise, 
+                                  mean = mean(closestObjLocNorm, na.rm = TRUE),
+                                  sd = sd(closestObjLocNorm, na.rm = TRUE))
+
+# Add NA values for each participant so that those without response have only NA values. In the other case, they are just ignored. 
+N         <- length(unique(schemaVR4_recallBias_rfg_data$subNum))
+
+# Create NA DF
+add_NA_df <- data.frame(subNum = rep(unique(schemaVR4_recallBias_rfg_data$subNum), each = 6),
+                        accRecall = rep(c(0, 0, 0, 1 , 1, 1), N),
+                        recallMemory = rep(c(1, 2, 3, 1 , 2, 3), N),
+                        closestObjLocNorm = rep(NA, N*6))
+
+# Add this to the main DF
+schemaVR4_recallBias_rfg_data <- rbind(schemaVR4_recallBias_rfg_data, add_NA_df)
+
+# Follow up test when collapsed across correctness
+schemaVR4_recallBias_followUp <- ddply(subset(schemaVR4_recallBias_rfg_data, recallMemory != 0),
+                                       c('subNum', 'recallMemory'),
+                                       summarise, 
+                                       closestObjLocNorm = mean(closestObjLocNorm, na.rm = TRUE))
+
+# Get data for follow up test
+dat1 <- schemaVR4_recallBias_followUp[schemaVR4_recallBias_followUp$recallMemory == 1, 'closestObjLocNorm']
+dat2 <- schemaVR4_recallBias_followUp[schemaVR4_recallBias_followUp$recallMemory == 2, 'closestObjLocNorm']
+dat3 <- schemaVR4_recallBias_followUp[schemaVR4_recallBias_followUp$recallMemory == 3, 'closestObjLocNorm']
+
+# Run follow up tests and get Cohen's d values
+# As some contain NA values, select only those where both are no NA.
+temp1 <- dat1[!(is.na(dat1) | is.na(dat2))]
+temp2 <- dat2[!(is.na(dat1) | is.na(dat2))]
+test_1_vs_2 <- reportBF(ttestBF(temp1, temp2, paired =  TRUE), 0)
+d_1_vs_2    <- signif(abs(mean(temp1 - temp2)/sd(temp1 - temp2)), 2)
+
+temp1 <- dat1[!(is.na(dat1) | is.na(dat3))]
+temp2 <- dat3[!(is.na(dat1) | is.na(dat3))]
+test_1_vs_3 <- reportBF(ttestBF(temp1, temp2, paired =  TRUE), 0)
+d_1_vs_3    <- signif(abs(mean(temp1 - temp2)/sd(temp1 - temp2)), 2)
+
+temp1 <- dat2[!(is.na(dat2) | is.na(dat3))]
+temp2 <- dat3[!(is.na(dat2) | is.na(dat3))]
+test_2_vs_3      <- reportBF(ttestBF(temp1, temp2, paired =  TRUE), 2)  
+test_2_vs_3_BF01 <- signif(1/ test_2_vs_3, 2)
+d_2_vs_3         <- signif(abs(mean(temp1 - temp2)/sd(temp1 - temp2)), 2)
+
+# Create string for reporting
+str1 <- mean_SD_str2(schemaVR4_recallBias_data$closestObjLocNorm[schemaVR4_recallBias_data$accRecall == 0], 1)
+str2 <- mean_SD_str2(schemaVR4_recallBias_data$closestObjLocNorm[schemaVR4_recallBias_data$accRecall == 1], 1)
+str3 <- mean_SD_str2(dat1, 1)
+str4 <- mean_SD_str2(dat2, 1)
+str5 <- mean_SD_str2(dat3, 1)
+```
+
+Like Experiment 1 and 2, the average expectancy for incorrectly-placed objects `r str1` was clearly higher than for correctly-placed objects `r str2`, $BF_{10}$ = `r schemaVR4_tTest3`, *d* = `r d3`. We again submitted the data to a 2 x 3 repeated measure ANOVA with correctness (0 vs. 1) and retrieval quality (remember vs. familiar vs. guess) as factors. There was extreme evidence for a main effect of retrieval quality, $BF_{10}$ = `r bf_anova2`, evidence for a main effect of correctness was also extremely strong, $BF_{10}$ = `r bf_anova3`. Furthermore, there was moderate evidence for the null hypothesis for the interaction of both factors, $BF_{01}$ = `r bf_anova1`. Mean expectancy for remember judgment, `r str3`, was lower than familiar judgments, `r str4`, $BF_{10}$ = `r test_1_vs_2`, *d* = `r d_1_vs_2`, and guess judgments, `r str5`, $BF_{10}$ = `r test_1_vs_3`, *d* = `r d_1_vs_3`. However, familiar and guess judgment did not show a difference in their mean expectancy ratings, $BF_{10}$ = `r test_2_vs_3`, *d* = `r d_2_vs_3` ($BF_{01}$ = `r test_2_vs_3_BF01`). 
+
+# Supplement
+## Recollection & famaliarity under different conditions
+### Experiment 1
+#### Recollection exclusivity
+```{r exp2_rem_exlcu}
+path2parent <- path2parent_current
+# Load image
+load(paste0(path2parent, "/schemaVR2/analysis/schemaVR2_RK_zeroPrior_20220206_175604.RData"))
+
+# Use the right model 
+currentModel  <- model_schemaVR2_rem_exclusive
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_rem_exc_lin1  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_rem_exc_quad1 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_exc_lin1` 
+
+Quadratic `r report2`. BF10 = `r bf_rem_exc_quad1`
+
+#### Familiarity redundancy
+```{r exp2_fam_red}
+# Load image
+load(paste0(path2parent, "/schemaVR2/analysis/schemaVR2_RK_zeroPrior_20220206_175604.RData"))
+
+# Use the right model 
+currentModel  <- model_schemaVR2_familiar_red
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_fam_red_lin1  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_fam_red_quad1 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_fam_red_lin1` 
+
+Quadratic `r report2`. BF10 = `r bf_fam_red_quad1`
+
+### Experiment 2a
+#### Recollection exclusivity
+##### Model with zero prior
+```{r exp3_rem_exc_zero}
+# Load image
+load(paste0(path2parent, "/schemaVR3/analysis/schemaVR3_RK_zeroPrior_20220206_180411.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVR3_rem_exclusive
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist         <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior        <- NA # doesn't matter
+priorDensity     <- dstudent_t(0 , df, mu, sigma)
+bf_rem_exc_lin2_zero <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_rem_exc_quad2_zero <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_exc_lin2_zero` 
+
+Quadratic `r report2`. BF10 = `r bf_rem_exc_quad2_zero`
+
+##### Model using posterior as prior
+```{r exp3_rem_exc_sequential}
+# Load image
+load(paste0(path2parent, "/schemaVR3/analysis/schemaVR3_RK_sequential_20220207_114930.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVR3_rem_exclusive
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[3])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_rem_exc_lin2  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[2])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_rem_exc_quad2 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_exc_lin2`, PB10 = `r signif(bf_rem_exc_lin1*bf_rem_exc_lin2, digits1)`
+
+Quadratic `r report2`. BF10 = `r bf_rem_exc_quad2`, PB10 = `r signif(bf_rem_exc_quad1*bf_rem_exc_quad2, digits1)`
+
+
+```{r exp3_rem_excl_priors, include = TRUE}
+kable(currentModel$prior)
+```
+
+#### Familiarity redundancy
+##### Model with zero prior
+```{r exp3_familiar_red_zero}
+# Load image
+load(paste0(path2parent, "/schemaVR3/analysis/schemaVR3_RK_zeroPrior_20220206_180411.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVR3_familiar_red
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_fam_red_lin2_zero  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_fam_red_quad2_zero <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_fam_red_lin2_zero` 
+
+Quadratic `r report2`. BF10 = `r bf_fam_red_quad2_zero`
+
+##### Model using posterior as prior
+```{r exp3_familiar_red_sequential}
+# Load image
+load(paste0(path2parent, "/schemaVR3/analysis/schemaVR3_RK_sequential_20220207_114930.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVR3_familiar_red
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[3])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_fam_red_lin2  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[2])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_fam_red_quad2 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_fam_red_lin2`, PB10 = `r signif(bf_fam_red_lin1*bf_fam_red_lin2, digits1)`
+
+Quadratic `r report2`. BF10 = `r bf_fam_red_quad2`, PB10 = `r signif(bf_fam_red_quad1*bf_fam_red_quad2, digits1)`
+
+
+```{r exp3_fam_red_priors, include = TRUE}
+kable(currentModel$prior)
+```
+
+### Experiment 2b
+#### Recollection exclusitvity
+##### Model with zero prior
+```{r exp4_rem_exc_zero}
+# Load image
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_RK_zeroPrior_20220206_181450.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVR4_rem_exclusive
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_rem_exc_lin3_zero  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_rem_exc_quad3_zero <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_exc_lin3_zero` 
+
+Quadratic `r report2`. BF10 = `r bf_rem_exc_quad3_zero`
+
+
+##### Model using posterior as prior
+```{r exp4_rem_exc_sequential}
+# Load image
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_RK_sequential_20220207_141708.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVR4_rem_exclusive
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[3])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_rem_exc_lin3  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[2])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_rem_exc_quad3 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_rem_exc_lin3`, PB10 = `r signif(bf_rem_exc_lin1*bf_rem_exc_lin2*bf_rem_exc_lin3, digits1)`
+
+Quadratic `r report2`. BF10 = `r bf_rem_exc_quad3`, PB10 = `r signif(bf_rem_exc_quad1*bf_rem_exc_quad2*bf_rem_exc_quad3, digits1)`
+
+
+```{r exp4_rem_exc;_priors, include = TRUE}
+kable(currentModel$prior)
+```
+
+#### Familiarity redundancy
+##### Model with zero prior
+```{r exp4_familiar_red_zero}
+# Load image
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_RK_zeroPrior_20220206_181450.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVR4_familiar_red
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_fam_red_lin3_zero  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[1])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_fam_red_quad3_zero <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_fam_red_lin3_zero` 
+
+Quadratic `r report2`. BF10 = `r bf_fam_red_quad3_zero`
+
+##### Model using posterior as prior
+```{r exp4_familiar_red_sequential}
+# Load image
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_RK_sequential_20220207_141708.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVR4_familiar_red
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+
+# Linear
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[3])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist        <- unlist(posterior_samples(currentModel)[2]) # The unlist() is important
+areaPrior       <- NA # doesn't matter
+priorDensity    <- dstudent_t(0 , df, mu, sigma)
+bf_fam_red_lin3  <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quadratic term
+# Get prior
+params <- extract_brms_prior(currentModel$prior$prior[2])
+df     <- params[1]
+mu     <- params[2]
+sigma  <- params[3]
+
+# Calculate BF
+postDist     <- unlist(posterior_samples(currentModel)[3]) # The unlist() is important
+areaPrior    <- NA # doesn't matter
+priorDensity <- dstudent_t(0 , df, mu, sigma)
+bf_fam_red_quad3 <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`. BF10 = `r bf_fam_red_lin3`, PB10 = `r signif(bf_fam_red_lin1*bf_fam_red_lin2*bf_fam_red_lin3, digits1)`
+
+Quadratic `r report2`. BF10 = `r bf_fam_red_quad3`, PB10 = `r signif(bf_fam_red_quad1*bf_fam_red_quad2*bf_fam_red_quad3, digits1)`
+
+
+```{r exp4_fam_red_priors, include = TRUE}
+kable(currentModel$prior)
+```
+
+## Pooled cubic analysis
+### Recall
+```{r}
+path2parent <- "E:/Alex/Laptop/Desktop/schemaVR" # This need to be changed to run this document
+# Load image
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR_all_recall_zeroPrior_cubic_20220209_215114.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVRall_recall_cubic
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+report3            <- brms_fixef_report(fixef_currentModel[4,], digits2, 'signif')
+
+# Linear term
+# Calculate savage dickey ratio
+postDist          <- posterior_samples(currentModel)$b_IExpM0.01100775D0.686581MU2
+areaPrior         <- NA
+priorDensity      <- dstudent_t(0 , 7, 0, 1)
+bf_all_recall_lin <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quad term
+# Calculate savage dickey ratio
+postDist           <- posterior_samples(currentModel)$b_IExpE2M0.4713124D0.3765475MU2
+areaPrior          <- 0.5 
+priorDensity       <- dstudent_t(0 , 7, 0, 1)
+bf_all_recall_quad <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'greater'), digits1)
+
+# Cubic term
+# Calculate savage dickey ratio
+postDist            <- posterior_samples(currentModel)$b_IExpE3MM0.002819718D0.5624869MU2
+areaPrior           <- NA 
+priorDensity        <- dstudent_t(0 , 7, 0, 1)
+bf_all_recall_cubic <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`, BF10 = `r bf_all_recall_lin`
+
+Quad `r report2`, BF10 = `r bf_all_recall_quad`
+
+Cubic `r report3`, BF10 = `r bf_all_recall_cubic`
+
+### 3AFC
+```{r}
+# Load image
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR_all_AFC_zeroPrior_cubic_20220213_112526.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVRall_AFC_cubic
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+report3            <- brms_fixef_report(fixef_currentModel[4,], digits2, 'signif')
+
+# Linear term
+# Calculate savage dickey ratio
+postDist          <- posterior_samples(currentModel)$b_IExpM0.01128509D0.6873529MU2
+areaPrior         <- NA
+priorDensity      <- dstudent_t(0 , 7, 0, 1)
+bf_all_AFC_lin    <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quad term
+# Calculate savage dickey ratio
+postDist           <- posterior_samples(currentModel)$b_IExpE2M0.47239D0.3764156MU2
+areaPrior          <- 0.5 
+priorDensity       <- dstudent_t(0 , 7, 0, 1)
+bf_all_AFC_quad <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'greater'), digits1)
+
+# Cubic term
+# Calculate savage dickey ratio
+postDist            <- posterior_samples(currentModel)$b_IExpE3MM0.003708847D0.5629717MU2
+areaPrior           <- NA 
+priorDensity        <- dstudent_t(0 , 7, 0, 1)
+bf_all_AFC_cubic <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`, BF10 = `r bf_all_AFC_lin`
+
+Quad `r report2`, BF10 = `r bf_all_AFC_quad`
+
+Cubic `r report3`, BF10 = `r bf_all_AFC_cubic`
+
+
+### Recollection
+```{r}
+# Load image
+load(paste0(path2parent, "/schemaVR4/analysis/schemaVR_all_recollection_zeroPrior_cubic_20220213_113551.RData"))
+
+# Use the right model 
+currentModel       <- model_schemaVRall_rem_cubic
+fixef_currentModel <- fixef(currentModel)
+report1            <- brms_fixef_report(fixef_currentModel[2,], digits2, 'signif')
+report2            <- brms_fixef_report(fixef_currentModel[3,], digits2, 'signif')
+report3            <- brms_fixef_report(fixef_currentModel[4,], digits2, 'signif')
+
+# Linear term
+# Calculate savage dickey ratio
+postDist          <- posterior_samples(currentModel)$b_IExpM0.002101487D0.6848884MU2
+areaPrior         <- NA
+priorDensity      <- dstudent_t(0 , 7, 0, 1)
+bf_all_rem_lin <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Quad term
+# Calculate savage dickey ratio
+postDist           <- posterior_samples(currentModel)$b_IExpE2M0.468863D0.3774832MU2
+areaPrior          <- NA
+priorDensity       <- dstudent_t(0 , 7, 0, 1)
+bf_all_rem_quad <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+
+# Cubic term
+# Calculate savage dickey ratio
+postDist            <- posterior_samples(currentModel)$b_IExpE3MM0.01127557D0.5612089MU2
+areaPrior           <- NA 
+priorDensity        <- dstudent_t(0 , 7, 0, 1)
+bf_all_rem_cubic <- signif(savage_dickey_ratio(postDist, priorDensity, areaPrior, 'two.sided'), digits1)
+```
+
+Linear `r report1`, BF10 = `r bf_all_rem_lin`
+
+Quad `r report2`, BF10 = `r bf_all_rem_quad`
+
+Cubic `r report3`, BF10 = `r bf_all_rem_cubic`

@@ -1,4 +1,4 @@
-# Script to run analysis of recall accuracy data for schemaVR3 (sequential)
+# Script to run analysis of recall accuracy data for schemaVR2 (sequential)
 # Version 2.0
 # Date:  05/02/2022
 # Author: Joern Alexander Quent
@@ -7,7 +7,7 @@
 # */
 # The reason why I used the rather conventional way of scaling the linear 
 # and the quadratic term inside the brm() function see
-# I((Exp - 0.1055907)/(0.6829275*2)) + I((Exp^2 - 0.4757246)/(0.3631597*2)) 
+# I((Exp - 0.1055907)/(0.6829275*2)) + I((Exp^2 - 0.4757246)/(0.3631597*2))
 # is because this allows us to illustrate the effect and easily create plots using
 # conditional_effects(). Otherwise we could have scaled the linear and the quadratic
 # term outside of the function. 
@@ -19,22 +19,21 @@
 
 ######################################################
 # Path to parent folder schemaVR
-path2parent  <- "E:/Alex/Laptop/Desktop/schemaVR/" # This need to be changed to run this document
+path2parent <- "E:/Alex/Laptop/Desktop/schemaVR/" # This need to be changed to run this document
 path2parent2 <- path2parent # Important to reset path2parent if the loaded file uses a different one
 ######################################################
 
 # Setting WD
-setwd(paste0(path2parent, "schemaVR3/analysis"))
+setwd(paste0(path2parent, "schemaVR2/analysis"))
 
 # Setting seed
-seed <- 12
+seed <- 248316
 set.seed(seed)
-seeds <- sample(1:9999, 2)
+seeds <- sample(1:9999, 1)
 
 # Libraries
 library(assortedRFunctions)
 library(brms)
-library(R.utils)
 
 # General settings
 cores2use <- 10
@@ -44,12 +43,12 @@ sleepTime <- 30
 # ----------------------------- Loading data & previous model ---------------------------
 # */
 # Loading data
-load(paste0(path2parent, "schemaVR3/data/dataSchemaVR3_cleaned.RData"))
+load(paste0(path2parent, "schemaVR2/data/dataSchemaVR2_cleaned.RData"))
 path2parent <- path2parent2 # Reset 
 
 # Look for correct file name and then used it
-targetPattern <- "schemaVR2_recall_sequential"
-targetFolder  <- "schemaVR2/analysis/"
+targetPattern <- "schemaVR1_recall_zeroPrior_"
+targetFolder  <- "schemaVR1/analysis/"
 
 # Load file with file names of models
 fileName        <- paste0(path2parent, "fileNames_ofModels.txt")
@@ -67,82 +66,78 @@ path2parent <- path2parent2 # Reset
 # */
 # (This is not essential but does stop the Betas getting too small, since 100^2 
 # gets quite big when you evaluate quadratic below).
-expectancy_3 <- dataSchemaVR3_recall$objLocTargetRating
-expectancy_3 <- expectancy_3/100
+expectancy_2 <- dataSchemaVR2_recall$objLocTargetRating
+expectancy_2 <- expectancy_2/100
 
 # These values are then used scale on Gelman et al. (2008) and 
 # https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations
 # Mean = 0 and SD = 0.5
-dataSchemaVR3_recall$Exp <- expectancy_3
+dataSchemaVR2_recall$Exp <- expectancy_2
 
 # /* 
 # ----------------------------- Get family parameters for prior ---------------------------
 # */
-postDists                    <- posterior_samples(model_schemaVR2_recall)
-intercept_schemaVR2_recall   <- brm(b_Intercept ~ 1,
+postDists                    <- posterior_samples(model_schemaVR1_recall)
+intercept_schemaVR1_recall   <- brm(b_Intercept ~ 1,
                                  data = postDists,
                                  cores = cores2use,
                                  family = student(link = "identity", link_sigma = "log", link_nu = "logm1"))
-
 # sleep sleepTime sec
 Sys.sleep(sleepTime)
-linear_schemaVR2_recall <- brm(b_IExpM0.1055907D0.6829275MU2 ~ 1,
+linear_schemaVR1_recall <- brm(b_IExpM0.1055907D0.6829275MU2 ~ 1,
                             data = postDists,
                             cores = cores2use,
                             family = student(link = "identity", link_sigma = "log", link_nu = "logm1"))
 
+
 # sleep sleepTime sec
 Sys.sleep(sleepTime)
-quad_schemaVR2_recall <- brm(b_IExpE2M0.4757246D0.3631597MU2 ~ 1,
+quad_schemaVR1_recall <- brm(b_IExpE2M0.4757246D0.3631597MU2 ~ 1,
                                    data = postDists,
                                    cores = cores2use,
                                    family = student(link = "identity", link_sigma = "log", link_nu = "logm1"))
-
 # sleep sleepTime sec
 Sys.sleep(sleepTime)
 
-
 # Assign prior to structure
-prior_schemaVR3_recall  <- c(set_prior(priorString_student(intercept_schemaVR2_recall), 
-                                      class = "Intercept"),
-                            set_prior(priorString_student(linear_schemaVR2_recall), 
-                                      class = "b", 
-                                      coef = "IExpM0.1055907D0.6829275MU2"),
-                            set_prior(priorString_student(quad_schemaVR2_recall), 
-                                      class = "b", 
-                                      coef = "IExpE2M0.4757246D0.3631597MU2"))
+prior_schemaVR2  <- c(set_prior(priorString_student(intercept_schemaVR1_recall), 
+                                class = "Intercept"),
+                      set_prior(priorString_student(linear_schemaVR1_recall), 
+                                class = "b", 
+                                coef = "IExpM0.1055907D0.6829275MU2"),
+                      set_prior(priorString_student(quad_schemaVR1_recall), 
+                                class = "b", 
+                                coef = "IExpE2M0.4757246D0.3631597MU2"))
 
 # /* 
 # ----------------------------- Model ---------------------------
 # */
 # Using recall_mean_linear, recall_sd_linear, recall_mean_quadratic & recall_sd_quadratic
 # from schemaVR1 to scale the linear and quadratic terms
-# For further information see above. 
-model_schemaVR3_recall <- brm(accRecall ~ I((Exp - 0.1055907)/(0.6829275*2)) + I((Exp^2 - 0.4757246)/(0.3631597*2)) +
+# For further information see above.
+model_schemaVR2_recall <- brm(accRecall ~ I((Exp - 0.1055907)/(0.6829275*2)) + I((Exp^2 - 0.4757246)/(0.3631597*2)) +
                                 (1 | subNum) +
                                 (1 | objNum),
-                           data = dataSchemaVR3_recall,
-                           prior = prior_schemaVR3_recall,
-                           family = bernoulli(),
-                           chains = 8,
-                           warmup = 2000,
-                           iter   = 16000,
-                           cores = cores2use,
-                           save_pars = save_pars(all = TRUE),
-                           sample_prior = TRUE,
-                           seed = seeds[1],
-                           control = list(adapt_delta = 0.9)) 
+                            data = dataSchemaVR2_recall,
+                            prior = prior_schemaVR2,
+                            family = bernoulli(),
+                            chains = 8,
+                            warmup = 2000,
+                            iter   = 16000,
+                            cores = cores2use,
+                            save_pars = save_pars(all = TRUE),
+                            sample_prior = TRUE,
+                            seed = seeds[1]) 
 
 # Sleep and summary 
 Sys.sleep(sleepTime)
-summary(model_schemaVR3_recall)
-
+summary(model_schemaVR2_recall)
 
 # /* 
 # ----------------------------- Saving image ---------------------------
 # */
 # Write file name in .txt file so it can be used across scripts
-fileName   <- datedFileNam('schemaVR3_recall_sequential', '.RData')
+fileName   <- datedFileNam('schemaVR2_recall_sequential', '.RData')
 write(fileName, file = paste0(path2parent, "fileNames_ofModels.txt"), append = TRUE)
 
 # Save image
