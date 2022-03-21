@@ -19,7 +19,7 @@ This repository contains all the relevant code and material for this project.
 # Guide through repository
 ## Files
 
-- ***downloads_and_moves_files_from_osf.R*** Script that downloads files that are too large to be uploaded to GitHub and moves content to correct file locations. These files are mainly the fitted models that are generated in the schemaVR folders and important to run the result files. The required disk space for this is approximately 20 GB. 
+- ***downloads_and_moves_files_from_osf.R*** Script that downloads files that are too large to be uploaded to GitHub and moves content to correct file locations. These files are mainly the fitted models that are generated in the schemaVR folders and important to run the result files. The required disk space for this is approximately 11 GB. 
 - ***paper.Rproj*** file (R project file) can be found in the paper folder. 
 
 ## Folders and their content
