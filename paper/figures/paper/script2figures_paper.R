@@ -11,11 +11,11 @@
 # */
 ######################################################
 # Path to parent folder schemaVR
-path2parent <- "E:/Alex/Laptop/Desktop/schemaVR" # This need to be changed to run this document
+path2parent <- "E:/Alex/research_projects/schemaVR/schemaVR" # This need to be changed to run this document
 ######################################################
 
 # Save path2parent to holder variable
-path2parent2 <- path2parent
+path2parent3 <- path2parent
 
 # Setting wd
 setwd(paste0(path2parent, "/paper/figures/paper"))
@@ -55,12 +55,15 @@ theme_set(updatedTheme)
 
 # Load data for recall
 load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_AFC_sequential_20220206_135656.RData"))
+path2parent <- path2parent3
 
 # Load data for 3AFC
 load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_recall_sequential_20220206_154319.RData"))
+path2parent <- path2parent3
 
 # Load data for RK
 load(paste0(path2parent, "/schemaVR4/analysis/schemaVR4_RK_sequential_20220207_141708.RData"))
+path2parent <- path2parent3
 
 # /* 
 # ----------------------------- Figure 2 ---------------------------
@@ -248,7 +251,8 @@ figure2 <- plot_grid(recallPlot1, AFCPlot1,
 save_plot("figure2.png", figure2,
           base_height = 18/cm(1),
           base_width = 11/cm(1),
-          base_aspect_ratio = 1)
+          base_aspect_ratio = 1,
+          dpi = 300)
 
 
 # /* 
