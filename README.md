@@ -1,9 +1,10 @@
 [![DOI](https://zenodo.org/badge/228648683.svg)](https://zenodo.org/badge/latestdoi/228648683)
 
-GitHub Repository for the __schemaVR__ project
+Repository for Shape of U: The non-monotonic relationship between object-location memory and expectedness 
 ================
 
 Collaborators: Joern Alexander Quent, Andrea Greve & Rik Henson
+
 Status: __In press in Psychological Science__ 
 
 The main aim of this project was to provide evidence that memory and expectancy follow a U-shape as predicted by the SLIMM framework. 
