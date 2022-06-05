@@ -78,7 +78,7 @@ tempPlot <- plot(conditional_effects(model_schemaVR1_recall))
 # Extract plot object, add title etc. and change parameters
 tempPlot <- tempPlot$Exp # Just extract the plot 'layer' if that what you call it. 
 tempPlot <- tempPlot + 
-  labs(y = 'p(recall accuracy)',
+  labs(y = 'Pilot\np(recall accuracy)',
        x = xTitle,
        title = 'Recall')
 
@@ -122,7 +122,7 @@ tempPlot <- plot(conditional_effects(model_schemaVR2_recall))
 # Extract plot object, add title etc. and change parameters
 tempPlot <- tempPlot$Exp # Just extract the plot 'layer' if that what you call it. 
 tempPlot <- tempPlot + 
-  labs(y = 'p(recall accuracy)',
+  labs(y = 'Exp. 1\np(recall accuracy)',
        x = xTitle)
 
 # Add the points to the plot
@@ -163,7 +163,7 @@ tempPlot <- plot(conditional_effects(model_schemaVR3_recall))
 # Extract plot object, add title etc. and change parameters
 tempPlot <- tempPlot$Exp # Just extract the plot 'layer' if that what you call it. 
 tempPlot <- tempPlot + 
-  labs(y = 'p(recall accuracy)',
+  labs(y = 'Exp. 2a\np(recall accuracy)',
        x = xTitle)
 
 # Add the points to the plot
@@ -204,7 +204,7 @@ tempPlot <- plot(conditional_effects(model_schemaVR4_recall))
 # Extract plot object, add title etc. and change parameters
 tempPlot <- tempPlot$Exp # Just extract the plot 'layer' if that what you call it. 
 tempPlot <- tempPlot + 
-  labs(y = 'p(recall accuracy)',
+  labs(y = 'Exp. 2b\np(recall accuracy)',
        x = xTitle)
 
 # Add the points to the plot
@@ -248,7 +248,7 @@ figure2 <- plot_grid(recallPlot1, AFCPlot1,
 
 
 # save as image
-save_plot("figure2.png", figure2,
+save_plot("figure2.pdf", figure2,
           base_height = 18/cm(1),
           base_width = 11/cm(1),
           base_aspect_ratio = 1,
@@ -270,7 +270,7 @@ tempPlot <- plot(conditional_effects(model_schemaVR2_rem))
 # Extract plot object, add title etc. and change parameters
 tempPlot <- tempPlot$Exp # Just extract the plot 'layer' if that what you call it. 
 tempPlot <- tempPlot + 
-  labs(y = 'p(remember)',
+  labs(y = 'Exp. 1\np(remember)',
        x = xTitle,
        title = 'Recollection')
 
@@ -314,7 +314,7 @@ tempPlot <- plot(conditional_effects(model_schemaVR3_rem))
 # Extract plot object, add title etc. and change parameters
 tempPlot <- tempPlot$Exp # Just extract the plot 'layer' if that what you call it. 
 tempPlot <- tempPlot + 
-  labs(y = 'p(remember)',
+  labs(y = 'Exp. 2a\np(remember)',
        x = xTitle)
 
 # Add the points to the plot
@@ -355,7 +355,7 @@ tempPlot <- plot(conditional_effects(model_schemaVR4_rem))
 # Extract plot object, add title etc. and change parameters
 tempPlot <- tempPlot$Exp # Just extract the plot 'layer' if that what you call it. 
 tempPlot <- tempPlot + 
-  labs(y = 'p(remember)',
+  labs(y = 'Exp. 2b\np(remember)',
        x = xTitle)
 
 # Add the points to the plot
@@ -398,7 +398,7 @@ figure3 <- plot_grid(rememPlot1, familiarPlot1,
 
 
 # save as image
-save_plot("figure3.png", figure3,
+save_plot("figure3.pdf", figure3,
           base_height = 16/cm(1),
           base_width =  11/cm(1),
           base_aspect_ratio = 1)
