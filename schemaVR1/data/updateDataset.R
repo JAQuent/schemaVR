@@ -422,7 +422,7 @@ write.table(combData,
 # respTime              Time (in seconds) the participant needed to respond (i.e. picking the object up) from start of trial. 
 # answerTime            Time (in seconds) the participant needed to give answer (i.e. dropping the object) from the time the object of picked up. 
 # numAttempts           Number of attempts. If an object was lost, the trial could be started again. 
-# recallNoMemory        No memory trial is a trial on which the participant told the experimenter that he/she did not see the object (0 = did not report not seeing object, 1 = repoted not seeing the object).
+# recallNoMemory        No memory trial is a trial on which the participant told the experimenter that he/she did not see the object (0 = did not report not seeing object, 1 = reported not seeing the object).
 # xRetrieved            X position (in virtual metres), where the participant placed the object.
 # yRetrieved            Y position (in virtual metres), where the participant placed the object.
 # zRetrieved            Z position (in virtual metres), where the participant placed the object.
@@ -430,7 +430,7 @@ write.table(combData,
 # yPositionCorrect      Y position (in virtual metres), where the object actually was.
 # zPositionCorrect      Z position (in virtual metres), where the object actually was.
 # euclideanDist         Euclidean distance (in virtual metres) between point, where the object was placed and where the object actually was. 
-# targetLocation        Number of the location, where the object actually was (i.e. tartget location).
+# targetLocation        Number of the location, where the object actually was (i.e. target location).
 # targetRankPre         Average rank from normative dataset for the object/location ratings for the target (0 to 400).
 # foil1Location         Number of the location of foil 1 in 3AFC task.
 # foil1RankPre          Average rank from normative dataset for the object/location ratings for foil 1 (0 to 400).

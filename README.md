@@ -28,7 +28,7 @@ Note that these folders only exist in the local copy that includes raw data:
 
 - ***normativeStudy*** contains the data from the normative study. For more information and code see https://github.com/JAQuent/ratingStudy. 
 - ***paper*** contains result documents, material for figures and some background work.  
-- ***schemaVR1*** to ***schemaVR4***  contain all material that is specific to the various iterations of the experiment. Most importantly these folders contain the analysis scripts under `\analysis\scripts`
+- ***schemaVR1*** to ***schemaVR4***  contain all material that is specific to the various iterations of the experiment. Most importantly these folders contain the analysis scripts under `\analysis\scripts`. The data including a legend of the column names is found in the folder `data`. 
 
 # More information
 

@@ -1,0 +1,47 @@
+The main data of this experiment (labelled Experiment 3) can be found in `dataSchemaVR4_cleaned.RData` in the data frames `dataSchemaVR4_AFC` and `dataSchemaVR4_recall`,  while the demographic data is found in `dataSchemaVR4_demo`.
+
+ # Legend of column names
+
+- subNum - Subject/participant number (e.g. 1, 2, 3...).
+- objNum - Object number (e.g. 1, 2, 3...).
+- objNam - Object name (e.g. helmet).
+- setNum - Indicates which of the five sets a participant was presented with (i.e. 111, 246, 388,498 & 848). The number refers to the index of the simulation that was used to create the sets but has otherwise not significance.  
+- recallTrial - Trial number during location recall task.
+- startTimeRecall - Time (in seconds) the trial started  in relation to starting the scene in unity.
+- pickUpTime - Time (in seconds) the object was picked up in relation to starting the scene in unity.
+- dropDownTime - Time (in seconds) the object was dropped down in relation to starting the scene in unity.
+- respTime - Time (in seconds) the participant needed to respond (i.e. picking the object up) from start of trial. 
+- answerTime - Time (in seconds) the participant needed to give answer (i.e. dropping the object) from the time the object of picked up. 
+- numAttempts  - Number of attempts. If an object was lost, the trial could be started again. 
+- recallMemory - Response given for judgement (0 = no memory, 1 = remember, 2 = familiar, 3 = guess) in recall task.
+- xRetrieved - X position (in virtual metres), where the participant placed the object.
+- yRetrieved - Y position (in virtual metres), where the participant placed the object.
+- zRetrieved - Z position (in virtual metres), where the participant placed the object.
+- xPositionCorrect - X position (in virtual metres), where the object actually was.
+- yPositionCorrect - Y position (in virtual metres), where the object actually was.
+- zPositionCorrect - Z position (in virtual metres), where the object actually was.
+- euclideanDist - Euclidean distance (in virtual metres) between point, where the object was placed and where the object actually was. 
+- accRecall - Accuracy of recallresponse (0 = incorrect, 1 = correct).
+- targetLocation - Number of the location, where the object actually was (i.e. target location).
+- targetRankPre - Average rank from normative dataset for the object/location ratings for the target (0 to 400).
+- foil1Location - Number of the location of foil 1 in 3AFC task.
+- foil1RankPre - Average rank from normative dataset for the object/location ratings for foil 1 (0 to 400)
+- foil2Location - Number of the location of foil 2 in 3AFC task.
+- foil2RankPre - Average rank from normative dataset for the object/location ratings for foil 2 (0 to 400).
+- AFCPreTime - Presentation time (in milliseconds) of the three images in the 3AFC task.
+- rtAFC - Reaction time (in milliseconds) to make 3AFC decision. 
+- resAFC - Response given for 3AFC decision (1, 2 or 3).
+- accAFC - Accuracy of 3AFC response (0 = incorrect, 1 = correct).
+- conPreTime -  Presentation time (in milliseconds) of confidence display in the 3AFC task.
+- rtCon - Reaction time (in milliseconds) to make confidence decision.
+- resCon -  Response given for judgement (0 = no memory, 1 = remember, 2 = familiar, 3 = guess) in 3AFC task.
+- left - Number of the location (i.e. image) that was displayed on the left side of the screen.
+- middle - Number of the location (i.e. image) that was displayed in the middle of the screen.
+- right - Number of the location (i.e. image) that was displayed on the right side of the screen.
+- afcTrial - Trial number during 3AFC task.
+- objLocTargetRating - Object/location expectancy rating (unexpected/-100 to expected/100) by the participant for object in target location.
+- objLocFoil1Rating - Object/location expectancy rating (unexpected/-100 to expected/100) by the participant for object in target foil 1 location.
+- objLocFoil2Rating - Object/location expectancy rating (unexpected/-100 to expected/100) by the participant for object in target foil 2 location.
+- generalRatingPost - General expectancy rating (unexpected/-100 to expected/100) by the participant for object.
+- kitchen - Categorical variable (kitchen (object 1 to 12) and unexpected non-kitchen (object 13 to 20)).
+- closestLoc - Location with the shortest Euclidean distance for the point, where the object was placed. 
