@@ -5,7 +5,7 @@ Repository for Shape of U: The non-monotonic relationship between object-locatio
 
 Collaborators: Joern Alexander Quent, Andrea Greve & Rik Henson
 
-Status: __In press in Psychological Science__ 
+Status: __In press in Psychological Science__ (DOI: 10.1177/09567976221109134)
 
 The main aim of this project was to provide evidence that memory and expectancy follow a U-shape as predicted by the SLIMM framework. 
 
@@ -20,6 +20,9 @@ This repository contains all the relevant code and material for this project.
 4. If there are questions, please contact me _alexander.quent AT rub.de_.
 
 # Guide through repository
+## Important notice about the experiment labels
+In the manuscript as it appears in _Psychological Science_ the experiments are labelled Pilot Experiment, Experiment 1, Experiment 2a and Experiment 2b. This corresponds to schemaVR1 to schemaVR4 in this repository.  
+
 ## Files
 
 - ***downloads_and_moves_files_from_osf.R*** Script that downloads files that are too large to be uploaded to GitHub and moves content to correct file locations. These files are mainly the fitted models that are generated in the schemaVR folders and important to run the result files. The required disk space for this is approximately 11 GB. 
@@ -35,4 +38,4 @@ Note that these folders only exist in the local copy that includes raw data:
 
 # More information
 
-The build task can be found [here](https://github.com/JAQuent/schemaVR/blob/master/schemaVR3/experiment/build_schemaVR3_task.zip). The unity project for schemaVR3 can be found [here](https://osf.io/ekzj9/download). 
+The build task can be found [here](https://github.com/JAQuent/schemaVR/blob/master/schemaVR3/experiment/build_schemaVR3_task.zip). The unity project for schemaVR3 can be found [here](https://osf.io/ekzj9/download). Alternatively you can also find back-ups here https://zenodo.org/record/6614685 & https://zenodo.org/record/6614757. 
