@@ -5,7 +5,9 @@ Repository for Shape of U: The non-monotonic relationship between object-locatio
 
 Collaborators: Joern Alexander Quent, Andrea Greve & Rik Henson
 
-Status: __In press in Psychological Science__ (DOI: 10.1177/09567976221109134)
+Status: __published__
+
+Quent, J. A., Greve, A., & Henson, R. N. (2022). Shape of U: The Nonmonotonic Relationship Between Object–Location Memory and Expectedness. _Psychological Science_, 33(12), 2084-2097. https://doi.org/10.1177/09567976221109134
 
 The main aim of this project was to provide evidence that memory and expectancy follow a U-shape as predicted by the SLIMM framework. 
 
